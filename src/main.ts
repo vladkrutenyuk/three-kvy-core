@@ -16,7 +16,7 @@ function createWorld() {
 	const gameWorld = new GameWorld({
 		modules: {
 			cannon: new CannonPhysicsModule(),
-			nebula: new NebulaParticlesModule(),
+			// nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
 		} as const,
 		three: {
@@ -28,7 +28,7 @@ function createWorld() {
 		},
 	})
 	const { three, animationFrameLoop, modules } = gameWorld
-	const { postprocessing, cannon, nebula } = modules
+	const { postprocessing, cannon } = modules
 
 	// setup postprocessing
 	const bloomPass = new UnrealBloomPass(
