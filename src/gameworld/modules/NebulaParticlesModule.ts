@@ -19,11 +19,11 @@ export default class NebulaParticlesModule extends GameWorldModule {
 		world.three.addEventListener('destroy', this.onDestroy)
     }
 
-    onBeforeRender() {
+    onBeforeRender = () => {
         this.system.update()
 	}
 
-	onDestroy() {
+	onDestroy = () => {
 		this.system.removeRenderer(this.spriteRenderer)
 		this.system.destroy()
 	}

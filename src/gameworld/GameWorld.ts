@@ -1,4 +1,3 @@
-import { Object3D, Object3DEventMap } from 'three'
 import AnimationFrameLoop from './AnimationFrameLoop'
 import GameObject from './GameObject'
 import GameWorldModule from './GameWorldModule'
@@ -23,19 +22,44 @@ export default class GameWorld<
 		this.three = new ThreeRendering(props.three)
 		this.modules = props.modules
 
-        for (const key in this.modules) {
-            this.modules[key].init(this)
-        }
+		for (const key in this.modules) {
+			this.modules[key].init(this)
+		}
 
-		this.animationFrameLoop.addEventListener('frame', () => this.three.render())
+		this.animationFrameLoop.addEventListener('frame', this.onFrame)
+        this.three.addEventListener('mount', this.onMount)
+        this.three.addEventListener('unmount', this.onUnmount)
 	}
+
+    private onFrame = () => {
+        this.three.render()
+    }
+
+    private onWindowFocus = () => {
+        this.animationFrameLoop.run()
+    }
+
+    private onWindowBlur = () => {
+        this.animationFrameLoop.stop()
+    }
+
+    private onMount = () => {
+        window.addEventListener('focus', this.onWindowFocus)
+        window.addEventListener('blur', this.onWindowBlur)
+    }
+
+    private onUnmount = () => {
+        window.removeEventListener('focus', this.onWindowFocus)
+        window.removeEventListener('blur', this.onWindowBlur)
+    }
 
 	removeFromParent(): this {
 		console.error(`It's prohibited to use method 'removeFromParent' for GameWorld`)
 		return this
 	}
-	attach(_: Object3D<Object3DEventMap>): this {
-		console.error(`It's prohibited to use method 'attach' for GameWorld`)
-		return this
-	}
+
+    destroy() {
+        this.animationFrameLoop.stop()
+        this.three.destroy()
+    }
 }

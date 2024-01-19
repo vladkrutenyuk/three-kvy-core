@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import GameWorld from './gameworld/GameWorld'
-import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
-import './style.css'
 import CannonPhysicsModule from './gameworld/modules/CannonPhysicsModule'
 import NebulaParticlesModule from './gameworld/modules/NebulaParticlesModule'
+import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
+import './style.css'
 
 console.log('main.ts')
 
@@ -23,12 +23,12 @@ function createWorld() {
 			rendererParams: {
 				antialias: true,
 				logarithmicDepthBuffer: true,
-                preserveDrawingBuffer: true,
+				preserveDrawingBuffer: true,
 			},
 		},
 	})
 	const { three, animationFrameLoop, modules } = gameWorld
-	const { postprocessing, cannon } = modules
+	const { postprocessing, cannon, nebula } = modules
 
 	// setup postprocessing
 	const bloomPass = new UnrealBloomPass(
@@ -37,7 +37,7 @@ function createWorld() {
 		0.2,
 		1.38
 	)
-	gameWorld.three.addEventListener('resize', (event) => {
+	three.addEventListener('resize', (event) => {
 		const { width, height } = event
 		bloomPass.resolution.set(width * 0.5, height * 0.5)
 	})
