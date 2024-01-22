@@ -8,7 +8,7 @@ export type GameWorldModulesRecord = Readonly<Record<string, GameWorldModule>>
 export default class GameWorld<
 	TModules extends GameWorldModulesRecord = {}
 > extends GameObject<TModules> {
-	public readonly isGameWorld = true
+	readonly isGameWorld = true
 
 	readonly animationFrameLoop: AnimationFrameLoop
 	readonly three: ThreeRendering
@@ -18,48 +18,57 @@ export default class GameWorld<
 
 	constructor(props: { three?: ThreeRenderingProps; modules: TModules }) {
 		super()
-		this.animationFrameLoop = new AnimationFrameLoop()
 		this.three = new ThreeRendering(props.three)
-		this.modules = props.modules
+		this.animationFrameLoop = new AnimationFrameLoop()
+		this.animationFrameLoop.addEventListener('frame', this.onFrame.bind(this))
 
+		this.three.scene.userData.gameWorldId = this.id
+		this.three.scene.add(this)
+
+        this.modules = props.modules
 		for (const key in this.modules) {
 			this.modules[key].init(this)
 		}
 
-		this.animationFrameLoop.addEventListener('frame', this.onFrame)
-        this.three.addEventListener('mount', this.onMount)
-        this.three.addEventListener('unmount', this.onUnmount)
+		this.initAnimationFrameLoopPausingOnWindowBlur()
 	}
 
-    private onFrame = () => {
-        this.three.render()
-    }
+    private onFrame() {
+		this.three.render()
+	}
 
-    private onWindowFocus = () => {
-        this.animationFrameLoop.run()
-    }
+	private initAnimationFrameLoopPausingOnWindowBlur= () => {
+		const onWindowFocus = () => {
+            console.log('onWindowFocus')
+			this.animationFrameLoop.run()
+		}
+		const onWindowBlur = () => {
+            console.log('onWindowBlur')
+			this.animationFrameLoop.stop()
+		}
+		this.three.addEventListener('mount', () => {
+            window.addEventListener('focus', onWindowFocus)
+            window.addEventListener('blur', onWindowBlur)
+		})
+		this.three.addEventListener('unmount', () => {
+            window.removeEventListener('focus', onWindowFocus)
+			window.removeEventListener('blur', onWindowBlur)
+		})
+	}
 
-    private onWindowBlur = () => {
-        this.animationFrameLoop.stop()
-    }
-
-    private onMount = () => {
-        window.addEventListener('focus', this.onWindowFocus)
-        window.addEventListener('blur', this.onWindowBlur)
-    }
-
-    private onUnmount = () => {
-        window.removeEventListener('focus', this.onWindowFocus)
-        window.removeEventListener('blur', this.onWindowBlur)
-    }
+	create(): GameObject<TModules> {
+		const go = new GameObject<TModules>()
+		this.add(go)
+		return go
+	}
 
 	removeFromParent(): this {
 		console.error(`It's prohibited to use method 'removeFromParent' for GameWorld`)
 		return this
 	}
 
-    destroy() {
-        this.animationFrameLoop.stop()
-        this.three.destroy()
-    }
+	destroy() {
+		this.animationFrameLoop.stop()
+		this.three.destroy()
+	}
 }

@@ -44,6 +44,9 @@ export default class ThreeRendering extends THREE.EventDispatcher<ThreeRendering
 		return this._isMounted
 	}
 	private _root: HTMLDivElement | null = null
+	get root() {
+		return this._root
+	}
 	private _resizeObserver: ResizeObserver | null = null
 
 	private _isDestroyed = false

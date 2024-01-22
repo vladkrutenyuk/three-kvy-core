@@ -1,6 +1,8 @@
-export function removeArrayItem<T>(array: T[], item: T): void {
+export function removeArrayItem<T>(array: T[], item: T): boolean {
 	const index = array.indexOf(item)
-	if (index !== -1) {
+	const found = index !== -1
+	if (found) {
 		array.splice(index, 1)
 	}
+	return found
 }

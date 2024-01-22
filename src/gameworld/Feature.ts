@@ -3,18 +3,33 @@ import GameObject from './GameObject'
 import GameWorld, { GameWorldModulesRecord } from './GameWorld'
 
 let _featureId = 0
+
 export type FeatureProps<
 	TModules extends GameWorldModulesRecord = {},
-	TProps = unknown
+	TProps extends {} = {}
 > = TProps & {
 	gameObject: GameObject<TModules>
 }
 
+export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
+	attachedToWorld: { world: GameWorld<TModules> }
+	detachedFromWorld: { world: GameWorld<TModules> }
+	removed: {}
+}
+
+const _event: {
+	[K in keyof FeatureEventMap<any>]: { type: K } & Partial<FeatureEventMap<any>[K]>
+} = {
+	attachedToWorld: { type: 'attachedToWorld' },
+	detachedFromWorld: { type: 'detachedFromWorld' },
+	removed: { type: 'removed' },
+}
+
 export default abstract class Feature<
 	TModules extends GameWorldModulesRecord = {},
-	TEventMap extends {} = {},
-	TProps = unknown
-> extends THREE.EventDispatcher<TEventMap> {
+	TEventMap extends Record<string, any> = {},
+	TProps extends Record<string, any> = {}
+> extends THREE.EventDispatcher<FeatureEventMap<TModules>> {
 	readonly type: string
 	readonly id: number
 	readonly gameObject: GameObject<TModules>
@@ -27,46 +42,115 @@ export default abstract class Feature<
 
 	constructor(props: FeatureProps<TModules, TProps>) {
 		super()
-		this.type = Feature.name
+		this.type = this.constructor.name
 		this.gameObject = props.gameObject
 		this.id = _featureId++
 		this.uuid = THREE.MathUtils.generateUUID()
 
-		this.gameObject.addEventListener('attachedToWorld', this.attachedToWorld)
-		this.gameObject.addEventListener('detachedFromWorld', this.detachedFromWrold)
-	}
-
-	protected onAttach(world: GameWorld<TModules>): void {}
-	protected onDetach(world: GameWorld<TModules>): void {}
-	protected onBeforeRender = (world: GameWorld<TModules>): void => {}
-
-	private attachedToWorld = (
-		event: {
-			world: GameWorld<TModules>
-		} & THREE.Event<'attachedToWorld', GameObject<TModules>>
-	) => {
-		this._world = event.world
-		this.onAttach(this._world)
-	}
-	private detachedFromWrold = (
-		event: {
-			world: GameWorld<TModules>
-		} & THREE.Event<'detachedFromWorld', GameObject<TModules>>
-	) => {
-		this._world = null
-		this.onDetach(event.world)
-	}
-
-	initOnBeforeRender = () => {
-		let listener: (() => void) | null = null
-		this.gameObject.addEventListener('attachedToWorld', (event) => {
-			const { world } = event
-			listener = () => this.onBeforeRender(world)
-			world.three.addEventListener('beforeRender', listener)
+		this.addEventListener('attachedToWorld', ({ world }) => {
+			console.log('N ATTACH LISTENER')
+			this.onAttach(world)
 		})
-		this.gameObject.addEventListener('detachedFromWorld', (event) => {
-			const { world } = event
+		this.addEventListener('detachedFromWorld', ({ world }) => {
+			this.onDetach(world)
+		})
+		this.addEventListener('removed', () => {
+			this.onRemove()
+		})
+
+		this.gameObject.addEventListener(
+			'attachedToWorld',
+			this.gameObjectAttachedToWorld
+		)
+		this.gameObject.addEventListener(
+			'detachedFromWorld',
+			this.gameObjectDetachedFromWorld
+		)
+		this.gameObject.world && this.attachToWorld(this.gameObject.world)
+	}
+
+	private gameObjectAttachedToWorld = (event: { world: GameWorld<TModules> }) => {
+		this._log('gameObjectAttachedToWorld')
+		this.attachToWorld(event.world)
+	}
+	private gameObjectDetachedFromWorld = (_: { world: GameWorld<TModules> }) => {
+		this._log('gameObjectDetachedFromWorld')
+		this.detachFromWorld()
+	}
+
+	private attachToWorld = (world: GameWorld<TModules>) => {
+		this._log('attachToWorld...')
+		if (this._world) {
+			this._log('attachToWorld has world')
+			this.detachFromWorld()
+		}
+		this._world = world
+
+		_event.attachedToWorld.world = this._world
+		this._log('attachToWorld done!')
+		this.dispatchEvent(
+			_event.attachedToWorld as Required<typeof _event.attachedToWorld>
+		)
+	}
+
+	private detachFromWorld = () => {
+		this._log('detachFromWorld...')
+		if (!this._world) return
+		const world = this._world
+		this._world = null
+
+		_event.detachedFromWorld.world = world
+		this._log('detachFromWorld done!')
+		this.dispatchEvent(
+			_event.detachedFromWorld as Required<typeof _event.detachedFromWorld>
+		)
+	}
+
+	remove() {
+		this._log('remove...')
+		this.gameObject.removeEventListener(
+			'attachedToWorld',
+			this.gameObjectAttachedToWorld
+		)
+		this.gameObject.removeEventListener(
+			'detachedFromWorld',
+			this.gameObjectDetachedFromWorld
+		)
+		this.detachFromWorld()
+		this.gameObject.removeFeature(this)
+
+		this.dispatchEvent(_event.removed)
+	}
+
+	protected initOnBeforeRender() {
+		let listener: (() => void) | null = null
+
+		const init = (world: GameWorld<TModules>) => {
+			listener = () => {
+				this.onBeforeRender(world)
+			}
+			world.three.addEventListener('beforeRender', listener)
+		}
+
+		this.addEventListener('attachedToWorld', ({ world }) => {
+			init(world)
+		})
+		this.addEventListener('detachedFromWorld', ({ world }) => {
 			listener && world.three.removeEventListener('beforeRender', listener)
 		})
+
+		this._world && init(this._world)
+	}
+
+	protected onAttach(ctx: GameWorld<TModules>) {}
+	protected onDetach(ctx: GameWorld<TModules>) {}
+	protected onRemove() {}
+	protected onBeforeRender(ctx: GameWorld<TModules>) {}
+
+	private _log(...args: any[]) {
+		console.log(
+			`GO-${this.gameObject.id} ${this.constructor.name}-${this.id}`,
+			...args
+		)
 	}
 }

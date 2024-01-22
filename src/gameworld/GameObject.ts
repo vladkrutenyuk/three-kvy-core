@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import GameWorld, { GameWorldModulesRecord } from './GameWorld'
 import Feature, { FeatureProps } from './Feature'
 import { removeArrayItem } from './utils/remove-array-item'
+import { traverseAncestorsInterruptible } from './utils/traverse-interruptible'
+import { isScene } from './utils/types/is-scene'
 
 export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> }
@@ -15,6 +17,7 @@ const _event: {
 	attachedToWorld: { type: 'attachedToWorld' },
 	detachedFromWorld: { type: 'detachedFromWorld' },
 }
+
 export default class GameObject<
 	TModules extends GameWorldModulesRecord = {}
 > extends THREE.Object3D<THREE.Object3DEventMap & GameObjectEventMap<TModules>> {
@@ -25,22 +28,29 @@ export default class GameObject<
 		return this._world
 	}
 
-	constructor() {
+	private readonly _features: Feature<TModules>[] = []
+
+	constructor(props?: { uuid?: string, name?: string}) {
 		super()
 		this.addEventListener('added', this.onAdded)
 		this.addEventListener('removed', this.onRemoved)
+		this.name = props?.name ?? `${this.constructor.name}-${this.id}`
+		this.uuid = props?.uuid ?? this.uuid
 	}
 
-	private onAdded = ({ target }: THREE.Event<'added', this>) => {
+	protected onAdded = ({ target }: THREE.Event<'added', this>) => {
+		this._log('onAdded...')
 		if (target.parent && GameObject.isIt<TModules>(target.parent)) {
+			this._log('onAdded parent is gameobject')
 			target.parent._world && target.attachToWorldRecursively(target.parent._world)
 			return
 		}
+		this._log('onAdded parent is just object3d')
 		// обрабатываем случай когда GameObject был добавлен к обычному Object3D
 
 		// ищем предка который был бы GameObject
 		let gameObjectAncestor: GameObject<TModules> | null = null
-		target.traverseAncestorsInterruptible((ancestor: THREE.Object3D) => {
+		traverseAncestorsInterruptible(target, (ancestor: THREE.Object3D) => {
 			const isGameObject = GameObject.isIt<TModules>(ancestor)
 			if (isGameObject) {
 				gameObjectAncestor = ancestor
@@ -51,10 +61,24 @@ export default class GameObject<
 
 		// если нашли и если у него есть мир то аттачимся к нему
 		if (gameObjectAncestor !== null) {
-			gameObjectAncestor._world && target.attachToWorldRecursively(gameObjectAncestor._world)
+			this._log('onAdded found game object ancestor')
+			gameObjectAncestor._world &&
+				target.attachToWorldRecursively(gameObjectAncestor._world)
 		}
 		// иначе отменяем добавление и высвечиваем ошибку
 		else {
+			// если у gameobject есть мир и был доавблен к сцене у которой есть gameWorldId ранвый этому миру
+			// то этот gameobject это gameworld который был добавлен в сцену на ините
+			if (
+				target._world &&
+				target.parent &&
+				isScene(target.parent) &&
+				target.parent.userData.gameWorldId === target._world.id
+			) {
+				this._log('onAdded it is gameworld added to scene')
+				return
+			}
+			// иначе светим ошибку и отменяем добавление
 			console.error(
 				`It's prohibited to add GameObject to simple Object3D which is not in any GameWorld.`,
 				`Add that Object3D to GameWorld or GameObject beforehand.`,
@@ -65,12 +89,16 @@ export default class GameObject<
 	}
 
 	private onRemoved = (_: THREE.Event<'removed', this>) => {
+		this._log('onRemoved...')
 		this.detachFromWorldRecursively()
 	}
 
 	private attachToWorld(world: GameWorld<TModules>) {
+		this._log('attachToWorld...')
 		if (this._world !== null) {
+			this._log('attachToWorld: has world')
 			if (this._world !== world) {
+				this._log('attachToWorld: has different world')
 				this.detachFromWorld()
 				this.attachToWorld(world)
 			}
@@ -79,30 +107,35 @@ export default class GameObject<
 
 		this._world = world
 		_event.attachedToWorld.world = this._world
+		this._log('attachToWorld done!')
 		this.dispatchEvent(
 			_event.attachedToWorld as Required<typeof _event.attachedToWorld>
 		)
 	}
 
 	private detachFromWorld() {
+		this._log('detachFromWorld...')
 		if (this._world === null) return
 
 		_event.detachedFromWorld.world = this._world
 		this._world = null
+		this._log('detachFromWorld done!')
 		this.dispatchEvent(
 			_event.detachedFromWorld as Required<typeof _event.detachedFromWorld>
 		)
 	}
 
 	private attachToWorldRecursively(world: GameWorld<TModules>) {
-		this.attachToWorld(world)
+		this._log('attachToWorldRecursively...')
+		// this.attachToWorld(world)
 		this.traverse((child) => {
 			GameObject.isIt<TModules>(child) && child.attachToWorld(world)
 		})
 	}
 
 	private detachFromWorldRecursively() {
-		this.detachFromWorld()
+		this._log('detachFromWorldRecursively...')
+		// this.detachFromWorld()
 		this.traverse((child) => {
 			GameObject.isIt(child) && child.detachFromWorld()
 		})
@@ -110,24 +143,27 @@ export default class GameObject<
 
 	add(...object: THREE.Object3D<THREE.Object3DEventMap>[]): this {
 		// TODO write types to prevent adding GameObjects with diffirent defined GameWorldModules
+		this._log(`add... ${object[0].id}`)
 		super.add(...object)
 		return this
 	}
 
-	private readonly _features: Feature<TModules>[] = []
+	addFeature<
+		TFeature extends Feature<TModules, TEventMap, TProps>,
+		TEventMap extends {},
+		TProps extends Readonly<Record<string, any>> = {}
+	>(f: new (p: FeatureProps<TModules, TProps>) => TFeature, props: TProps): TFeature
 
-	addFeature<TFeature extends Feature<TModules, TEventMap, TProps>, TEventMap extends {}, TProps>(
-		f: new (p: FeatureProps<TModules, TProps>) => TFeature,
-		props: TProps
+	addFeature<TFeature extends Feature<TModules, TEventMap, {}>, TEventMap extends {}>(
+		f: new (p: FeatureProps<TModules, {}>) => TFeature,
+		props?: {}
 	): TFeature
-	addFeature<TFeature extends Feature<TModules, TEventMap, void>, TEventMap extends {}>(
-		f: new (p: FeatureProps<TModules, void>) => TFeature,
-		props?: void
-	): TFeature
-	addFeature<TFeature extends Feature<TModules, TEventMap, unknown>, TEventMap extends {}>(
+
+	addFeature<TFeature extends Feature<TModules, TEventMap, {}>, TEventMap extends {}>(
 		f: new (p: FeatureProps<TModules>) => TFeature,
 		props: unknown
 	): TFeature {
+		this._log(`addFeature...`, f.name)
 		const feature = new f(
 			props !== undefined ? { gameObject: this, ...props } : { gameObject: this }
 		)
@@ -135,7 +171,7 @@ export default class GameObject<
 		return feature
 	}
 
-	public getFeature<TFeatureType extends typeof Feature>(
+	getFeature<TFeatureType extends typeof Feature>(
 		f: TFeatureType
 	): InstanceType<TFeatureType> | null {
 		return this._features.find(
@@ -143,9 +179,16 @@ export default class GameObject<
 		) as InstanceType<TFeatureType> | null
 	}
 
-	public removeFeature<TFeature extends Feature<TModules>>(feature: TFeature) {
-		removeArrayItem(this._features, feature)
-		//TODO remvoe feature
+	removeFeature<TFeature extends Feature<TModules>>(feature: TFeature) {
+		this._log(`removeFeature...`, feature.constructor.name, feature.id)
+		const foundAndRemoved = removeArrayItem(this._features, feature)
+		if (foundAndRemoved) {
+			feature.remove()
+		}
+	}
+
+	private _log = (...args: any[]) => {
+		console.log(`g-${this.id}`, ...args)
 	}
 
 	static isIt<TModules extends GameWorldModulesRecord = {}>(
@@ -153,4 +196,5 @@ export default class GameObject<
 	): obj is GameObject<TModules> {
 		return (obj as GameObject<TModules>).isGameObject
 	}
+
 }

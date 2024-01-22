@@ -1,10 +1,13 @@
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import GameObject from './gameworld/GameObject'
 import GameWorld from './gameworld/GameWorld'
+import CannonPhysicsDebuggerGof from './gameworld/features/CannonPhysicsDebuggerGof'
 import CannonPhysicsModule from './gameworld/modules/CannonPhysicsModule'
-import NebulaParticlesModule from './gameworld/modules/NebulaParticlesModule'
 import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
 import './style.css'
+import TestGof from './gameworld/features/TestGof'
 
 console.log('main.ts')
 
@@ -29,6 +32,9 @@ function createWorld() {
 	})
 	const { three, animationFrameLoop, modules } = gameWorld
 	const { postprocessing, cannon } = modules
+    
+    three.renderer.setPixelRatio(window.devicePixelRatio)
+    postprocessing.composer.setPixelRatio(window.devicePixelRatio)
 
 	// setup postprocessing
 	const bloomPass = new UnrealBloomPass(
@@ -47,7 +53,8 @@ function createWorld() {
 	three.scene.background = new THREE.Color(0xff0000)
 	three.camera.position.setScalar(20)
 	three.camera.lookAt(new THREE.Vector3().setScalar(0))
-	three.scene.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000))
+
+	gameWorld.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000))
 
 	const cube = new THREE.Mesh(
 		new THREE.BoxGeometry(),
@@ -56,9 +63,56 @@ function createWorld() {
 			emissiveIntensity: 4,
 		})
 	)
-	three.scene.add(cube)
+	gameWorld.add(cube)
 
 	// start
 	three.mount(root as HTMLDivElement)
 	animationFrameLoop.run()
+
+	// const go1 = new GameObject()
+	// go1.addFeature(AudioGof, { mediaSrc: '/asdasd.ogg' })
+
+
+    // // @ts-ignore
+	// gameWorld.addFeature(CannonPhysicsDebuggerGof)
+	const spawnRandomSphereBody = () => {
+		const body = new CANNON.Body()
+		body.addShape(
+			new CANNON.Sphere(THREE.MathUtils.randFloat(0, 6)),
+			new CANNON.Vec3(
+				THREE.MathUtils.randFloat(-10, 10),
+				0,
+				THREE.MathUtils.randFloat(-10, 10)
+			)
+		)
+		cannon.world.addBody(body)
+	}
+
+	// setTimeout(() => {
+	//     cannonPhysicsDebuggerGof.remove()
+	// }, 2000)
+
+    const goo = new GameObject()
+    gameWorld.add(goo)
+    goo.addFeature(TestGof)
+
+    const go2 = new GameObject<{ cannon: CannonPhysicsModule }>()
+	gameWorld.add(go2)
+	// go2.addFeature(CannonPhysicsDebuggerGof)
+
+    for (let i = 0; i < 6; i++) {
+		spawnRandomSphereBody()
+	}
+
+	gameWorld.traverse((x) => {
+		console.log('---', x.name, x.type)
+	})
+
+    //@ts-ignore
+    gameWorld.addFeature(CannonPhysicsDebuggerGof)
+    
+    setTimeout(() => {
+        //@ts-ignore
+        gameWorld.getFeature(CannonPhysicsDebuggerGof)?.remove()
+    }, 1500)
 }
