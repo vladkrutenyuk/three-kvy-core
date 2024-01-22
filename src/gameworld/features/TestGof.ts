@@ -14,7 +14,7 @@ export default class TestGof extends Feature{
         this.gameObject.add(this.mesh)
 	}
 
-    protected onRemove() {
+    protected onDestroy() {
         this.gameObject.remove(this.mesh)
     }
 

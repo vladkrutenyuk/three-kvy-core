@@ -30,14 +30,14 @@ export default class GameWorld<
 			this.modules[key].init(this)
 		}
 
-		this.initAnimationFrameLoopPausingOnWindowBlur()
+		this.initFrameLoopPausingOnSwitchTab()
 	}
 
     private onFrame() {
 		this.three.render()
 	}
 
-	private initAnimationFrameLoopPausingOnWindowBlur= () => {
+	private initFrameLoopPausingOnSwitchTab = () => {
 		const onWindowFocus = () => {
             console.log('onWindowFocus')
 			this.animationFrameLoop.run()

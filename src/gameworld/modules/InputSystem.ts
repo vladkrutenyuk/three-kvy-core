@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export default class InputSystem {
 	private _domElement: HTMLElement
-	
+
 	readonly activePointers = new Map<number, PointerEvent>()
 	private readonly _averageActivePointersCoords = { x: 0, y: 0 }
 	private _pointerXStack = [0, 0]
@@ -64,7 +64,7 @@ export default class InputSystem {
 		this.resetPointers()
 	}
 
-	private onPointerEnter = (event: globalThis.PointerEvent) => {}
+	private onPointerEnter = (_: globalThis.PointerEvent) => {}
 
 	private onPointerDown = (event: globalThis.PointerEvent) => {
 		this.activePointers.set(event.pointerId, event)

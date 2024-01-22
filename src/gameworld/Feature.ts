@@ -14,7 +14,7 @@ export type FeatureProps<
 export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> }
 	detachedFromWorld: { world: GameWorld<TModules> }
-	removed: {}
+	destroy: {}
 }
 
 const _event: {
@@ -22,7 +22,7 @@ const _event: {
 } = {
 	attachedToWorld: { type: 'attachedToWorld' },
 	detachedFromWorld: { type: 'detachedFromWorld' },
-	removed: { type: 'removed' },
+	destroy: { type: 'destroy' },
 }
 
 export default abstract class Feature<
@@ -55,7 +55,7 @@ export default abstract class Feature<
 			this.onDetach(world)
 		})
 		this.addEventListener('removed', () => {
-			this.onRemove()
+			this.onDestroy()
 		})
 
 		this.gameObject.addEventListener(
@@ -106,7 +106,7 @@ export default abstract class Feature<
 		)
 	}
 
-	remove() {
+	destroy() {
 		this._log('remove...')
 		this.gameObject.removeEventListener(
 			'attachedToWorld',
@@ -117,9 +117,9 @@ export default abstract class Feature<
 			this.gameObjectDetachedFromWorld
 		)
 		this.detachFromWorld()
-		this.gameObject.removeFeature(this)
+		this.gameObject.destroyFeature(this)
 
-		this.dispatchEvent(_event.removed)
+		this.dispatchEvent(_event.destroy)
 	}
 
 	protected initOnBeforeRender() {
@@ -141,11 +141,32 @@ export default abstract class Feature<
 
 		this._world && init(this._world)
 	}
+	protected onBeforeRender(ctx: GameWorld<TModules>) {}
+	
+	protected initOnAfterRender() {
+		let listener: (() => void) | null = null
+
+		const init = (world: GameWorld<TModules>) => {
+			listener = () => {
+				this.onAfterRender(world)
+			}
+			world.three.addEventListener('afterRender', listener)
+		}
+
+		this.addEventListener('attachedToWorld', ({ world }) => {
+			init(world)
+		})
+		this.addEventListener('detachedFromWorld', ({ world }) => {
+			listener && world.three.removeEventListener('afterRender', listener)
+		})
+
+		this._world && init(this._world)
+	}
+	protected onAfterRender(ctx: GameWorld<TModules>) {}
 
 	protected onAttach(ctx: GameWorld<TModules>) {}
 	protected onDetach(ctx: GameWorld<TModules>) {}
-	protected onRemove() {}
-	protected onBeforeRender(ctx: GameWorld<TModules>) {}
+	protected onDestroy() {}
 
 	private _log(...args: any[]) {
 		console.log(

@@ -60,7 +60,6 @@ export default class ThreeRendering extends THREE.EventDispatcher<ThreeRendering
 		super()
 
 		this.renderer = new THREE.WebGLRenderer(props?.rendererParams)
-		// this.renderer.setPixelRatio(window.devicePixelRatio)
 		this.scene = new THREE.Scene()
 		this.camera = new THREE.PerspectiveCamera(
 			props?.cameraParams?.fov,

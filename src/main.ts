@@ -1,13 +1,17 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import {
+    AllModules, CPHModule
+} from './gameworld/BuiltInModulesRecords'
 import GameObject from './gameworld/GameObject'
 import GameWorld from './gameworld/GameWorld'
 import CannonPhysicsDebuggerGof from './gameworld/features/CannonPhysicsDebuggerGof'
+import TestGof from './gameworld/features/TestGof'
 import CannonPhysicsModule from './gameworld/modules/CannonPhysicsModule'
+import NebulaParticlesModule from './gameworld/modules/NebulaParticlesModule'
 import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
 import './style.css'
-import TestGof from './gameworld/features/TestGof'
 
 console.log('main.ts')
 
@@ -16,12 +20,12 @@ function createWorld() {
 	const root = document.querySelector('#app')
 	if (!root) return
 
-	const gameWorld = new GameWorld({
+	const gameWorld = new GameWorld<AllModules>({
 		modules: {
 			cannon: new CannonPhysicsModule(),
-			// nebula: new NebulaParticlesModule(),
+			nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
-		} as const,
+		},
 		three: {
 			rendererParams: {
 				antialias: true,
@@ -32,9 +36,9 @@ function createWorld() {
 	})
 	const { three, animationFrameLoop, modules } = gameWorld
 	const { postprocessing, cannon } = modules
-    
-    three.renderer.setPixelRatio(window.devicePixelRatio)
-    postprocessing.composer.setPixelRatio(window.devicePixelRatio)
+
+	three.renderer.setPixelRatio(window.devicePixelRatio)
+	postprocessing.composer.setPixelRatio(window.devicePixelRatio)
 
 	// setup postprocessing
 	const bloomPass = new UnrealBloomPass(
@@ -72,8 +76,7 @@ function createWorld() {
 	// const go1 = new GameObject()
 	// go1.addFeature(AudioGof, { mediaSrc: '/asdasd.ogg' })
 
-
-    // // @ts-ignore
+	// // @ts-ignore
 	// gameWorld.addFeature(CannonPhysicsDebuggerGof)
 	const spawnRandomSphereBody = () => {
 		const body = new CANNON.Body()
@@ -92,15 +95,15 @@ function createWorld() {
 	//     cannonPhysicsDebuggerGof.remove()
 	// }, 2000)
 
-    const goo = new GameObject()
-    gameWorld.add(goo)
-    goo.addFeature(TestGof)
+	const goo = new GameObject()
+	gameWorld.add(goo)
+	goo.addFeature(TestGof)
 
-    const go2 = new GameObject<{ cannon: CannonPhysicsModule }>()
+	const go2 = new GameObject<CPHModule>()
 	gameWorld.add(go2)
 	// go2.addFeature(CannonPhysicsDebuggerGof)
 
-    for (let i = 0; i < 6; i++) {
+	for (let i = 0; i < 6; i++) {
 		spawnRandomSphereBody()
 	}
 
@@ -108,11 +111,12 @@ function createWorld() {
 		console.log('---', x.name, x.type)
 	})
 
-    //@ts-ignore
-    gameWorld.addFeature(CannonPhysicsDebuggerGof)
-    
-    setTimeout(() => {
-        //@ts-ignore
-        gameWorld.getFeature(CannonPhysicsDebuggerGof)?.remove()
-    }, 1500)
+    //TODO resolve typescript issue with modules typings
+	//@ts-ignore
+	gameWorld.addFeature(CannonPhysicsDebuggerGof)
+
+	setTimeout(() => {
+		//@ts-ignore
+		gameWorld.getFeature(CannonPhysicsDebuggerGof)?.destroy()
+	}, 1500)
 }

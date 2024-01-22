@@ -1,14 +1,7 @@
 import GameWorld from '../GameWorld'
 import GameWorldModule from '../GameWorldModule'
 import * as NEBULA from 'three-nebula'
-// import * as THREE from '../../../node_modules/three/build/three.module.js'
 import * as THREE from 'three'
-
-declare module 'three-nebula' {
-	interface SpriteRenderer {
-		// constructor(): void
-	}
-}
 
 export default class NebulaParticlesModule extends GameWorldModule {
 	system!: NEBULA.System
@@ -18,13 +11,10 @@ export default class NebulaParticlesModule extends GameWorldModule {
 		world: GameWorld<TModules>
 	): void {
 		this.system = new NEBULA.System()
-		/**
-		 * @requires THREE - { Mesh, BoxGeometry, MeshLambertMaterial }
-		 */
 		this.spriteRenderer = new NEBULA.SpriteRenderer(
 			world.three.scene,
 			//@ts-ignore
-			{ Mesh: THREE.Mesh, BoxGeometry: THREE.BoxGeometry, MeshLambertMaterial: THREE.MeshLambertMaterial}
+            THREE
 		)
 		this.system.addRenderer(this.spriteRenderer)
 

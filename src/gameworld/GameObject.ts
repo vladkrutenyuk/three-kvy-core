@@ -179,11 +179,11 @@ export default class GameObject<
 		) as InstanceType<TFeatureType> | null
 	}
 
-	removeFeature<TFeature extends Feature<TModules>>(feature: TFeature) {
-		this._log(`removeFeature...`, feature.constructor.name, feature.id)
+	destroyFeature<TFeature extends Feature<TModules>>(feature: TFeature) {
+		this._log(`destroyFeature...`, feature.constructor.name, feature.id)
 		const foundAndRemoved = removeArrayItem(this._features, feature)
 		if (foundAndRemoved) {
-			feature.remove()
+			feature.destroy()
 		}
 	}
 

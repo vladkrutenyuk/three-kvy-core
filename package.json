@@ -15,6 +15,7 @@
     "vite": "^5.0.8"
   },
   "dependencies": {
+    "@babel/runtime": "^7.23.8",
     "cannon-es": "^0.20.0",
     "cannon-es-debugger": "^1.0.0",
     "three": "^0.160.0",

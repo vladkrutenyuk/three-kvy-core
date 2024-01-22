@@ -1,29 +1,29 @@
-import {
-	Vec3 as CannonVector3,
-	Sphere,
-	Box,
-	ConvexPolyhedron,
-	Trimesh,
-	Heightfield,
-	Shape,
-	Quaternion as CannonQuaternion,
-	Cylinder,
-} from 'cannon-es'
-import {
-	MeshBasicMaterial,
-	SphereGeometry,
-	BoxGeometry,
-	PlaneGeometry,
-	CylinderGeometry,
-	Mesh,
-	Vector3 as ThreeVector3,
-	Quaternion as ThreeQuaternion,
-	BufferGeometry,
-	Float32BufferAttribute,
-} from 'three'
-import type { Body, World } from 'cannon-es'
-import type { Color } from 'three'
+import type { Body } from 'cannon-es'
 import * as CANNON from 'cannon-es'
+import {
+    Box,
+    Quaternion as CannonQuaternion,
+    Vec3 as CannonVector3,
+    ConvexPolyhedron,
+    Cylinder,
+    Heightfield,
+    Shape,
+    Sphere,
+    Trimesh,
+} from 'cannon-es'
+import type { Color } from 'three'
+import {
+    BoxGeometry,
+    BufferGeometry,
+    CylinderGeometry,
+    Float32BufferAttribute,
+    Mesh,
+    MeshBasicMaterial,
+    PlaneGeometry,
+    SphereGeometry,
+    Quaternion as ThreeQuaternion,
+    Vector3 as ThreeVector3,
+} from 'three'
 
 type ComplexShape = Shape & { geometryId?: number }
 export type DebugOptions = {
@@ -38,7 +38,7 @@ export default function CreateCannonDebugger(
 	world: CANNON.World,
 	{ color = 0x00ff00, scale = 1, onInit, onUpdate }: DebugOptions = {}
 ) {
-    console.log('CreatingCannonDebugger... ')
+	console.log('CreatingCannonDebugger... ')
 	const _meshes: Mesh[] = []
 	const _material = new MeshBasicMaterial({ color: color ?? 0x00ff00, wireframe: true })
 	const _tempVec0 = new CannonVector3()
@@ -253,7 +253,7 @@ export default function CreateCannonDebugger(
 		const shapeWorldQuaternion = _tempQuat0
 
 		let meshIndex = 0
-        console.log('cesd update...')
+		console.log('cesd update...')
 
 		for (const body of world.bodies) {
 			for (let i = 0; i !== body.shapes.length; i++) {
