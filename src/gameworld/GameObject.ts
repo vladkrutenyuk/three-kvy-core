@@ -9,14 +9,6 @@ export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> }
 	detachedFromWorld: { world: GameWorld<TModules> }
 }
-const _event: {
-	[K in keyof GameObjectEventMap<any>]: { type: K } & Partial<
-		GameObjectEventMap<any>[K]
-	>
-} = {
-	attachedToWorld: { type: 'attachedToWorld' },
-	detachedFromWorld: { type: 'detachedFromWorld' },
-}
 
 export default class GameObject<
 	TModules extends GameWorldModulesRecord = {}
@@ -168,6 +160,7 @@ export default class GameObject<
 			props !== undefined ? { gameObject: this, ...props } : { gameObject: this }
 		)
 		this._features.push(feature)
+		feature.init()
 		return feature
 	}
 
@@ -196,5 +189,13 @@ export default class GameObject<
 	): obj is GameObject<TModules> {
 		return (obj as GameObject<TModules>).isGameObject
 	}
+}
 
+const _event: {
+	[K in keyof GameObjectEventMap<any>]: { type: K } & Partial<
+		GameObjectEventMap<any>[K]
+	>
+} = {
+	attachedToWorld: { type: 'attachedToWorld' },
+	detachedFromWorld: { type: 'detachedFromWorld' },
 }

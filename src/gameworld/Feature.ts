@@ -17,14 +17,6 @@ export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	destroy: {}
 }
 
-const _event: {
-	[K in keyof FeatureEventMap<any>]: { type: K } & Partial<FeatureEventMap<any>[K]>
-} = {
-	attachedToWorld: { type: 'attachedToWorld' },
-	detachedFromWorld: { type: 'detachedFromWorld' },
-	destroy: { type: 'destroy' },
-}
-
 export default abstract class Feature<
 	TModules extends GameWorldModulesRecord = {},
 	TEventMap extends Record<string, any> = {},
@@ -48,7 +40,6 @@ export default abstract class Feature<
 		this.uuid = THREE.MathUtils.generateUUID()
 
 		this.addEventListener('attachedToWorld', ({ world }) => {
-			console.log('N ATTACH LISTENER')
 			this.onAttach(world)
 		})
 		this.addEventListener('detachedFromWorld', ({ world }) => {
@@ -66,6 +57,9 @@ export default abstract class Feature<
 			'detachedFromWorld',
 			this.gameObjectDetachedFromWorld
 		)
+	}
+
+	init() {
 		this.gameObject.world && this.attachToWorld(this.gameObject.world)
 	}
 
@@ -81,6 +75,7 @@ export default abstract class Feature<
 	private attachToWorld = (world: GameWorld<TModules>) => {
 		this._log('attachToWorld...')
 		if (this._world) {
+			if (this.world === world) return
 			this._log('attachToWorld has world')
 			this.detachFromWorld()
 		}
@@ -174,4 +169,12 @@ export default abstract class Feature<
 			...args
 		)
 	}
+}
+
+const _event: {
+	[K in keyof FeatureEventMap<any>]: { type: K } & Partial<FeatureEventMap<any>[K]>
+} = {
+	attachedToWorld: { type: 'attachedToWorld' },
+	detachedFromWorld: { type: 'detachedFromWorld' },
+	destroy: { type: 'destroy' },
 }

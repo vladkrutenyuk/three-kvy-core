@@ -13,18 +13,6 @@ export type ThreeRenderingEventMap = {
 	}
 }
 
-const _emptyFn = () => {}
-const _event: {
-	[K in keyof ThreeRenderingEventMap]: { type: K } & ThreeRenderingEventMap[K]
-} = {
-	beforeRender: { type: 'beforeRender' },
-	afterRender: { type: 'afterRender' },
-	mount: { type: 'mount' },
-	unmount: { type: 'unmount' },
-	destroy: { type: 'destroy' },
-	resize: { type: 'resize', width: 100, height: 100 },
-}
-
 export type ThreeRenderingProps = {
 	rendererParams?: THREE.WebGLRendererParameters
 	cameraParams?: {
@@ -33,6 +21,7 @@ export type ThreeRenderingProps = {
 		far?: number
 	}
 }
+
 export default class ThreeRendering extends THREE.EventDispatcher<ThreeRenderingEventMap> {
 	public readonly renderer: THREE.WebGLRenderer
 	public readonly scene: THREE.Scene
@@ -145,4 +134,16 @@ export default class ThreeRendering extends THREE.EventDispatcher<ThreeRendering
 		_event.resize.height = height
 		this.dispatchEvent(_event.resize)
 	}
+}
+
+const _emptyFn = () => {}
+const _event: {
+	[K in keyof ThreeRenderingEventMap]: { type: K } & ThreeRenderingEventMap[K]
+} = {
+	beforeRender: { type: 'beforeRender' },
+	afterRender: { type: 'afterRender' },
+	mount: { type: 'mount' },
+	unmount: { type: 'unmount' },
+	destroy: { type: 'destroy' },
+	resize: { type: 'resize', width: 100, height: 100 },
 }

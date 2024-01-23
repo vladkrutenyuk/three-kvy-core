@@ -9,7 +9,7 @@ export default class CannonPhysicsDebuggerGof extends Feature<{
 	cannon: CannonPhysicsModule
 }> {
 	// private _cannonDebugger?: ReturnType<typeof CreateCannonDebugger>
-	private _cannonDebugger?: CannonEsDebugger
+	private _cannonDebugger: CannonEsDebugger | null = null
 	private _root: THREE.Group
 
 	constructor(
@@ -17,25 +17,24 @@ export default class CannonPhysicsDebuggerGof extends Feature<{
 			cannon: CannonPhysicsModule
 		}>
 	) {
+		// ...
 		super(props)
+		console.log('CannonPhysicsDebuggerGof constructor', this._cannonDebugger)
 		this._root = new THREE.Group()
 		this.gameObject.add(this._root)
 	}
 
 	protected onAttach(ctx: GameWorld<{ cannon: CannonPhysicsModule }>) {
 		setTimeout(() => {
-			this._cannonDebugger = new CannonEsDebugger(
-				this._root,
-				ctx.modules.cannon.world
-			)
 		})
+		this._cannonDebugger = new CannonEsDebugger(this._root, ctx.modules.cannon.world)
 		ctx.modules.cannon.world.addEventListener('postStep', this.update.bind(this))
 	}
 
 	protected onDetach(ctx: GameWorld<{ cannon: CannonPhysicsModule }>) {
 		console.log('CANNNONNN onDetach')
 		ctx.modules.cannon.world.removeEventListener('postStep', this.update)
-		this._cannonDebugger = undefined
+		this._cannonDebugger = null
 		this.gameObject.remove(this._root)
 		fullObjectDispose(this._root)
 	}

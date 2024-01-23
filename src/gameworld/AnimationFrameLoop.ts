@@ -1,9 +1,5 @@
 import * as THREE from 'three'
 
-const _runEvent = { type: 'run' } as const
-const _stopEvent = { type: 'stop' } as const
-const _frameEvent = { type: 'frame' } as const
-
 export default class AnimationFrameLoop extends THREE.EventDispatcher<{
 	frame: {}
 	run: {}
@@ -53,3 +49,7 @@ export default class AnimationFrameLoop extends THREE.EventDispatcher<{
 		this.dispatchEvent(_frameEvent)
 	}
 }
+
+const _runEvent = { type: 'run' } as const
+const _stopEvent = { type: 'stop' } as const
+const _frameEvent = { type: 'frame' } as const

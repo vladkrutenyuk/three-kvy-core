@@ -14,4 +14,4 @@ export type NPModule = {
 	readonly nebula: NebulaParticlesModule
 }
 
-export type AllModules = CPHModule & PPModule & NPModule
+export type AllModules = CPHModule & PPModule & NPModules

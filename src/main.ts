@@ -20,12 +20,12 @@ function createWorld() {
 	const root = document.querySelector('#app')
 	if (!root) return
 
-	const gameWorld = new GameWorld<AllModules>({
+	const gameWorld = new GameWorld({
 		modules: {
 			cannon: new CannonPhysicsModule(),
 			nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
-		},
+		} as const,
 		three: {
 			rendererParams: {
 				antialias: true,
@@ -34,6 +34,7 @@ function createWorld() {
 			},
 		},
 	})
+	
 	const { three, animationFrameLoop, modules } = gameWorld
 	const { postprocessing, cannon } = modules
 
@@ -101,7 +102,7 @@ function createWorld() {
 
 	const go2 = new GameObject<CPHModule>()
 	gameWorld.add(go2)
-	// go2.addFeature(CannonPhysicsDebuggerGof)
+	go2.addFeature(CannonPhysicsDebuggerGof)
 
 	for (let i = 0; i < 6; i++) {
 		spawnRandomSphereBody()
@@ -111,12 +112,14 @@ function createWorld() {
 		console.log('---', x.name, x.type)
 	})
 
+	
+	const go3 = new GameObject<{cannon: CannonPhysicsModule, nebula: NebulaParticlesModule}>()
     //TODO resolve typescript issue with modules typings
 	//@ts-ignore
-	gameWorld.addFeature(CannonPhysicsDebuggerGof)
+	go3.addFeature(CannonPhysicsDebuggerGof)
 
-	setTimeout(() => {
-		//@ts-ignore
-		gameWorld.getFeature(CannonPhysicsDebuggerGof)?.destroy()
-	}, 1500)
+	// setTimeout(() => {
+	// 	//@ts-ignore
+	// 	gameWorld.getFeature(CannonPhysicsDebuggerGof)?.destroy()
+	// }, 1500)
 }
