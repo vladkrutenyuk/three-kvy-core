@@ -19,6 +19,8 @@ export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
 
 export default abstract class Feature<
 	TModules extends GameWorldModulesRecord = {},
+	//TODO когжа TEventMap добавляется в extends THREE.EventDispatcher<FeatureEventMap<TModules>>
+	// то типы ломаются в addEventListener
 	TEventMap extends Record<string, any> = {},
 	TProps extends Record<string, any> = {}
 > extends THREE.EventDispatcher<FeatureEventMap<TModules> & TEventMap> {
@@ -123,18 +125,26 @@ export default abstract class Feature<
 		this.dispatchEvent(_event.destroy)
 	}
 
-	protected initOnBeforeRender() {
+	private _eventMethodsDict = {
+		onBeforeRender: "beforeRender",
+		onAfterRender: "afterRender",
+		onUnmount: "unmount",
+		onMount: "mount",
+		onResize: "resize",
+	} as const
+
+	protected initEventMethod(name: keyof typeof this._eventMethodsDict) {
 		let listener: (() => void) | null = null
 
 		const init = (world: GameWorld<TModules>) => {
-			listener = () => {
-				this.onBeforeRender(world)
+			let listener = () => {
+				this[name](world)
 			}
-			world.three.addEventListener("beforeRender", listener)
+			world.three.addEventListener(this._eventMethodsDict[name], listener)
 		}
 
-		this.addEventListener("attachedToWorld", ({ world }) => {
-			init(world)
+		this.addEventListener("attachedToWorld", (event) => {
+			init(event.world)
 		})
 		this.addEventListener("detachedFromWorld", ({ world }) => {
 			listener && world.three.removeEventListener("beforeRender", listener)
@@ -143,27 +153,31 @@ export default abstract class Feature<
 		this._world && init(this._world)
 	}
 	protected onBeforeRender(_: GameWorld<TModules>) {}
-
-	protected initOnAfterRender() {
-		let listener: (() => void) | null = null
-
-		const init = (world: GameWorld<TModules>) => {
-			listener = () => {
-				this.onAfterRender(world)
-			}
-			world.three.addEventListener("afterRender", listener)
-		}
-
-		this.addEventListener("attachedToWorld", ({ world }) => {
-			init(world)
-		})
-		this.addEventListener("detachedFromWorld", ({ world }) => {
-			listener && world.three.removeEventListener("afterRender", listener)
-		})
-
-		this._world && init(this._world)
-	}
 	protected onAfterRender(_: GameWorld<TModules>) {}
+	protected onUnmount(_: GameWorld<TModules>) {}
+	protected onMount(_: GameWorld<TModules>) {}
+	protected onResize(_: GameWorld<TModules>) {}
+
+	// protected initOnBeforeRender() {
+	// 	let listener: (() => void) | null = null
+
+	// 	const init = (world: GameWorld<TModules>) => {
+	// 		listener = () => {
+	// 			this.onBeforeRender(world)
+	// 		}
+	// 		world.three.addEventListener("beforeRender", listener)
+	// 	}
+
+	// 	this.addEventListener("attachedToWorld", ({ world }) => {
+	// 		init(world)
+	// 	})
+	// 	this.addEventListener("detachedFromWorld", ({ world }) => {
+	// 		listener && world.three.removeEventListener("beforeRender", listener)
+	// 	})
+
+	// 	this._world && init(this._world)
+	// }
+
 	protected onAttach(_: GameWorld<TModules>) {}
 	protected onDetach(_: GameWorld<TModules>) {}
 	protected onDestroy() {}

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import Feature, { FeatureProps } from '../Feature'
 import GameWorld from '../GameWorld'
-import CannonEsDebuggerPro from '../extensions/CannonEsDebuggerPro'
+import CannonEsDebuggerPro from '../extensions/cannon-es-debugger-pro/CannonEsDebuggerPro'
 import CannonPhysicsModule from '../modules/CannonPhysicsModule'
 import { fullObjectDispose } from '../utils/full-object-dispose'
 

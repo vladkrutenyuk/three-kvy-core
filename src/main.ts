@@ -92,6 +92,21 @@ function createWorld() {
 		cannon.world.addBody(body)
 	}
 
+	const spawnRandomBoxBody = () => {
+		const body = new CANNON.Body()
+		const halfSize = THREE.MathUtils.randFloat(0, 6)
+		const halfSizeVec = new CANNON.Vec3().set(halfSize, halfSize, halfSize)
+		body.addShape(
+			new CANNON.Box(halfSizeVec),
+			new CANNON.Vec3(
+				THREE.MathUtils.randFloat(-10, 10),
+				0,
+				THREE.MathUtils.randFloat(-10, 10)
+			)
+		)
+		cannon.world.addBody(body)
+	}
+
 	// setTimeout(() => {
 	//     cannonPhysicsDebuggerGof.remove()
 	// }, 2000)
@@ -106,6 +121,7 @@ function createWorld() {
 
 	for (let i = 0; i < 6; i++) {
 		spawnRandomSphereBody()
+		spawnRandomBoxBody()
 	}
 
 	// gameWorld.traverse((x) => {

@@ -8,7 +8,7 @@ export default class TestGof extends Feature{
 		props: FeatureProps
 	) {
 		super(props)
-		this.initOnBeforeRender()
+		this.initEventMethod('onBeforeRender')
         this.mesh = new THREE.Mesh(new THREE.BoxGeometry, new THREE.MeshNormalMaterial())
         this.mesh.scale.setScalar(4)
         this.gameObject.add(this.mesh)

@@ -1,50 +1,56 @@
+import type { Body } from "cannon-es"
+import * as CANNON from "cannon-es"
 import {
-	Vec3 as CannonVector3,
-	Sphere,
 	Box,
+	Quaternion as CannonQuaternion,
+	Vec3 as CannonVector3,
 	ConvexPolyhedron,
-	Trimesh,
+	Cylinder,
 	Heightfield,
 	Shape,
-	Quaternion as CannonQuaternion,
-	Cylinder,
-} from 'cannon-es'
+	Sphere,
+	Trimesh,
+} from "cannon-es"
 import {
-	MeshBasicMaterial,
-	SphereGeometry,
 	BoxGeometry,
-	PlaneGeometry,
-	CylinderGeometry,
-	Mesh,
-	Vector3 as ThreeVector3,
-	Quaternion as ThreeQuaternion,
 	BufferGeometry,
+	Color,
+	CylinderGeometry,
+	EdgesGeometry,
 	Float32BufferAttribute,
-} from 'three'
-import type { Body } from 'cannon-es'
-import type { Color } from 'three'
-import * as CANNON from 'cannon-es'
+	LineBasicMaterial,
+	LineSegments,
+	Mesh,
+	MeshBasicMaterial,
+	Object3D,
+	PlaneGeometry,
+	Quaternion as ThreeQuaternion,
+	Vector3 as ThreeVector3
+} from "three"
+import { DebugSphere, DebugSphereGeometry } from "./DebugSphere"
 
 type ComplexShape = Shape & { geometryId?: number }
 export type DebugOptions = {
 	color?: string | number | Color
 	scale?: number
-	onInit?: (body: Body, mesh: Mesh, shape: Shape) => void
-	onUpdate?: (body: Body, mesh: Mesh, shape: Shape) => void
+	onInit?: (body: Body, mesh: Object3D, shape: Shape) => void
+	onUpdate?: (body: Body, mesh: Object3D, shape: Shape) => void
 }
 
 const _tempVec0 = new CannonVector3()
 const _tempVec1 = new CannonVector3()
 const _tempVec2 = new CannonVector3()
 const _tempQuat0 = new CannonQuaternion()
-const _sphereGeometry = new SphereGeometry(1)
+const _debugSphereGeometry = new DebugSphereGeometry(1)
 const _boxGeometry = new BoxGeometry(1, 1, 1)
+const _boxEdgesGeometry = new EdgesGeometry(_boxGeometry)
 const _planeGeometry = new PlaneGeometry(10, 10, 10, 10)
 // Move the planeGeometry forward a little bit to prevent z-fighting
 _planeGeometry.translate(0, 0, 0.0001)
 
 export default class CannonEsDebuggerPro {
 	readonly material: MeshBasicMaterial
+	readonly lineMaterial: LineBasicMaterial
 	readonly world: CANNON.World
 	readonly root: THREE.Object3D
 
@@ -52,36 +58,38 @@ export default class CannonEsDebuggerPro {
 		color: 0x00ff00,
 		scale: 1,
 	}
-    private readonly _meshes: Mesh[] = []
+	private readonly _meshes: Object3D[] = []
 
 	constructor(root: THREE.Object3D, world: CANNON.World, options: DebugOptions = {}) {
-		console.log('CreatingCannonDebugger... ')
+		console.log("CreatingCannonDebugger... ")
 		this._options = options
 		this.world = world
 		this.root = root
+		const color = this._options.color ?? 0x00ff00
 		this.material = new MeshBasicMaterial({
-			color: this._options.color ?? 0x00ff00,
+			color,
 			wireframe: true,
 		})
+		this.lineMaterial = new LineBasicMaterial({ color })
 	}
 
-	private createMesh(shape: Shape): Mesh {
-		let mesh = new Mesh()
+	private createMesh(shape: Shape): Object3D {
+		let mesh: Object3D | null = null
 		const { SPHERE, BOX, PLANE, CYLINDER, CONVEXPOLYHEDRON, TRIMESH, HEIGHTFIELD } =
 			Shape.types
 
-		const _material = this.material
+		const material = this.material
 		switch (shape.type) {
 			case SPHERE: {
-				mesh = new Mesh(_sphereGeometry, _material)
+				mesh = new DebugSphere(this.lineMaterial, _debugSphereGeometry)
 				break
 			}
 			case BOX: {
-				mesh = new Mesh(_boxGeometry, _material)
+				mesh = new LineSegments(_boxEdgesGeometry, this.lineMaterial)
 				break
 			}
 			case PLANE: {
-				mesh = new Mesh(_planeGeometry, _material)
+				mesh = new Mesh(_planeGeometry, material)
 				break
 			}
 			case CYLINDER: {
@@ -91,34 +99,37 @@ export default class CannonEsDebuggerPro {
 					(shape as Cylinder).height,
 					(shape as Cylinder).numSegments
 				)
-				mesh = new Mesh(geometry, _material)
+				mesh = new Mesh(geometry, material)
 				;(shape as ComplexShape).geometryId = geometry.id
 				break
 			}
 			case CONVEXPOLYHEDRON: {
 				const geometry = createConvexPolyhedronGeometry(shape as ConvexPolyhedron)
-				mesh = new Mesh(geometry, _material)
+				mesh = new Mesh(geometry, material)
 				;(shape as ComplexShape).geometryId = geometry.id
 				break
 			}
 			case TRIMESH: {
 				const geometry = createTrimeshGeometry(shape as Trimesh)
-				mesh = new Mesh(geometry, _material)
+				mesh = new Mesh(geometry, material)
 				;(shape as ComplexShape).geometryId = geometry.id
 				break
 			}
 			case HEIGHTFIELD: {
 				const geometry = createHeightfieldGeometry(shape as Heightfield)
-				mesh = new Mesh(geometry, _material)
+				mesh = new Mesh(geometry, material)
 				;(shape as ComplexShape).geometryId = geometry.id
 				break
 			}
 		}
-		this.root.add(mesh)
-		return mesh
+		if (mesh) {
+			this.root.add(mesh)
+			return mesh
+		}
+		return new Object3D()
 	}
 
-	private scaleMesh(mesh: Mesh, shape: Shape | ComplexShape): void {
+	private scaleMesh(mesh: Object3D, shape: Shape | ComplexShape): void {
 		const scale = this._options.scale ?? 1
 		const { SPHERE, BOX, PLANE, CYLINDER, CONVEXPOLYHEDRON, TRIMESH, HEIGHTFIELD } =
 			Shape.types
@@ -157,12 +168,16 @@ export default class CannonEsDebuggerPro {
 		}
 	}
 
-	private typeMatch(mesh: Mesh, shape: Shape | ComplexShape): boolean {
-		if (!mesh) return false
-		const { geometry } = mesh
+	private typeMatch(obj: Object3D, shape: Shape | ComplexShape): boolean {
+		if (!obj) return false
+		if (!isMesh(obj)) {
+			return (
+				(obj instanceof DebugSphere && shape.type === Shape.types.SPHERE) ||
+				(obj instanceof LineSegments && shape.type === Shape.types.BOX)
+			)
+		}
+		const { geometry } = obj
 		return (
-			(geometry instanceof SphereGeometry && shape.type === Shape.types.SPHERE) ||
-			(geometry instanceof BoxGeometry && shape.type === Shape.types.BOX) ||
 			(geometry instanceof PlaneGeometry && shape.type === Shape.types.PLANE) ||
 			(geometry.id === (shape as ComplexShape).geometryId &&
 				shape.type === Shape.types.CYLINDER) ||
@@ -189,18 +204,16 @@ export default class CannonEsDebuggerPro {
 	}
 
 	update() {
-		const meshes = this._meshes
 		const shapeWorldPosition = _tempVec0
 		const shapeWorldQuaternion = _tempQuat0
 
 		let meshIndex = 0
-		console.log('cesd update...')
 
 		for (const body of this.world.bodies) {
 			for (let i = 0; i !== body.shapes.length; i++) {
 				const shape = body.shapes[i]
 				const didCreateNewMesh = this.updateMesh(meshIndex, shape)
-				const mesh = meshes[meshIndex]
+				const mesh = this._meshes[meshIndex]
 
 				if (mesh) {
 					// Get world position
@@ -226,12 +239,13 @@ export default class CannonEsDebuggerPro {
 			}
 		}
 
-		for (let i = meshIndex; i < meshes.length; i++) {
-			const mesh = meshes[i]
+		for (let i = meshIndex; i < this._meshes.length; i++) {
+			const mesh = this._meshes[i]
 			if (mesh) this.root.remove(mesh)
+			//TODO dispose geometries
 		}
 
-		meshes.length = meshIndex
+		this._meshes.length = meshIndex
 	}
 
 	clear() {
@@ -257,7 +271,7 @@ function createTrimeshGeometry(shape: Trimesh): BufferGeometry {
 		positions.push(v2.x, v2.y, v2.z)
 	}
 
-	geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+	geometry.setAttribute("position", new Float32BufferAttribute(positions, 3))
 	geometry.computeBoundingSphere()
 	geometry.computeVertexNormals()
 	return geometry
@@ -272,7 +286,7 @@ function createConvexPolyhedronGeometry(shape: ConvexPolyhedron): BufferGeometry
 		const vertex = shape.vertices[i]
 		positions.push(vertex.x, vertex.y, vertex.z)
 	}
-	geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+	geometry.setAttribute("position", new Float32BufferAttribute(positions, 3))
 
 	// Add faces
 	const indices = []
@@ -310,8 +324,15 @@ function createHeightfieldGeometry(shape: Heightfield): BufferGeometry {
 	}
 
 	geometry.setIndex(indices)
-	geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+	geometry.setAttribute("position", new Float32BufferAttribute(positions, 3))
 	geometry.computeBoundingSphere()
 	geometry.computeVertexNormals()
 	return geometry
+}
+
+export function isMesh<
+	TMat extends THREE.Material | THREE.Material[],
+	TGeom extends THREE.BufferGeometry = THREE.BufferGeometry
+>(obj: THREE.Object3D): obj is THREE.Mesh<TGeom, TMat> {
+	return (obj as THREE.Mesh).isMesh || obj.type === "Mesh"
 }
