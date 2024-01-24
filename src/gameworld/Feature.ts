@@ -142,7 +142,7 @@ export default abstract class Feature<
 
 		this._world && init(this._world)
 	}
-	protected onBeforeRender(ctx: GameWorld<TModules>) {}
+	protected onBeforeRender(_: GameWorld<TModules>) {}
 
 	protected initOnAfterRender() {
 		let listener: (() => void) | null = null
@@ -163,9 +163,9 @@ export default abstract class Feature<
 
 		this._world && init(this._world)
 	}
-	protected onAfterRender(ctx: GameWorld<TModules>) {}
-	protected onAttach(ctx: GameWorld<TModules>) {}
-	protected onDetach(ctx: GameWorld<TModules>) {}
+	protected onAfterRender(_: GameWorld<TModules>) {}
+	protected onAttach(_: GameWorld<TModules>) {}
+	protected onDetach(_: GameWorld<TModules>) {}
 	protected onDestroy() {}
 
 	private _log(...args: any[]) {

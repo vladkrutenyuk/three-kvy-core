@@ -14,7 +14,9 @@ class GameWorld<TModules extends ModulesRecord = {}> {
 		this.modules = modules
 	}
 
-	add(gameObject: GameObject<TModules>) {}
+	add(gameObject: GameObject<TModules>) {
+		gameObject
+	}
 
 	create(): GameObject<TModules> {
 		const go = new GameObject<TModules>()
@@ -30,7 +32,7 @@ class GameObject<TModules extends ModulesRecord = {}> {
 
 	//TODO add feature with props (2 arg)
 	//TODO add feature with no props (1 arg)
-	addFeature<TFeature>() {}
+	// addFeature<TFeature>() {}
 }
 
 // game object feature

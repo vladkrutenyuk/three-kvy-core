@@ -1,30 +1,28 @@
-import * as CANNON from 'cannon-es'
-import * as THREE from 'three'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-import {
-    AllModules, CPHModule
-} from './gameworld/BuiltInModulesRecords'
-import GameObject from './gameworld/GameObject'
-import GameWorld from './gameworld/GameWorld'
-import CannonPhysicsDebuggerGof from './gameworld/features/CannonPhysicsDebuggerGof'
-import TestGof from './gameworld/features/TestGof'
-import CannonPhysicsModule from './gameworld/modules/CannonPhysicsModule'
-import NebulaParticlesModule from './gameworld/modules/NebulaParticlesModule'
-import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
-import './style.css'
-import InputSystemModule from './gameworld/modules/InputSystemModule'
+import * as CANNON from "cannon-es"
+import * as THREE from "three"
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js"
+import { CPHModule } from "./gameworld/BuiltInModulesRecords"
+import GameObject from "./gameworld/GameObject"
+import GameWorld from "./gameworld/GameWorld"
+import CannonPhysicsDebuggerGof from "./gameworld/features/CannonPhysicsDebuggerGof"
+import TestGof from "./gameworld/features/TestGof"
+import CannonPhysicsModule from "./gameworld/modules/CannonPhysicsModule"
+import NebulaParticlesModule from "./gameworld/modules/NebulaParticlesModule"
+import ThreePostProcessingModule from "./gameworld/modules/ThreePostProcessingModule"
+import "./style.css"
+import InputSystemModule from "./gameworld/modules/InputSystemModule"
 
-console.log('main.ts')
+console.log("main.ts")
 
 createWorld()
 function createWorld() {
-	const root = document.querySelector('#app')
+	const root = document.querySelector("#app")
 	if (!root) return
 
 	const gameWorld = new GameWorld({
 		modules: {
 			cannon: new CannonPhysicsModule(),
-			nebula: new NebulaParticlesModule(),
+			// nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
 			input: new InputSystemModule(),
 		} as const,
@@ -36,9 +34,9 @@ function createWorld() {
 			},
 		},
 	})
-	
+
 	const { three, animationFrameLoop, modules } = gameWorld
-	const { postprocessing, cannon, input } = modules
+	const { postprocessing, cannon } = modules
 
 	three.renderer.setPixelRatio(window.devicePixelRatio)
 	postprocessing.composer.setPixelRatio(window.devicePixelRatio)
@@ -50,7 +48,7 @@ function createWorld() {
 		0.2,
 		1.38
 	)
-	three.addEventListener('resize', (event) => {
+	three.addEventListener("resize", (event) => {
 		const { width, height } = event
 		bloomPass.resolution.set(width * 0.5, height * 0.5)
 	})
@@ -114,9 +112,11 @@ function createWorld() {
 	// 	console.log('---', x.name, x.type)
 	// })
 
-	
-	const go3 = new GameObject<{cannon: CannonPhysicsModule, nebula: NebulaParticlesModule}>()
-    //TODO resolve typescript issue with modules typings
+	const go3 = new GameObject<{
+		cannon: CannonPhysicsModule
+		nebula: NebulaParticlesModule
+	}>()
+	//TODO resolve typescript issue with modules typings
 	//@ts-ignore
 	go3.addFeature(CannonPhysicsDebuggerGof)
 
