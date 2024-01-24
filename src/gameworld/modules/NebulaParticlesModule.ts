@@ -7,7 +7,7 @@ export default class NebulaParticlesModule extends GameWorldModule {
 	system!: NEBULA.System
 	spriteRenderer!: NEBULA.SpriteRenderer
 
-	onInit<TModules extends Readonly<Record<string, GameWorldModule>>>(
+	protected onInit<TModules extends Readonly<Record<string, GameWorldModule>>>(
 		world: GameWorld<TModules>
 	): void {
 		this.system = new NEBULA.System()
@@ -22,12 +22,13 @@ export default class NebulaParticlesModule extends GameWorldModule {
 		world.three.addEventListener('destroy', this.onDestroy)
 	}
 
+	protected onDestroy() {
+		this.system.removeRenderer(this.spriteRenderer)
+		this.system.destroy()
+	}
+	
 	onBeforeRender = () => {
 		this.system.update()
 	}
 
-	onDestroy = () => {
-		this.system.removeRenderer(this.spriteRenderer)
-		this.system.destroy()
-	}
 }

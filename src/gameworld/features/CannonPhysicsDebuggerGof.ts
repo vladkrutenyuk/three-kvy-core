@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import Feature, { FeatureProps } from '../Feature'
 import GameWorld from '../GameWorld'
-import CannonEsDebugger from '../extensions/CannonEsDebugger'
+import CannonEsDebuggerPro from '../extensions/CannonEsDebuggerPro'
 import CannonPhysicsModule from '../modules/CannonPhysicsModule'
 import { fullObjectDispose } from '../utils/full-object-dispose'
 
@@ -9,7 +9,7 @@ export default class CannonPhysicsDebuggerGof extends Feature<{
 	cannon: CannonPhysicsModule
 }> {
 	// private _cannonDebugger?: ReturnType<typeof CreateCannonDebugger>
-	private _cannonDebugger: CannonEsDebugger | null = null
+	private _cannonDebugger: CannonEsDebuggerPro | null = null
 	private _root: THREE.Group
 
 	constructor(
@@ -27,7 +27,7 @@ export default class CannonPhysicsDebuggerGof extends Feature<{
 	protected onAttach(ctx: GameWorld<{ cannon: CannonPhysicsModule }>) {
 		setTimeout(() => {
 		})
-		this._cannonDebugger = new CannonEsDebugger(this._root, ctx.modules.cannon.world)
+		this._cannonDebugger = new CannonEsDebuggerPro(this._root, ctx.modules.cannon.world)
 		ctx.modules.cannon.world.addEventListener('postStep', this.update.bind(this))
 	}
 

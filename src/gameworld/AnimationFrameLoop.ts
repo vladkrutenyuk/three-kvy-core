@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
 export default class AnimationFrameLoop extends THREE.EventDispatcher<{
 	frame: {}
@@ -15,11 +15,11 @@ export default class AnimationFrameLoop extends THREE.EventDispatcher<{
 
 	public readonly globalUniforms = {
 		deltaTime: {
-			value: 0
+			value: 0,
 		},
 		time: {
-			value: 0
-		}
+			value: 0,
+		},
 	}
 
 	public run() {
@@ -50,6 +50,6 @@ export default class AnimationFrameLoop extends THREE.EventDispatcher<{
 	}
 }
 
-const _runEvent = { type: 'run' } as const
-const _stopEvent = { type: 'stop' } as const
-const _frameEvent = { type: 'frame' } as const
+const _runEvent = { type: "run" } as const
+const _stopEvent = { type: "stop" } as const
+const _frameEvent = { type: "frame" } as const

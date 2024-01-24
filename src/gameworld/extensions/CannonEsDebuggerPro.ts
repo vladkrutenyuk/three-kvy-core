@@ -43,7 +43,7 @@ const _planeGeometry = new PlaneGeometry(10, 10, 10, 10)
 // Move the planeGeometry forward a little bit to prevent z-fighting
 _planeGeometry.translate(0, 0, 0.0001)
 
-export default class CannonEsDebugger {
+export default class CannonEsDebuggerPro {
 	readonly material: MeshBasicMaterial
 	readonly world: CANNON.World
 	readonly root: THREE.Object3D

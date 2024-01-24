@@ -1,8 +1,8 @@
 //TODO difine different varians of built-in templates
 
-import CannonPhysicsModule from './modules/CannonPhysicsModule'
-import NebulaParticlesModule from './modules/NebulaParticlesModule'
-import ThreePostProcessingModule from './modules/ThreePostProcessingModule'
+import CannonPhysicsModule from "./modules/CannonPhysicsModule"
+import NebulaParticlesModule from "./modules/NebulaParticlesModule"
+import ThreePostProcessingModule from "./modules/ThreePostProcessingModule"
 
 export type CPHModule = {
 	readonly cannon: CannonPhysicsModule

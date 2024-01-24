@@ -1,5 +1,5 @@
-import * as THREE from 'three'
-import { fullObjectDispose } from './utils/full-object-dispose'
+import * as THREE from "three"
+import { fullObjectDispose } from "./utils/full-object-dispose"
 
 export type ThreeRenderingEventMap = {
 	beforeRender: {}
@@ -72,6 +72,10 @@ export default class ThreeRendering extends THREE.EventDispatcher<ThreeRendering
 		this._renderFn = fn
 	}
 
+	clearRenderFn() {
+		this._renderFn = _emptyFn
+	}
+
 	mount(root: HTMLDivElement) {
 		if (this._isMounted) return
 		this._isMounted = true
@@ -83,7 +87,7 @@ export default class ThreeRendering extends THREE.EventDispatcher<ThreeRendering
 		this.resizeHandler()
 
 		this.renderer.domElement.tabIndex = 0
-		this.renderer.domElement.style.touchAction = 'none'
+		this.renderer.domElement.style.touchAction = "none"
 		this.renderer.domElement.focus()
 
 		this.dispatchEvent(_event.mount)
@@ -140,10 +144,10 @@ const _emptyFn = () => {}
 const _event: {
 	[K in keyof ThreeRenderingEventMap]: { type: K } & ThreeRenderingEventMap[K]
 } = {
-	beforeRender: { type: 'beforeRender' },
-	afterRender: { type: 'afterRender' },
-	mount: { type: 'mount' },
-	unmount: { type: 'unmount' },
-	destroy: { type: 'destroy' },
-	resize: { type: 'resize', width: 100, height: 100 },
+	beforeRender: { type: "beforeRender" },
+	afterRender: { type: "afterRender" },
+	mount: { type: "mount" },
+	unmount: { type: "unmount" },
+	destroy: { type: "destroy" },
+	resize: { type: "resize", width: 100, height: 100 },
 }

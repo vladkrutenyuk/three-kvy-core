@@ -1,3 +1,5 @@
-export function disposeCallback<TDisposable extends { dispose: () => void }>(disposable: TDisposable) {
-    disposable.dispose()
+export function disposeCallback<TDisposable extends { dispose: () => void }>(
+	disposable: TDisposable
+) {
+	disposable.dispose()
 }

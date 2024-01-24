@@ -1,9 +1,9 @@
-import * as THREE from 'three'
-import GameWorld, { GameWorldModulesRecord } from './GameWorld'
-import Feature, { FeatureProps } from './Feature'
-import { removeArrayItem } from './utils/remove-array-item'
-import { traverseAncestorsInterruptible } from './utils/traverse-interruptible'
-import { isScene } from './utils/types/is-scene'
+import * as THREE from "three"
+import GameWorld, { GameWorldModulesRecord } from "./GameWorld"
+import Feature, { FeatureProps } from "./Feature"
+import { removeArrayItem } from "./utils/remove-array-item"
+import { traverseAncestorsInterruptible } from "./utils/traverse-interruptible"
+import { isScene } from "./utils/types/is-scene"
 
 export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> }
@@ -11,8 +11,11 @@ export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 }
 
 export default class GameObject<
-	TModules extends GameWorldModulesRecord = {}
-> extends THREE.Object3D<THREE.Object3DEventMap & GameObjectEventMap<TModules>> {
+	TModules extends GameWorldModulesRecord = {},
+	TEventMap extends Record<string,any> = {}
+> extends THREE.Object3D<
+	THREE.Object3DEventMap & GameObjectEventMap<TModules> & TEventMap
+> {
 	public readonly isGameObject = true
 
 	protected _world: GameWorld<TModules> | null = null
@@ -22,22 +25,22 @@ export default class GameObject<
 
 	private readonly _features: Feature<TModules>[] = []
 
-	constructor(props?: { uuid?: string, name?: string}) {
+	constructor(props?: { uuid?: string; name?: string }) {
 		super()
-		this.addEventListener('added', this.onAdded)
-		this.addEventListener('removed', this.onRemoved)
+		this.addEventListener("added", this.onAdded)
+		this.addEventListener("removed", this.onRemoved)
 		this.name = props?.name ?? `${this.constructor.name}-${this.id}`
 		this.uuid = props?.uuid ?? this.uuid
 	}
 
-	protected onAdded = ({ target }: THREE.Event<'added', this>) => {
-		this._log('onAdded...')
+	protected onAdded = ({ target }: THREE.Event<"added", this>) => {
+		this._log("onAdded...")
 		if (target.parent && GameObject.isIt<TModules>(target.parent)) {
-			this._log('onAdded parent is gameobject')
+			this._log("onAdded parent is gameobject")
 			target.parent._world && target.attachToWorldRecursively(target.parent._world)
 			return
 		}
-		this._log('onAdded parent is just object3d')
+		this._log("onAdded parent is just object3d")
 		// обрабатываем случай когда GameObject был добавлен к обычному Object3D
 
 		// ищем предка который был бы GameObject
@@ -53,7 +56,7 @@ export default class GameObject<
 
 		// если нашли и если у него есть мир то аттачимся к нему
 		if (gameObjectAncestor !== null) {
-			this._log('onAdded found game object ancestor')
+			this._log("onAdded found game object ancestor")
 			gameObjectAncestor._world &&
 				target.attachToWorldRecursively(gameObjectAncestor._world)
 		}
@@ -67,7 +70,7 @@ export default class GameObject<
 				isScene(target.parent) &&
 				target.parent.userData.gameWorldId === target._world.id
 			) {
-				this._log('onAdded it is gameworld added to scene')
+				this._log("onAdded it is gameworld added to scene")
 				return
 			}
 			// иначе светим ошибку и отменяем добавление
@@ -80,17 +83,17 @@ export default class GameObject<
 		}
 	}
 
-	private onRemoved = (_: THREE.Event<'removed', this>) => {
-		this._log('onRemoved...')
+	private onRemoved = (_: THREE.Event<"removed", this>) => {
+		this._log("onRemoved...")
 		this.detachFromWorldRecursively()
 	}
 
 	private attachToWorld(world: GameWorld<TModules>) {
-		this._log('attachToWorld...')
+		this._log("attachToWorld...")
 		if (this._world !== null) {
-			this._log('attachToWorld: has world')
+			this._log("attachToWorld: has world")
 			if (this._world !== world) {
-				this._log('attachToWorld: has different world')
+				this._log("attachToWorld: has different world")
 				this.detachFromWorld()
 				this.attachToWorld(world)
 			}
@@ -99,26 +102,30 @@ export default class GameObject<
 
 		this._world = world
 		_event.attachedToWorld.world = this._world
-		this._log('attachToWorld done!')
+		this._log("attachToWorld done!")
 		this.dispatchEvent(
+			//TODO fix type error
+			//@ts-ignore
 			_event.attachedToWorld as Required<typeof _event.attachedToWorld>
 		)
 	}
 
 	private detachFromWorld() {
-		this._log('detachFromWorld...')
+		this._log("detachFromWorld...")
 		if (this._world === null) return
 
 		_event.detachedFromWorld.world = this._world
 		this._world = null
-		this._log('detachFromWorld done!')
+		this._log("detachFromWorld done!")
 		this.dispatchEvent(
+			//TODO fix type error
+			//@ts-ignore
 			_event.detachedFromWorld as Required<typeof _event.detachedFromWorld>
 		)
 	}
 
 	private attachToWorldRecursively(world: GameWorld<TModules>) {
-		this._log('attachToWorldRecursively...')
+		this._log("attachToWorldRecursively...")
 		// this.attachToWorld(world)
 		this.traverse((child) => {
 			GameObject.isIt<TModules>(child) && child.attachToWorld(world)
@@ -126,11 +133,17 @@ export default class GameObject<
 	}
 
 	private detachFromWorldRecursively() {
-		this._log('detachFromWorldRecursively...')
+		this._log("detachFromWorldRecursively...")
 		// this.detachFromWorld()
 		this.traverse((child) => {
 			GameObject.isIt(child) && child.detachFromWorld()
 		})
+	}
+
+	create(): GameObject<TModules> {
+		const go = new GameObject<TModules>()
+		this.add(go)
+		return go
 	}
 
 	add(...object: THREE.Object3D<THREE.Object3DEventMap>[]): this {
@@ -196,6 +209,6 @@ const _event: {
 		GameObjectEventMap<any>[K]
 	>
 } = {
-	attachedToWorld: { type: 'attachedToWorld' },
-	detachedFromWorld: { type: 'detachedFromWorld' },
+	attachedToWorld: { type: "attachedToWorld" },
+	detachedFromWorld: { type: "detachedFromWorld" },
 }

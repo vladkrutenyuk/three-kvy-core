@@ -12,6 +12,7 @@ import CannonPhysicsModule from './gameworld/modules/CannonPhysicsModule'
 import NebulaParticlesModule from './gameworld/modules/NebulaParticlesModule'
 import ThreePostProcessingModule from './gameworld/modules/ThreePostProcessingModule'
 import './style.css'
+import InputSystemModule from './gameworld/modules/InputSystemModule'
 
 console.log('main.ts')
 
@@ -25,6 +26,7 @@ function createWorld() {
 			cannon: new CannonPhysicsModule(),
 			nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
+			input: new InputSystemModule(),
 		} as const,
 		three: {
 			rendererParams: {
@@ -36,7 +38,7 @@ function createWorld() {
 	})
 	
 	const { three, animationFrameLoop, modules } = gameWorld
-	const { postprocessing, cannon } = modules
+	const { postprocessing, cannon, input } = modules
 
 	three.renderer.setPixelRatio(window.devicePixelRatio)
 	postprocessing.composer.setPixelRatio(window.devicePixelRatio)
@@ -108,9 +110,9 @@ function createWorld() {
 		spawnRandomSphereBody()
 	}
 
-	gameWorld.traverse((x) => {
-		console.log('---', x.name, x.type)
-	})
+	// gameWorld.traverse((x) => {
+	// 	console.log('---', x.name, x.type)
+	// })
 
 	
 	const go3 = new GameObject<{cannon: CannonPhysicsModule, nebula: NebulaParticlesModule}>()
