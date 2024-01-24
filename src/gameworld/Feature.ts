@@ -19,9 +19,7 @@ export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
 
 export default abstract class Feature<
 	TModules extends GameWorldModulesRecord = {},
-	//TODO когжа TEventMap добавляется в extends THREE.EventDispatcher<FeatureEventMap<TModules>>
-	// то типы ломаются в addEventListener
-	TEventMap extends Record<string, any> = {},
+	TEventMap extends {} = {},
 	TProps extends Record<string, any> = {}
 > extends THREE.EventDispatcher<FeatureEventMap<TModules> & TEventMap> {
 	readonly type: string
@@ -47,7 +45,7 @@ export default abstract class Feature<
 		this.addEventListener("detachedFromWorld", ({ world }) => {
 			this.onDetach(world)
 		})
-		this.addEventListener("removed", () => {
+		this.addEventListener("destroy", () => {
 			this.onDestroy()
 		})
 
@@ -64,6 +62,28 @@ export default abstract class Feature<
 	init() {
 		this.gameObject.world && this.attachToWorld(this.gameObject.world)
 	}
+
+	destroy() {
+		this._log("remove...")
+		this.gameObject.removeEventListener(
+			"attachedToWorld",
+			this.gameObjectAttachedToWorld
+		)
+		this.gameObject.removeEventListener(
+			"detachedFromWorld",
+			this.gameObjectDetachedFromWorld
+		)
+		this.detachFromWorld()
+		this.gameObject.destroyFeature(this)
+
+		//TODO fix type error
+		//@ts-ignore
+		this.dispatchEvent(_event.destroy)
+	}
+
+	protected onAttach(_: GameWorld<TModules>) {}
+	protected onDetach(_: GameWorld<TModules>) {}
+	protected onDestroy() {}
 
 	private gameObjectAttachedToWorld = (event: { world: GameWorld<TModules> }) => {
 		this._log("gameObjectAttachedToWorld")
@@ -88,7 +108,7 @@ export default abstract class Feature<
 		this.dispatchEvent(
 			//TODO fix type error
 			//@ts-ignore
-			_event.attachedToWorld as Required<typeof _event.attachedToWorld>
+			_event.attachedToWorld
 		)
 	}
 
@@ -100,29 +120,9 @@ export default abstract class Feature<
 
 		_event.detachedFromWorld.world = world
 		this._log("detachFromWorld done!")
-		this.dispatchEvent(
-			//TODO fix type error
-			//@ts-ignore
-			_event.detachedFromWorld as Required<typeof _event.detachedFromWorld>
-		)
-	}
-
-	destroy() {
-		this._log("remove...")
-		this.gameObject.removeEventListener(
-			"attachedToWorld",
-			this.gameObjectAttachedToWorld
-		)
-		this.gameObject.removeEventListener(
-			"detachedFromWorld",
-			this.gameObjectDetachedFromWorld
-		)
-		this.detachFromWorld()
-		this.gameObject.destroyFeature(this)
-
 		//TODO fix type error
 		//@ts-ignore
-		this.dispatchEvent(_event.destroy)
+		this.dispatchEvent(_event.detachedFromWorld)
 	}
 
 	private _eventMethodsDict = {
@@ -146,8 +146,8 @@ export default abstract class Feature<
 		this.addEventListener("attachedToWorld", (event) => {
 			init(event.world)
 		})
-		this.addEventListener("detachedFromWorld", ({ world }) => {
-			listener && world.three.removeEventListener("beforeRender", listener)
+		this.addEventListener("detachedFromWorld", (event) => {
+			listener && event.world.three.removeEventListener("beforeRender", listener)
 		})
 
 		this._world && init(this._world)
@@ -158,30 +158,6 @@ export default abstract class Feature<
 	protected onMount(_: GameWorld<TModules>) {}
 	protected onResize(_: GameWorld<TModules>) {}
 
-	// protected initOnBeforeRender() {
-	// 	let listener: (() => void) | null = null
-
-	// 	const init = (world: GameWorld<TModules>) => {
-	// 		listener = () => {
-	// 			this.onBeforeRender(world)
-	// 		}
-	// 		world.three.addEventListener("beforeRender", listener)
-	// 	}
-
-	// 	this.addEventListener("attachedToWorld", ({ world }) => {
-	// 		init(world)
-	// 	})
-	// 	this.addEventListener("detachedFromWorld", ({ world }) => {
-	// 		listener && world.three.removeEventListener("beforeRender", listener)
-	// 	})
-
-	// 	this._world && init(this._world)
-	// }
-
-	protected onAttach(_: GameWorld<TModules>) {}
-	protected onDetach(_: GameWorld<TModules>) {}
-	protected onDestroy() {}
-
 	private _log(...args: any[]) {
 		console.log(
 			`GO-${this.gameObject.id} ${this.constructor.name}-${this.id}`,
@@ -191,9 +167,9 @@ export default abstract class Feature<
 }
 
 const _event: {
-	[K in keyof FeatureEventMap<any>]: { type: K } & Partial<FeatureEventMap<any>[K]>
+	[K in keyof FeatureEventMap<any>]: { type: K } & FeatureEventMap<any>[K]
 } = {
-	attachedToWorld: { type: "attachedToWorld" },
-	detachedFromWorld: { type: "detachedFromWorld" },
+	attachedToWorld: { type: "attachedToWorld", world: {} as any },
+	detachedFromWorld: { type: "detachedFromWorld", world: {} as any },
 	destroy: { type: "destroy" },
 }
