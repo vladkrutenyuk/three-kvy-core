@@ -27,3 +27,4 @@ demo
 .parcel-cache
 build
 dist
+.demo-cache

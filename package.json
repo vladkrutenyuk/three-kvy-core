@@ -36,7 +36,8 @@
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:core && npm run build:examples",
     "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build",
-    "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc"
+    "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc",
+    "demo": "parcel demo/index.html --dist-dir .demo-cache"
   },
   "files": [
     "dist/build",
