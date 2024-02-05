@@ -1,24 +1,71 @@
 {
-  "name": "game-world-sandbox-ts",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+  "name": "@vladkrutenyuk/game-world",
+  "version": "0.0.1",
+  "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
+  "license": "MIT",
+  "description": "Game world for `three.js`.",
+  "homepage": "https://github.com/vladkrutenyuk/game-world",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vladkrutenyuk/game-world"
   },
+  "exports": {
+    ".": {
+      "import": "./build/index.module.js",
+      "require": "./build/index.cjs"
+    },
+    "./examples/*": "./examples/*",
+    "./examples": "./examples/index.js",
+    "./addons/*": "./examples/*",
+    "./src/*": "./src/*"
+  },
+  "type": "module",
+  "source": "src/index.ts",
+  "main": "dist/build/index.cjs",
+  "module": "dist/build/index.module.js",
+  "types": "dist/build/types.d.ts",
+  "targets": {
+    "main": {
+      "optimize": true
+    },
+    "module": {
+      "optimize": true
+    }
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && npm run build:core && npm run build:examples",
+    "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build",
+    "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc"
+  },
+  "files": [
+    "dist/build",
+    "dist/examples",
+    "dist/src",
+    "package.json",
+    "LICENSE",
+    "README.md"
+  ],
   "devDependencies": {
+    "@parcel/packager-ts": "2.11.0",
+    "@parcel/transformer-typescript-types": "2.11.0",
     "@types/three": "^0.160.0",
     "@types/three-nebula": "^10.0.3",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "parcel": "^2.11.0",
+    "rimraf": "^5.0.5",
+    "tsc-alias": "^1.8.8"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@babel/runtime": "^7.23.8",
+    "@vladkrutenyuk/cannon-es-debugger-pro": "^0.2.4",
     "cannon-es": "^0.20.0",
-    "cannon-es-debugger": "^1.0.0",
     "three": "^0.160.0",
-    "three-nebula": "^10.0.3"
+    "three-nebula": "^10.0.3",
+    "typescript": "^5.2.2"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   }
 }

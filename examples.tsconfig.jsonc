@@ -6,7 +6,6 @@
       "dom",
       "esnext"
     ], // Библиотеки, которые будут доступны во время компиляции
-    "declaration": true, // Генерировать файлы d.ts для TypeScript
     "outDir": "./dist", // Папка для скомпилированных файлов
     "strict": true, // Включить строгие проверки типов
     "esModuleInterop": true, // Разрешить интероперабельность с модулями ES6
@@ -20,12 +19,12 @@
     }
   },
   "include": [
-    "src/**/*",
-    "demo/**/*",
-    "examples/**/*"
+    "examples/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src"
   ]
 }
