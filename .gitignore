@@ -27,3 +27,4 @@ dist-ssr
 build
 dist
 .demo-cache
+.vscode
