@@ -1,1 +1,1 @@
-# @vladkrutenyuk/gameworld
+# @vladkrutenyuk/game-world

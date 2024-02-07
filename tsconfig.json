@@ -22,7 +22,8 @@
   "include": [
     "src/**/*",
     "demo/**/*",
-    "examples/**/*"
+    "examples/**/*",
+    "sandbox/**/*"
   ],
   "exclude": [
     "node_modules",

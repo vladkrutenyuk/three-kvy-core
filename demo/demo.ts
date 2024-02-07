@@ -8,7 +8,7 @@ import CannonPhysicsModule from "../examples/modules/CannonPhysicsModule";
 import InputSystemModule from "../examples/modules/InputSystemModule";
 import NebulaParticlesModule from "../examples/modules/NebulaParticlesModule";
 import ThreePostProcessingModule from "../examples/modules/ThreePostProcessingModule";
-import { CPHModule } from "../src/core/BuiltInModulesRecords";
+import { CPHModule } from "./BuiltInModulesRecords";
 import { GameObject } from "../src/core/GameObject";
 import { GameWorld } from "../src/core/GameWorld";
 
