@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { removeArrayItem } from "../utils/remove-array-item";
-import { traverseAncestorsInterruptible } from "../utils/traverse-interruptible";
+import { removeArrayItem } from "../utils/general/remove-array-item";
+import { traverseAncestorsInterruptible } from "../utils/three/traverse-ancestors-interruptible";
 import { isScene } from "../utils/typeguards/is-scene";
 import { Feature, FeatureProps } from "./Feature";
 import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
@@ -12,18 +12,25 @@ export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 
 export class GameObject<
 	TModules extends GameWorldModulesRecord = {},
-	TEventMap extends Record<string, any> = {}
+	TEventMap extends {} = {}
 > extends THREE.Object3D<
 	THREE.Object3DEventMap & GameObjectEventMap<TModules> & TEventMap
 > {
+	public static isIt<TModules extends GameWorldModulesRecord = {}>(
+		obj: THREE.Object3D
+	): obj is GameObject<TModules> {
+		return (obj as GameObject<TModules>).isGameObject || obj.type === 'GameObject';
+	}
+	
+	public readonly type: 'GameObject'
 	public readonly isGameObject = true;
-
-	protected _world: GameWorld<TModules> | null = null;
-	get world() {
+	public get world() {
 		return this._world;
 	}
 
-	private readonly _features: Feature<TModules>[] = [];
+	protected _world: GameWorld<TModules> | null = null;
+
+	private readonly _features: Feature<any>[] = [];
 
 	constructor(props?: { uuid?: string; name?: string }) {
 		super();
@@ -31,6 +38,76 @@ export class GameObject<
 		this.addEventListener("removed", this.onRemoved);
 		this.name = props?.name ?? `${this.constructor.name}-${this.id}`;
 		this.uuid = props?.uuid ?? this.uuid;
+		this.type = 'GameObject'
+	}
+
+	create(): GameObject<TModules> {
+		const go = new GameObject<TModules>();
+		this.add(go);
+		return go;
+	}
+
+	add(...object: THREE.Object3D<THREE.Object3DEventMap>[]): this {
+		// TODO: write types to prevent adding GameObjects with diffirent defined GameWorldModules
+		this._log(`add... ${object[0].id}`);
+		super.add(...object);
+		return this;
+	}
+
+	addFeature<
+		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+		TFeatureModules extends GameWorldModulesRecord = {},
+		TProps extends {} = {}
+	>(
+		feature: new (
+			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>, TProps>
+		) => TFeature,
+		props: TProps
+	): TFeature;
+
+	addFeature<
+		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+		TFeatureModules extends GameWorldModulesRecord = {}
+	>(
+		feature: new (
+			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>>
+		) => TFeature,
+		props?: undefined
+	): TFeature;
+
+	addFeature<
+		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+		TFeatureModules extends GameWorldModulesRecord = {}
+	>(
+		feature: new (
+			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>>
+		) => TFeature,
+		props: unknown
+	): TFeature {
+		const gameObject = this as unknown as GameObject<
+			CompatibleModules<TFeatureModules, TModules>,
+			TEventMap
+		>;
+		const instance = new feature(props ? { ...props, gameObject } : { gameObject });
+		this._features.push(instance);
+		instance.init()
+		return instance;
+	}
+
+	getFeature<TFeatureType extends typeof Feature>(
+		f: TFeatureType
+	): InstanceType<TFeatureType> | null {
+		return this._features.find(
+			(feature) => feature.type === f.name
+		) as InstanceType<TFeatureType> | null;
+	}
+
+	destroyFeature<TFeature extends Feature<any>>(feature: TFeature) {
+		this._log(`destroyFeature...`, feature.constructor.name, feature.id);
+		const foundAndRemoved = removeArrayItem(this._features, feature);
+		if (foundAndRemoved) {
+			feature.destroy();
+		}
 	}
 
 	protected onAdded = ({ target }: THREE.Event<"added", this>) => {
@@ -104,9 +181,9 @@ export class GameObject<
 		_event.attachedToWorld.world = this._world;
 		this._log("attachToWorld done!");
 		this.dispatchEvent(
-			//TODO fix type error
+			//TODO: fix type error
 			//@ts-ignore
-			_event.attachedToWorld as Required<typeof _event.attachedToWorld>
+			_event.attachedToWorld
 		);
 	}
 
@@ -118,15 +195,14 @@ export class GameObject<
 		this._world = null;
 		this._log("detachFromWorld done!");
 		this.dispatchEvent(
-			//TODO fix type error
+			//TODO: fix type error
 			//@ts-ignore
-			_event.detachedFromWorld as Required<typeof _event.detachedFromWorld>
+			_event.detachedFromWorld
 		);
 	}
 
 	private attachToWorldRecursively(world: GameWorld<TModules>) {
 		this._log("attachToWorldRecursively...");
-		// this.attachToWorld(world)
 		this.traverse((child) => {
 			GameObject.isIt<TModules>(child) && child.attachToWorld(world);
 		});
@@ -134,74 +210,14 @@ export class GameObject<
 
 	private detachFromWorldRecursively() {
 		this._log("detachFromWorldRecursively...");
-		// this.detachFromWorld()
 		this.traverse((child) => {
 			GameObject.isIt(child) && child.detachFromWorld();
 		});
 	}
 
-	create(): GameObject<TModules> {
-		const go = new GameObject<TModules>();
-		this.add(go);
-		return go;
-	}
-
-	add(...object: THREE.Object3D<THREE.Object3DEventMap>[]): this {
-		// TODO write types to prevent adding GameObjects with diffirent defined GameWorldModules
-		this._log(`add... ${object[0].id}`);
-		super.add(...object);
-		return this;
-	}
-
-	addFeature<
-		TFeature extends Feature<TModules, TEventMap, TProps>,
-		TEventMap extends {},
-		TProps extends Readonly<Record<string, any>> = {}
-	>(f: new (p: FeatureProps<TModules, TProps>) => TFeature, props: TProps): TFeature;
-
-	addFeature<TFeature extends Feature<TModules, TEventMap, {}>, TEventMap extends {}>(
-		f: new (p: FeatureProps<TModules, {}>) => TFeature,
-		props?: {}
-	): TFeature;
-
-	addFeature<TFeature extends Feature<TModules, TEventMap, {}>, TEventMap extends {}>(
-		f: new (p: FeatureProps<TModules>) => TFeature,
-		props: unknown
-	): TFeature {
-		this._log(`addFeature...`, f.name);
-		const feature = new f(
-			props !== undefined ? { gameObject: this, ...props } : { gameObject: this }
-		);
-		this._features.push(feature);
-		feature.init();
-		return feature;
-	}
-
-	getFeature<TFeatureType extends typeof Feature>(
-		f: TFeatureType
-	): InstanceType<TFeatureType> | null {
-		return this._features.find(
-			(feature) => feature.type === f.name
-		) as InstanceType<TFeatureType> | null;
-	}
-
-	destroyFeature<TFeature extends Feature<TModules>>(feature: TFeature) {
-		this._log(`destroyFeature...`, feature.constructor.name, feature.id);
-		const foundAndRemoved = removeArrayItem(this._features, feature);
-		if (foundAndRemoved) {
-			feature.destroy();
-		}
-	}
-
 	private _log = (...args: any[]) => {
 		console.log(`g-${this.id}`, ...args);
 	};
-
-	static isIt<TModules extends GameWorldModulesRecord = {}>(
-		obj: THREE.Object3D
-	): obj is GameObject<TModules> {
-		return (obj as GameObject<TModules>).isGameObject;
-	}
 }
 
 const _event: {
@@ -212,3 +228,28 @@ const _event: {
 	attachedToWorld: { type: "attachedToWorld" },
 	detachedFromWorld: { type: "detachedFromWorld" },
 };
+
+type isSubsetRecord<
+	TSub extends Record<TKey, TValue>,
+	TRecord extends Record<TKey, TValue>,
+	TKey extends string | number | symbol = string,
+	TValue = any
+> = {
+	[K in keyof TSub]: K extends keyof TRecord
+		? TSub[K] extends TRecord[K]
+			? never
+			: K
+		: K;
+}[keyof TSub];
+
+type CompatibleFeature<
+	TFeatureModules extends GameWorldModulesRecord,
+	TGameObjectModules extends GameWorldModulesRecord
+> = isSubsetRecord<TFeatureModules, TGameObjectModules> extends never
+	? Feature<TFeatureModules>
+	: never;
+
+type CompatibleModules<
+	TSubModules extends GameWorldModulesRecord,
+	TModules extends GameWorldModulesRecord
+> = isSubsetRecord<TSubModules, TModules> extends never ? TSubModules : never;

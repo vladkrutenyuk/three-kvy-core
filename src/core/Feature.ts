@@ -4,33 +4,33 @@ import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
 
 let _featureId = 0;
 
-export type FeatureProps<
-	TModules extends GameWorldModulesRecord = {},
-	TProps extends {} = {}
-> = TProps & {
-	gameObject: GameObject<TModules>;
-};
-
 export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> };
 	detachedFromWorld: { world: GameWorld<TModules> };
 	destroy: {};
 };
+export type FeatureProps<
+	TModules extends GameWorldModulesRecord,
+	TProps extends {} = {}
+> = TProps & {
+	gameObject: GameObject<TModules>;
+};
 
 export abstract class Feature<
 	TModules extends GameWorldModulesRecord = {},
-	TEventMap extends {} = {},
-	TProps extends Record<string, any> = {}
+	TProps extends {} = {},
+	TEventMap extends {} = {}
 > extends THREE.EventDispatcher<FeatureEventMap<TModules> & TEventMap> {
-	readonly type: string;
-	readonly id: number;
-	readonly gameObject: GameObject<TModules>;
-	uuid: string;
+	public readonly type: string;
+	public readonly id: number;
+	public readonly gameObject: GameObject<TModules>;
+	public uuid: string;
 
-	private _world: GameWorld<TModules> | null = null;
 	protected get world() {
 		return this._world;
 	}
+
+	private _world: GameWorld<TModules> | null = null;
 
 	constructor(props: FeatureProps<TModules, TProps>) {
 		super();
@@ -76,7 +76,7 @@ export abstract class Feature<
 		this.detachFromWorld();
 		this.gameObject.destroyFeature(this);
 
-		//TODO fix type error
+		//TODO: fix type error
 		//@ts-ignore
 		this.dispatchEvent(_event.destroy);
 	}
@@ -105,11 +105,9 @@ export abstract class Feature<
 
 		_event.attachedToWorld.world = this._world;
 		this._log("attachToWorld done!");
-		this.dispatchEvent(
-			//TODO fix type error
-			//@ts-ignore
-			_event.attachedToWorld
-		);
+		//TODO: fix type error
+		//@ts-ignore
+		this.dispatchEvent(_event.attachedToWorld);
 	};
 
 	private detachFromWorld = () => {
@@ -120,27 +118,19 @@ export abstract class Feature<
 
 		_event.detachedFromWorld.world = world;
 		this._log("detachFromWorld done!");
-		//TODO fix type error
+		//TODO: fix type error
 		//@ts-ignore
 		this.dispatchEvent(_event.detachedFromWorld);
 	};
 
-	private _eventMethodsDict = {
-		onBeforeRender: "beforeRender",
-		onAfterRender: "afterRender",
-		onUnmount: "unmount",
-		onMount: "mount",
-		onResize: "resize",
-	} as const;
-
-	protected initEventMethod(name: keyof typeof this._eventMethodsDict) {
+	protected initEventMethod(name: keyof typeof _eventMethods) {
 		let listener: (() => void) | null = null;
 
 		const init = (world: GameWorld<TModules>) => {
 			let listener = () => {
 				this[name](world);
 			};
-			world.three.addEventListener(this._eventMethodsDict[name], listener);
+			world.three.addEventListener(_eventMethods[name], listener);
 		};
 
 		this.addEventListener("attachedToWorld", (event) => {
@@ -165,6 +155,14 @@ export abstract class Feature<
 		);
 	}
 }
+
+const _eventMethods = {
+	onBeforeRender: "beforeRender",
+	onAfterRender: "afterRender",
+	onUnmount: "unmount",
+	onMount: "mount",
+	onResize: "resize",
+} as const;
 
 const _event: {
 	[K in keyof FeatureEventMap<any>]: { type: K } & FeatureEventMap<any>[K];

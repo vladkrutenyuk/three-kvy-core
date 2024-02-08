@@ -1,6 +1,5 @@
 export {};
-import * as THREE from "three";
-type RoRecStr<TValue = any> = Readonly<Record<string, TValue>>;
+
 type ModulesRecord = Readonly<Record<string, any>>;
 
 type isSubsetRecord<
@@ -30,7 +29,7 @@ type CompatibleModules<
 > = isSubsetRecord<TSubModules, TModules> extends never ? TSubModules : never;
 
 class GameObject<TModules extends ModulesRecord = {}> {
-	features: Feature[] = []
+	features: Feature[] = [];
 	addFeature<
 		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
 		TFeatureModules extends ModulesRecord = {},
@@ -60,12 +59,11 @@ class GameObject<TModules extends ModulesRecord = {}> {
 			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>>
 		) => TFeature,
 		props: unknown
-	): TFeature 
-	{
+	): TFeature {
 		const instance = new feature(
 			props ? { ...props, gameObject: this } : { gameObject: this }
 		);
-		this.features.push(instance)
+		this.features.push(instance);
 		return instance;
 	}
 }
@@ -80,10 +78,9 @@ type FeatureProps<
 abstract class Feature<
 	TModules extends ModulesRecord = {},
 	TProps extends ModulesRecord = {}
-> extends THREE.EventDispatcher {
+> {
 	gameObject: GameObject<TModules>;
 	constructor(props: FeatureProps<TModules, TProps>) {
-		super()
 		this.gameObject = props.gameObject;
 	}
 }
@@ -108,23 +105,23 @@ let goABbad = new GameObject<{ a: string; b: string }>();
 
 // works but bad return types
 let ph1 = go0.addFeature(Feature0); // ОК
-let s1 = go0.addFeature(FeatureA); // ERROR
-let pa1 = go0.addFeature(FeatureB); // ERROR
+// let s1 = go0.addFeature(FeatureA); // ERROR
+// let pa1 = go0.addFeature(FeatureB); // ERROR
 
 let ph2 = goA.addFeature(FeatureA); // ОК
 let s2 = goA.addFeature(Feature0); // ОК
-let pa2 = goA.addFeature(FeatureB); // ERROR
+// let pa2 = goA.addFeature(FeatureB); // ERROR
 
 let ph3 = goAB.addFeature(FeatureA); // ОК
 let s3 = goAB.addFeature(Feature0); // ОК
 let pa3 = goAB.addFeature(FeatureB); // ОК
 
-let ph4 = goABbad.addFeature(FeatureB); // ERROR
+// let ph4 = goABbad.addFeature(FeatureB); // ERROR
 
 // props
 let _1 = goAB.addFeature(FeatureBProps, { name: "asdasd" }); // ОК
-let _111 = go0.addFeature(FeatureBProps, { name: "asdasd" }); // ERROR
-let _1111 = goA.addFeature(FeatureBProps, { name: "asdasd" }); // ERROR
-let _11 = goAB.addFeature(FeatureBProps); // ERROR
-let _2 = goA.addFeature(FeatureBProps); // ERROR
-let _3 = goAB.addFeature(FeatureBProps); // ERROR
+// let _111 = go0.addFeature(FeatureBProps, { name: "asdasd" }); // ERROR
+// let _1111 = goA.addFeature(FeatureBProps, { name: "asdasd" }); // ERROR
+// let _11 = goAB.addFeature(FeatureBProps); // ERROR
+// let _2 = goA.addFeature(FeatureBProps); // ERROR
+// let _3 = goAB.addFeature(FeatureBProps); // ERROR

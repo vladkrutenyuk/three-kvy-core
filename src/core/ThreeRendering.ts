@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { fullObjectDispose } from "../utils/full-object-dispose";
+import { fullObjectDispose } from "../utils/three/full-object-dispose";
 
 export type ThreeRenderingEventMap = {
 	beforeRender: {};
@@ -14,8 +14,8 @@ export type ThreeRenderingEventMap = {
 };
 
 export type ThreeRenderingProps = {
-	rendererParams?: THREE.WebGLRendererParameters;
-	cameraParams?: {
+	renderer?: THREE.WebGLRendererParameters;
+	camera?: {
 		fov?: number;
 		near?: number;
 		far?: number;
@@ -26,35 +26,34 @@ export class ThreeRendering extends THREE.EventDispatcher<ThreeRenderingEventMap
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
 	public readonly camera: THREE.PerspectiveCamera;
-	//TODO make option to choose between OrthographicCamera and PerspectiveCamera
 
-	private _isMounted = false;
+	public get root() {
+		return this._root;
+	}
 	public get isMounted() {
 		return this._isMounted;
 	}
-	private _root: HTMLDivElement | null = null;
-	get root() {
-		return this._root;
-	}
-	private _resizeObserver: ResizeObserver | null = null;
-
-	private _isDestroyed = false;
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
+
+	private _root: HTMLDivElement | null = null;
+	private _resizeObserver: ResizeObserver | null = null;
+	private _isMounted = false;
+	private _isDestroyed = false;
 
 	private _renderFn = _emptyFn;
 
 	constructor(props?: ThreeRenderingProps) {
 		super();
 
-		this.renderer = new THREE.WebGLRenderer(props?.rendererParams);
+		this.renderer = new THREE.WebGLRenderer(props?.renderer);
 		this.scene = new THREE.Scene();
 		this.camera = new THREE.PerspectiveCamera(
-			props?.cameraParams?.fov,
+			props?.camera?.fov,
 			1,
-			props?.cameraParams?.near,
-			props?.cameraParams?.far
+			props?.camera?.near,
+			props?.camera?.far
 		);
 
 		this._renderFn = () => {

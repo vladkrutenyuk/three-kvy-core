@@ -13,11 +13,11 @@ export class GameWorld<TModules extends GameWorldModulesRecord = {}> extends Gam
 	TModules,
 	GameWorldEventMap
 > {
-	readonly isGameWorld = true;
+	public readonly isGameWorld = true;
 
-	readonly animationFrameLoop: AnimationFrameLoop;
-	readonly three: ThreeRendering;
-	readonly modules: TModules;
+	public readonly animationFrameLoop: AnimationFrameLoop;
+	public readonly three: ThreeRendering;
+	public readonly modules: TModules;
 
 	protected readonly _world: GameWorld<TModules> = this;
 
@@ -38,11 +38,21 @@ export class GameWorld<TModules extends GameWorldModulesRecord = {}> extends Gam
 		this.initFrameLoopPausingOnSwitchTab();
 	}
 
+	removeFromParent(): this {
+		console.error(`It's prohibited to use method 'removeFromParent' for GameWorld`);
+		return this;
+	}
+
+	destroy() {
+		this.animationFrameLoop.stop();
+		this.three.destroy();
+	}
+
 	private onFrame() {
 		this.three.render();
 	}
 
-	private initFrameLoopPausingOnSwitchTab = () => {
+	private initFrameLoopPausingOnSwitchTab() {
 		const onWindowFocus = () => {
 			console.log("onWindowFocus");
 			this.animationFrameLoop.run();
@@ -60,14 +70,4 @@ export class GameWorld<TModules extends GameWorldModulesRecord = {}> extends Gam
 			window.removeEventListener("blur", onWindowBlur);
 		});
 	};
-
-	removeFromParent(): this {
-		console.error(`It's prohibited to use method 'removeFromParent' for GameWorld`);
-		return this;
-	}
-
-	destroy() {
-		this.animationFrameLoop.stop();
-		this.three.destroy();
-	}
 }

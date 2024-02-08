@@ -1,14 +1,15 @@
 import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
 
 export abstract class GameWorldModule {
-	private _isInited = false;
 	public get isInited() {
 		return this._isInited;
 	}
-	private _isDestroyed = false;
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
+	
+	private _isInited = false;
+	private _isDestroyed = false;
 
 	init<TModules extends GameWorldModulesRecord>(world: GameWorld<TModules>) {
 		if (this._isInited) return;
@@ -16,6 +17,7 @@ export abstract class GameWorldModule {
 		this.onInit(world);
 		world.addEventListener("destroy", this.onDestroy.bind(this));
 	}
+	
 	protected abstract onInit<TModules extends GameWorldModulesRecord>(
 		world: GameWorld<TModules>
 	): void;

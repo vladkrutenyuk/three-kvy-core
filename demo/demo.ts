@@ -14,20 +14,19 @@ import { CPHModule } from "./BuiltInModulesRecords";
 
 console.log("main.ts");
 
-createWorld();
-function createWorld() {
-	const root = document.querySelector("#app");
-	if (!root) return;
+const root = document.querySelector("#app");
+root && createWorld(root as HTMLDivElement);
 
+function createWorld(root: HTMLDivElement) {
 	const gameWorld = new GameWorld({
 		modules: {
 			cannon: new CannonPhysicsModule(),
-			// nebula: new NebulaParticlesModule(),
+			nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
 			input: new InputSystemModule(),
 		} as const,
 		three: {
-			rendererParams: {
+			renderer: {
 				antialias: true,
 				logarithmicDepthBuffer: true,
 				preserveDrawingBuffer: true,
@@ -54,7 +53,7 @@ function createWorld() {
 	postprocessing.composer.insertPass(bloomPass, 1);
 
 	// setup scene
-	three.scene.background = new THREE.Color(0x202020);
+	three.scene.background = new THREE.Color(0xaa2020);
 	three.camera.position.setScalar(20);
 	three.camera.lookAt(new THREE.Vector3().setScalar(0));
 
@@ -74,11 +73,6 @@ function createWorld() {
 	three.mount(root as HTMLDivElement);
 	animationFrameLoop.run();
 
-	// const go1 = new GameObject()
-	// go1.addFeature(AudioGof, { mediaSrc: '/asdasd.ogg' })
-
-	// // @ts-ignore
-	// gameWorld.addFeature(CannonPhysicsDebuggerGof)
 	const spawnRandomSphereBody = () => {
 		const body = new CANNON.Body();
 		body.addShape(
@@ -107,49 +101,25 @@ function createWorld() {
 		cannon.world.addBody(body);
 	};
 
-	// setTimeout(() => {
-	//     cannonPhysicsDebuggerGof.remove()
-	// }, 2000)
-
-	const goo = new GameObject();
-	gameWorld.add(goo);
-	goo.addFeature(TestGof);
-
-	const go2 = new GameObject<CPHModule>();
-	gameWorld.add(go2);
-	go2.addFeature(CannonPhysicsDebuggerGof);
-
 	for (let i = 0; i < 3; i++) {
 		spawnRandomSphereBody();
 		spawnRandomBoxBody();
 	}
 
-	// gameWorld.traverse((x) => {
-	// 	console.log('---', x.name, x.type)
-	// })
-
-	const go3 = new GameObject<{
-		cannon: CannonPhysicsModule;
-		nebula: NebulaParticlesModule;
-	}>();
-	//TODO resolve typescript issue with modules typings
-	//@ts-ignore
-	go3.addFeature(CannonPhysicsDebuggerGof);
-
 	const planeBody = new CANNON.Body().addShape(new CANNON.Plane());
 	cannon.world.addBody(planeBody);
 
-	const go4 = new GameObject();
-	go4.addFeature(OrbitCameraGof, {
-		options: {
-			maxDistance: 50,
-			initDistance: 40,
-			enablePan: true,
-		},
-	});
-	gameWorld.add(go4);
-	// setTimeout(() => {
-	// 	//@ts-ignore
-	// 	gameWorld.getFeature(CannonPhysicsDebuggerGof)?.destroy()
-	// }, 1500)
+	gameWorld
+		.addFeature(OrbitCameraGof, {
+			options: {
+				maxDistance: 50,
+				initDistance: 40,
+				enablePan: true,
+			},
+		})
+	gameWorld.addFeature(CannonPhysicsDebuggerGof);
+	// gameWorld.create().addFeature(TestGof)
+	const go = new GameObject()
+	go.addFeature(TestGof)
+	gameWorld.add(go)
 }

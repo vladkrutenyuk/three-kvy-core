@@ -12,13 +12,14 @@ export type OrbitCameraGofOptions = {
 	minAzimuthAngle?: number;
 	enablePan?: boolean;
 };
+export type OrbitCameraGofProps = {
+	target?: THREE.Object3D;
+	options?: OrbitCameraGofOptions;
+};
 export default class OrbitCameraGof extends Feature<
 	{},
-	{ start: {}; end: {} },
-	{
-		target?: THREE.Object3D;
-		options?: OrbitCameraGofOptions;
-	}
+	OrbitCameraGofProps,
+	{ start: {}; end: {} }
 > {
 	readonly type = OrbitCameraGof.name;
 
@@ -44,15 +45,7 @@ export default class OrbitCameraGof extends Feature<
 
 	private _options?: OrbitCameraGofOptions;
 
-	constructor(
-		props: FeatureProps<
-			{},
-			{
-				target?: THREE.Object3D;
-				options?: OrbitCameraGofOptions;
-			}
-		>
-	) {
+	constructor(props: FeatureProps<{}, OrbitCameraGofProps>) {
 		super(props);
 		this.initEventMethod("onBeforeRender");
 		this.target = props.target ?? null;

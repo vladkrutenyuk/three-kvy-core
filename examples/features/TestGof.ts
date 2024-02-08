@@ -1,9 +1,9 @@
 import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
-export default class TestGof extends Feature {
+export default class TestGof extends Feature<{}> {
 	mesh: THREE.Mesh;
-	constructor(props: FeatureProps) {
+	constructor(props: FeatureProps<{}>) {
 		super(props);
 		this.initEventMethod("onBeforeRender");
 		this.mesh = new THREE.Mesh(
