@@ -57,15 +57,27 @@
     "tsc-alias": "^1.8.8"
   },
   "peerDependencies": {
-    "@babel/runtime": "^7.23.8",
-    "@vladkrutenyuk/cannon-es-debugger-pro": "^0.2.4",
-    "cannon-es": "^0.20.0",
     "three": "^0.160.0",
+    "cannon-es": "^0.20.0",
+    "@vladkrutenyuk/cannon-es-debugger-pro": "^0.2.4",
     "three-nebula": "^10.0.3",
+    "@babel/runtime": "^7.23.8",
     "typescript": "^5.2.2"
   },
   "peerDependenciesMeta": {
     "typescript": {
+      "optional": true
+    },
+    "cannon-es": {
+      "optional": true
+    },
+    "@vladkrutenyuk/cannon-es-debugger-pro": {
+      "optional": true
+    },
+    "three-nebula": {
+      "optional": true
+    },
+    "@babel/runtime": {
       "optional": true
     }
   }
