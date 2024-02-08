@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
-import { Feature, FeatureProps } from "./Feature";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseAncestorsInterruptible } from "../utils/traverse-interruptible";
-import { isScene } from "../utils/types/is-scene";
+import { isScene } from "../utils/typeguards/is-scene";
+import { Feature, FeatureProps } from "./Feature";
+import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
 
 export type GameObjectEventMap<TModules extends GameWorldModulesRecord = {}> = {
 	attachedToWorld: { world: GameWorld<TModules> };

@@ -1,6 +1,6 @@
 import { disposeCallback } from "./dispose-callback";
-import { isDisposable } from "./types/is-disposable";
-import { isMesh } from "./types/is-mesh";
+import { isDisposable } from "./typeguards/is-disposable";
+import { isMesh } from "./typeguards/is-mesh";
 
 export function fullObjectDispose(obj: THREE.Object3D, deep?: boolean) {
 	if (isMesh(obj)) {

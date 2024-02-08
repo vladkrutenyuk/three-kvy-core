@@ -8,9 +8,9 @@ import CannonPhysicsModule from "../examples/modules/CannonPhysicsModule";
 import InputSystemModule from "../examples/modules/InputSystemModule";
 import NebulaParticlesModule from "../examples/modules/NebulaParticlesModule";
 import ThreePostProcessingModule from "../examples/modules/ThreePostProcessingModule";
-import { CPHModule } from "./BuiltInModulesRecords";
 import { GameObject } from "../src/core/GameObject";
 import { GameWorld } from "../src/core/GameWorld";
+import { CPHModule } from "./BuiltInModulesRecords";
 
 console.log("main.ts");
 
@@ -59,6 +59,7 @@ function createWorld() {
 	three.camera.lookAt(new THREE.Vector3().setScalar(0));
 
 	gameWorld.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
+	gameWorld.add(new GameObject());
 
 	const cube = new THREE.Mesh(
 		new THREE.BoxGeometry(),
