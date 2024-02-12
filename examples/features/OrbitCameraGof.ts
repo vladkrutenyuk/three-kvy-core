@@ -16,7 +16,7 @@ export type OrbitCameraGofProps = {
 	target?: THREE.Object3D;
 	options?: OrbitCameraGofOptions;
 };
-export default class OrbitCameraGof extends Feature<
+export class OrbitCameraGof extends Feature<
 	{},
 	OrbitCameraGofProps,
 	{ start: {}; end: {} }

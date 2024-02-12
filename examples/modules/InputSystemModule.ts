@@ -1,7 +1,7 @@
 import { GameWorld, GameWorldModule, GameWorldModulesRecord } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
-export default class InputSystemModule extends GameWorldModule {
+export class InputSystemModule extends GameWorldModule {
 	private _dom!: HTMLElement;
 
 	private readonly _keys = new Set<string>();

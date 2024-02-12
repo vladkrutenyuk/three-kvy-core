@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.4",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
   "license": "MIT",
   "description": "Game world for `three.js`.",
@@ -9,21 +9,11 @@
     "type": "git",
     "url": "https://github.com/vladkrutenyuk/game-world"
   },
-  "exports": {
-    ".": {
-      "import": "./build/index.module.js",
-      "require": "./build/index.cjs"
-    },
-    "./examples/*": "./examples/*",
-    "./examples": "./examples/index.js",
-    "./addons/*": "./examples/*",
-    "./src/*": "./src/*"
-  },
   "type": "module",
   "source": "src/index.ts",
-  "main": "dist/build/index.cjs",
-  "module": "dist/build/index.module.js",
-  "types": "dist/build/types.d.ts",
+  "main": "./dist/build/index.cjs",
+  "module": "./dist/build/index.module.js",
+  "types": "./dist/src/index.d.ts",
   "targets": {
     "main": {
       "optimize": true
@@ -35,7 +25,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:core && npm run build:examples",
-    "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build",
+    "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build && rimraf dist/src/index.d.ts.map",
     "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc",
     "demo": "parcel demo/index.html --dist-dir .demo-cache"
   },
@@ -53,15 +43,16 @@
     "@types/three": "^0.160.0",
     "@types/three-nebula": "^10.0.3",
     "parcel": "^2.11.0",
+    "process": "^0.11.10",
     "rimraf": "^5.0.5",
     "tsc-alias": "^1.8.8"
   },
   "peerDependencies": {
-    "three": "^0.160.0",
-    "cannon-es": "^0.20.0",
-    "@vladkrutenyuk/cannon-es-debugger-pro": "^0.2.4",
-    "three-nebula": "^10.0.3",
     "@babel/runtime": "^7.23.8",
+    "@vladkrutenyuk/cannon-es-debugger-pro": "^0.2.4",
+    "cannon-es": "^0.20.0",
+    "three": "^0.160.0",
+    "three-nebula": "^10.0.3",
     "typescript": "^5.2.2"
   },
   "peerDependenciesMeta": {

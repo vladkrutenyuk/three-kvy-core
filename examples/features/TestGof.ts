@@ -1,7 +1,7 @@
 import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
-export default class TestGof extends Feature<{}> {
+export class TestGof extends Feature<{}> {
 	mesh: THREE.Mesh;
 	constructor(props: FeatureProps<{}>) {
 		super(props);

@@ -1,9 +1,9 @@
 import { CannonEsDebuggerPro } from "@vladkrutenyuk/cannon-es-debugger-pro";
 import * as THREE from "three";
 import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
-import CannonPhysicsModule from "../modules/CannonPhysicsModule";
+import { CannonPhysicsModule } from "../modules/CannonPhysicsModule";
 
-export default class CannonPhysicsDebuggerGof extends Feature<{
+export class CannonPhysicsDebuggerGof extends Feature<{
 	cannon: CannonPhysicsModule;
 }> {
 	private _cannonDebugger: CannonEsDebuggerPro | null = null;

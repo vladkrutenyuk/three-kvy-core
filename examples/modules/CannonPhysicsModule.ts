@@ -1,7 +1,7 @@
 import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
 import * as CANNON from "cannon-es";
 
-export default class CannonPhysicsModule extends GameWorldModule {
+export class CannonPhysicsModule extends GameWorldModule {
 	readonly world: CANNON.World;
 	readonly fixedStep: number;
 	readonly maxSubSteps: number;

@@ -3,7 +3,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
 
-export default class ThreePostProcessingModule extends GameWorldModule {
+export class ThreePostProcessingModule extends GameWorldModule {
 	public composer!: EffectComposer;
 
 	private _renderer!: THREE.WebGLRenderer;

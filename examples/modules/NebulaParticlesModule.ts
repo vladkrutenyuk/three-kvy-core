@@ -2,7 +2,7 @@ import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
 import * as NEBULA from "three-nebula";
 import * as THREE from "three";
 
-export default class NebulaParticlesModule extends GameWorldModule {
+export class NebulaParticlesModule extends GameWorldModule {
 	system!: NEBULA.System;
 	spriteRenderer!: NEBULA.SpriteRenderer;
 
