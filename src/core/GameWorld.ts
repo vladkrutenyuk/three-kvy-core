@@ -54,11 +54,11 @@ export class GameWorld<TModules extends GameWorldModulesRecord = {}> extends Gam
 
 	private initFrameLoopPausingOnSwitchTab() {
 		const onWindowFocus = () => {
-			console.log("onWindowFocus");
+			// console.log("onWindowFocus");
 			this.animationFrameLoop.run();
 		};
 		const onWindowBlur = () => {
-			console.log("onWindowBlur");
+			// console.log("onWindowBlur");
 			this.animationFrameLoop.stop();
 		};
 		this.three.addEventListener("mount", () => {

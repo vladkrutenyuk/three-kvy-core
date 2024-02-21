@@ -159,10 +159,10 @@ export abstract class Feature<
 	protected onResize(_: GameWorld<TModules>) {}
 
 	private _log(...args: any[]) {
-		console.log(
-			`GO-${this.gameObject.id} ${this.constructor.name}-${this.id}`,
-			...args
-		);
+		// console.log(
+		// 	`GO-${this.gameObject.id} ${this.constructor.name}-${this.id}`,
+		// 	...args
+		// );
 	}
 }
 

@@ -216,7 +216,7 @@ export class GameObject<
 	}
 
 	private _log = (...args: any[]) => {
-		console.log(`g-${this.id}`, ...args);
+		// console.log(`g-${this.id}`, ...args);
 	};
 }
 
