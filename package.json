@@ -27,7 +27,8 @@
     "build": "npm run clean && npm run build:core && npm run build:examples",
     "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build && rimraf dist/src/index.d.ts.map",
     "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc",
-    "demo": "parcel demo/index.html --dist-dir .demo-cache"
+    "demo": "parcel demo/index.html --dist-dir .demo-cache",
+    "alpha-release": "npm run build && npm version prerelease --preid=alpha && git push origin && npm publish"
   },
   "files": [
     "dist/build",
