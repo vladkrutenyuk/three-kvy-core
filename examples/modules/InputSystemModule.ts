@@ -255,9 +255,6 @@ export class InputSystemModule extends GameWorldModule {
 	// 	this._dom.addEventListener(...args);
 	// }
 
-	addRendererDomEventListener = this._dom.addEventListener
-	removeRendererDomEventListener = this._dom.removeEventListener
-
 	// public removeRendererDomEventListener<K extends keyof HTMLElementEventMap>(
 	// 	...args: Parameters<typeof this._dom.removeEventListener<K>>
 	// ) {

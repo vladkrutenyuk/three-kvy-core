@@ -1,13 +1,13 @@
 import * as CANNON from "cannon-es";
 import * as THREE from "three";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import {CannonPhysicsDebuggerGof} from "../examples/features/CannonPhysicsDebuggerGof";
-import {OrbitCameraGof} from "../examples/features/OrbitCameraGof";
-import {TestGof} from "../examples/features/TestGof";
-import {CannonPhysicsModule} from "../examples/modules/CannonPhysicsModule";
-import {InputSystemModule} from "../examples/modules/InputSystemModule";
-import {NebulaParticlesModule} from "../examples/modules/NebulaParticlesModule";
-import {ThreePostProcessingModule} from "../examples/modules/ThreePostProcessingModule";
+import { CannonPhysicsDebuggerGof } from "../examples/features/CannonPhysicsDebuggerGof";
+import { OrbitCameraGof } from "../examples/features/OrbitCameraGof";
+import { TestGof } from "../examples/features/TestGof";
+import { CannonPhysicsModule } from "../examples/modules/CannonPhysicsModule";
+import { InputSystemModule } from "../examples/modules/InputSystemModule";
+import { NebulaParticlesModule } from "../examples/modules/NebulaParticlesModule";
+import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
 import { GameObject } from "../src/core/GameObject";
 import { GameWorld } from "../src/core/GameWorld";
 import { CPHModule } from "./BuiltInModulesRecords";
@@ -69,8 +69,6 @@ function createWorld(root: HTMLDivElement) {
 	);
 	gameWorld.add(cube);
 
-	input.addRendererDomEventListener('click', (event) => {})
-	
 	// start
 	three.mount(root as HTMLDivElement);
 	animationFrameLoop.run();
@@ -111,17 +109,16 @@ function createWorld(root: HTMLDivElement) {
 	const planeBody = new CANNON.Body().addShape(new CANNON.Plane());
 	cannon.world.addBody(planeBody);
 
-	gameWorld
-		.addFeature(OrbitCameraGof, {
-			options: {
-				maxDistance: 50,
-				initDistance: 40,
-				enablePan: true,
-			},
-		})
+	gameWorld.addFeature(OrbitCameraGof, {
+		options: {
+			maxDistance: 50,
+			initDistance: 40,
+			enablePan: true,
+		},
+	});
 	gameWorld.addFeature(CannonPhysicsDebuggerGof);
 	// gameWorld.create().addFeature(TestGof)
-	const go = new GameObject()
-	go.addFeature(TestGof)
-	gameWorld.add(go)
+	const go = new GameObject();
+	go.addFeature(TestGof);
+	gameWorld.add(go);
 }
