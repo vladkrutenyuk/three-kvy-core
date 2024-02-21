@@ -249,15 +249,18 @@ export class InputSystemModule extends GameWorldModule {
 
 	// CUSTOM EVENTS
 
-	public addRendererDomEventListener<K extends keyof HTMLElementEventMap>(
-		...args: Parameters<typeof this._dom.addEventListener<K>>
-	) {
-		this._dom.addEventListener(...args);
-	}
+	// public addRendererDomEventListener<K extends keyof HTMLElementEventMap>(
+	// 	...args: Parameters<typeof this._dom.addEventListener<K>>
+	// ) {
+	// 	this._dom.addEventListener(...args);
+	// }
 
-	public removeRendererDomEventListener<K extends keyof HTMLElementEventMap>(
-		...args: Parameters<typeof this._dom.removeEventListener<K>>
-	) {
-		this._dom.removeEventListener(...args);
-	}
+	addRendererDomEventListener = this._dom.addEventListener
+	removeRendererDomEventListener = this._dom.removeEventListener
+
+	// public removeRendererDomEventListener<K extends keyof HTMLElementEventMap>(
+	// 	...args: Parameters<typeof this._dom.removeEventListener<K>>
+	// ) {
+	// 	this._dom.removeEventListener(...args);
+	// }
 }

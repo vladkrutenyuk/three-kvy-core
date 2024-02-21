@@ -35,7 +35,7 @@ function createWorld(root: HTMLDivElement) {
 	});
 
 	const { three, animationFrameLoop, modules } = gameWorld;
-	const { postprocessing, cannon } = modules;
+	const { postprocessing, cannon, input } = modules;
 
 	postprocessing.setPixelRatio(window.devicePixelRatio);
 
@@ -69,6 +69,8 @@ function createWorld(root: HTMLDivElement) {
 	);
 	gameWorld.add(cube);
 
+	input.addRendererDomEventListener('click', (event) => {})
+	
 	// start
 	three.mount(root as HTMLDivElement);
 	animationFrameLoop.run();

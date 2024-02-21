@@ -39,11 +39,17 @@ export abstract class Feature<
 		this.id = _featureId++;
 		this.uuid = THREE.MathUtils.generateUUID();
 
+		let reverse: ReturnType<typeof this.useAttachedCtx>
 		this.addEventListener("attachedToWorld", ({ world }) => {
 			this.onAttach(world);
+			reverse = this.useAttachedCtx(world);
 		});
 		this.addEventListener("detachedFromWorld", ({ world }) => {
 			this.onDetach(world);
+			if (reverse) {
+				reverse()
+				reverse = undefined
+			}
 		});
 		this.addEventListener("destroy", () => {
 			this.onDestroy();
@@ -79,6 +85,10 @@ export abstract class Feature<
 		//TODO: fix type error
 		//@ts-ignore
 		this.dispatchEvent(_event.destroy);
+	}
+
+	protected useAttachedCtx(_: GameWorld<TModules>): undefined | (() => void) {
+		return;
 	}
 
 	protected onAttach(_: GameWorld<TModules>) {}
