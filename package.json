@@ -20,14 +20,8 @@
       "require": "./dist/build/index.cjs",
       "types": "./dist/src/index.d.ts"
     },
-    "./features": {
-      "import": "./dist/examples/features/index.js",
-      "types": "./dist/examples/features/index.d.ts"
-    },
-    "./modules": {
-      "import": "./dist/examples/modules/index.js",
-      "types": "./dist/examples/modules/index.d.ts"
-    }
+    "./modules/*": "./dist/examples/modules/*.js",
+    "./features/*": "./dist/examples/features/*.js"
   },
   "targets": {
     "main": {
