@@ -14,6 +14,21 @@
   "main": "./dist/build/index.cjs",
   "module": "./dist/build/index.module.js",
   "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/build/index.module.js",
+      "require": "./dist/build/index.cjs",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./features": {
+      "import": "./dist/examples/features/index.js",
+      "types": "./dist/examples/features/index.d.ts"
+    },
+    "./modules": {
+      "import": "./dist/examples/modules/index.js",
+      "types": "./dist/examples/modules/index.d.ts"
+    }
+  },
   "targets": {
     "main": {
       "optimize": true
