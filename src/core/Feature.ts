@@ -1,110 +1,110 @@
 import * as THREE from "three";
-import { GameObject } from "./GameObject";
-import { GameWorld, GameWorldModulesRecord } from "./GameWorld";
+import { GameContext, GameContextModulesRecord } from "./GameContext";
+import { IFeaturable, ObjectFeaturability } from "./ObjectFeaturablity";
+import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
+import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 
-let _featureId = 0;
+export type FeatureEventMap<TModules extends GameContextModulesRecord = {}, TMap extends {} = {} > =
+	CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap
 
-export type FeatureEventMap<TModules extends GameWorldModulesRecord = {}> = {
-	attachedToWorld: { world: GameWorld<TModules> };
-	detachedFromWorld: { world: GameWorld<TModules> };
-	destroy: {};
-};
 export type FeatureProps<
-	TModules extends GameWorldModulesRecord,
+	TModules extends GameContextModulesRecord = {},
 	TProps extends {} = {}
 > = TProps & {
-	gameObject: GameObject<TModules>;
+	object: IFeaturable<TModules>;
 };
 
 export abstract class Feature<
-	TModules extends GameWorldModulesRecord = {},
+	TModules extends GameContextModulesRecord = {},
 	TProps extends {} = {},
-	TEventMap extends {} = {}
+	TEventMap extends FeatureEventMap<TModules> = FeatureEventMap<TModules>
 > extends THREE.EventDispatcher<FeatureEventMap<TModules> & TEventMap> {
 	public readonly type: string;
 	public readonly id: number;
-	public readonly gameObject: GameObject<TModules>;
 	public uuid: string;
+	public readonly object: IFeaturable<TModules>;
+	public featurabiliy: ObjectFeaturability<TModules>;
 
 	protected get world() {
 		return this._world;
 	}
 
-	private _world: GameWorld<TModules> | null = null;
+	private _world: GameContext<TModules> | null = null;
 
 	constructor(props: FeatureProps<TModules, TProps>) {
 		super();
 		this.type = this.constructor.name;
-		this.gameObject = props.gameObject;
+		this.object = props.object;
+		this.featurabiliy = this.object.userData.featurability;
 		this.id = _featureId++;
 		this.uuid = THREE.MathUtils.generateUUID();
 
-		let reverse: ReturnType<typeof this.useAttachedCtx>
-		this.addEventListener("attachedToWorld", ({ world }) => {
-			this.onAttach(world);
-			reverse = this.useAttachedCtx(world);
+		this.featurabiliy.addEventListener(
+			CtxAttachableEvent.ATTACHED_TO_CTX,
+			this.objectAttachedToCtxHandler
+		);
+		this.featurabiliy.addEventListener(
+			CtxAttachableEvent.DETACHED_FROM_CTX,
+			this.objectDetachedFromCtxHandler
+		);
+
+		let reverse: ReturnType<typeof this.useAttachedCtx>;
+		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, ({ ctx }) => {
+			this.onAttach(ctx);
+			reverse = this.useAttachedCtx(ctx);
 		});
-		this.addEventListener("detachedFromWorld", ({ world }) => {
-			this.onDetach(world);
+		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, ({ ctx }) => {
+			this.onDetach(ctx);
 			if (reverse) {
-				reverse()
-				reverse = undefined
+				reverse();
+				reverse = undefined;
 			}
 		});
 		this.addEventListener("destroy", () => {
 			this.onDestroy();
 		});
-
-		this.gameObject.addEventListener(
-			"attachedToWorld",
-			this.gameObjectAttachedToWorld
-		);
-		this.gameObject.addEventListener(
-			"detachedFromWorld",
-			this.gameObjectDetachedFromWorld
-		);
 	}
 
+	/** It is prohibited to call this method manually by yourself! */
 	init() {
-		this.gameObject.world && this.attachToWorld(this.gameObject.world);
+		this.featurabiliy.world && this.attachToWorld(this.featurabiliy.world);
 	}
 
 	destroy() {
 		this._log("remove...");
-		this.gameObject.removeEventListener(
-			"attachedToWorld",
-			this.gameObjectAttachedToWorld
+		this.featurabiliy.removeEventListener(
+			CtxAttachableEvent.ATTACHED_TO_CTX,
+			this.objectAttachedToCtxHandler
 		);
-		this.gameObject.removeEventListener(
-			"detachedFromWorld",
-			this.gameObjectDetachedFromWorld
+		this.featurabiliy.removeEventListener(
+			CtxAttachableEvent.DETACHED_FROM_CTX,
+			this.objectDetachedFromCtxHandler
 		);
 		this.detachFromWorld();
-		this.gameObject.destroyFeature(this);
+		this.featurabiliy.destroyFeature(this);
 
 		//TODO: fix type error
 		//@ts-ignore
 		this.dispatchEvent(_event.destroy);
 	}
 
-	protected useAttachedCtx(_: GameWorld<TModules>): undefined | (() => void) {
+	protected useAttachedCtx(_: GameContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
-
-	protected onAttach(_: GameWorld<TModules>) {}
-	protected onDetach(_: GameWorld<TModules>) {}
+	protected onAttach(_: GameContext<TModules>) {}
+	protected onDetach(_: GameContext<TModules>) {}
 	protected onDestroy() {}
 
-	private gameObjectAttachedToWorld = (event: { world: GameWorld<TModules> }) => {
+	private objectAttachedToCtxHandler = (event: { ctx: GameContext<TModules> }) => {
 		this._log("gameObjectAttachedToWorld");
-		this.attachToWorld(event.world);
+		this.attachToWorld(event.ctx);
 	};
-	private gameObjectDetachedFromWorld = (_: { world: GameWorld<TModules> }) => {
+	private objectDetachedFromCtxHandler = (_: { ctx: GameContext<TModules> }) => {
 		this._log("gameObjectDetachedFromWorld");
 		this.detachFromWorld();
 	};
 
-	private attachToWorld = (world: GameWorld<TModules>) => {
+	private attachToWorld = (world: GameContext<TModules>) => {
 		this._log("attachToWorld...");
 		if (this._world) {
 			if (this.world === world) return;
@@ -113,56 +113,52 @@ export abstract class Feature<
 		}
 		this._world = world;
 
-		_event.attachedToWorld.world = this._world;
+		_event[CtxAttachableEvent.ATTACHED_TO_CTX].ctx = this._world;
 		this._log("attachToWorld done!");
-		//TODO: fix type error
-		//@ts-ignore
-		this.dispatchEvent(_event.attachedToWorld);
+		this.dispatchEvent(_event[CtxAttachableEvent.ATTACHED_TO_CTX]);
 	};
-
 	private detachFromWorld = () => {
 		this._log("detachFromWorld...");
 		if (!this._world) return;
 		const world = this._world;
 		this._world = null;
 
-		_event.detachedFromWorld.world = world;
+		_event[CtxAttachableEvent.DETACHED_FROM_CTX].ctx = world;
 		this._log("detachFromWorld done!");
-		//TODO: fix type error
-		//@ts-ignore
-		this.dispatchEvent(_event.detachedFromWorld);
+
+		this.dispatchEvent(_event[DestroyableEvent.DESTROYED]);
 	};
 
 	protected initEventMethod(name: keyof typeof _eventMethods) {
 		let listener: (() => void) | null = null;
 
-		const init = (world: GameWorld<TModules>) => {
+		const init = (world: GameContext<TModules>) => {
 			let listener = () => {
 				this[name](world);
 			};
 			world.three.addEventListener(_eventMethods[name], listener);
 		};
 
-		this.addEventListener("attachedToWorld", (event) => {
-			init(event.world);
+		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, (event) => {
+			init(event.ctx);
 		});
-		this.addEventListener("detachedFromWorld", (event) => {
-			listener && event.world.three.removeEventListener("beforeRender", listener);
+		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, (event) => {
+			listener && event.ctx.three.removeEventListener("beforeRender", listener);
 		});
 
 		this._world && init(this._world);
 	}
-	protected onBeforeRender(_: GameWorld<TModules>) {}
-	protected onAfterRender(_: GameWorld<TModules>) {}
-	protected onUnmount(_: GameWorld<TModules>) {}
-	protected onMount(_: GameWorld<TModules>) {}
-	protected onResize(_: GameWorld<TModules>) {}
+	protected onBeforeRender(_: GameContext<TModules>) {}
+	protected onAfterRender(_: GameContext<TModules>) {}
+	protected onUnmount(_: GameContext<TModules>) {}
+	protected onMount(_: GameContext<TModules>) {}
+	protected onResize(_: GameContext<TModules>) {}
 
 	private _log(...args: any[]) {
-		// console.log(
-		// 	`GO-${this.gameObject.id} ${this.constructor.name}-${this.id}`,
-		// 	...args
-		// );
+		console.log(
+			`F-${this.object.id} ${this.constructor.name}-${this.id}`,
+			...args
+		);
 	}
 }
 
@@ -177,7 +173,15 @@ const _eventMethods = {
 const _event: {
 	[K in keyof FeatureEventMap<any>]: { type: K } & FeatureEventMap<any>[K];
 } = {
-	attachedToWorld: { type: "attachedToWorld", world: {} as any },
-	detachedFromWorld: { type: "detachedFromWorld", world: {} as any },
-	destroy: { type: "destroy" },
+	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
+		type: CtxAttachableEvent.ATTACHED_TO_CTX,
+		ctx: {} as any,
+	},
+	[CtxAttachableEvent.DETACHED_FROM_CTX]: {
+		type: CtxAttachableEvent.DETACHED_FROM_CTX,
+		ctx: {} as any,
+	},
+	[DestroyableEvent.DESTROYED]: { type: DestroyableEvent.DESTROYED },
 };
+
+let _featureId = 0;

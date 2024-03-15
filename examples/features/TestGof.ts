@@ -1,4 +1,4 @@
-import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
+import { GameContext, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
 export class TestGof extends Feature<{}> {
@@ -11,14 +11,14 @@ export class TestGof extends Feature<{}> {
 			new THREE.MeshNormalMaterial()
 		);
 		this.mesh.scale.setScalar(4);
-		this.gameObject.add(this.mesh);
+		this.object.add(this.mesh);
 	}
 
 	protected onDestroy() {
-		this.gameObject.remove(this.mesh);
+		this.object.remove(this.mesh);
 	}
 
-	protected onBeforeRender(ctx: GameWorld<{}>): void {
+	protected onBeforeRender(ctx: GameContext<{}>): void {
 		this.mesh.rotateY(ctx.animationFrameLoop.globalUniforms.deltaTime.value);
 	}
 }

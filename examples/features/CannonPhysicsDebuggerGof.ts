@@ -1,6 +1,6 @@
 import { CannonEsDebuggerPro } from "@vladkrutenyuk/cannon-es-debugger-pro";
 import * as THREE from "three";
-import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
+import { GameContext, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
 import { CannonPhysicsModule } from "../modules/CannonPhysicsModule";
 
 export class CannonPhysicsDebuggerGof extends Feature<{
@@ -16,10 +16,10 @@ export class CannonPhysicsDebuggerGof extends Feature<{
 	) {
 		super(props);
 		this._root = new THREE.Group();
-		this.gameObject.add(this._root);
+		this.object.add(this._root);
 	}
 
-	protected onAttach(ctx: GameWorld<{ cannon: CannonPhysicsModule }>) {
+	protected onAttach(ctx: GameContext<{ cannon: CannonPhysicsModule }>) {
 		this._cannonDebugger = new CannonEsDebuggerPro(
 			this._root,
 			ctx.modules.cannon.world
@@ -27,11 +27,11 @@ export class CannonPhysicsDebuggerGof extends Feature<{
 		ctx.modules.cannon.world.addEventListener("postStep", this.update.bind(this));
 	}
 
-	protected onDetach(ctx: GameWorld<{ cannon: CannonPhysicsModule }>) {
+	protected onDetach(ctx: GameContext<{ cannon: CannonPhysicsModule }>) {
 		ctx.modules.cannon.world.removeEventListener("postStep", this.update);
 		this._cannonDebugger?.destroy();
 		this._cannonDebugger = null;
-		this.gameObject.remove(this._root);
+		this.object.remove(this._root);
 	}
 
 	private update() {

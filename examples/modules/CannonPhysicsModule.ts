@@ -1,7 +1,7 @@
-import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
+import { GameContext, GameContextModule } from "@vladkrutenyuk/game-world";
 import * as CANNON from "cannon-es";
 
-export class CannonPhysicsModule extends GameWorldModule {
+export class CannonPhysicsModule extends GameContextModule {
 	readonly world: CANNON.World;
 	readonly fixedStep: number;
 	readonly maxSubSteps: number;
@@ -17,16 +17,16 @@ export class CannonPhysicsModule extends GameWorldModule {
 		this.maxSubSteps = props?.maxSubSteps ?? 3;
 	}
 
-	protected onInit<TModules extends Readonly<Record<string, GameWorldModule>>>(
-		world: GameWorld<TModules>
+	protected onInit<TModules extends Readonly<Record<string, GameContextModule>>>(
+		world: GameContext<TModules>
 	): void {
 		world.three.addEventListener("beforeRender", this.onBeforeRender);
 	}
 
 	protected onDestroy<
-		TModules extends Readonly<Record<string, GameWorldModule>>
-	>(event: { world: GameWorld<TModules> }): void {
-		event.world.three.removeEventListener("beforeRender", this.onBeforeRender);
+		TModules extends Readonly<Record<string, GameContextModule>>
+	>(ctx: GameContext<TModules>): void {
+		ctx.three.removeEventListener("beforeRender", this.onBeforeRender);
 		while (this.world.bodies.length > 0) {
 			this.world.removeBody(this.world.bodies[0]);
 		}

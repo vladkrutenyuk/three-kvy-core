@@ -8,9 +8,8 @@ import { CannonPhysicsModule } from "../examples/modules/CannonPhysicsModule";
 import { InputSystemModule } from "../examples/modules/InputSystemModule";
 import { NebulaParticlesModule } from "../examples/modules/NebulaParticlesModule";
 import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
-import { GameObject } from "../src/core/GameObject";
-import { GameWorld } from "../src/core/GameWorld";
-import { CPHModule } from "./BuiltInModulesRecords";
+import { GameContext } from "../src/core/GameContext";
+import { ObjectFeaturability } from "../src/core/ObjectFeaturablity";
 
 console.log("main.ts");
 
@@ -18,7 +17,7 @@ const root = document.querySelector("#app");
 root && createWorld(root as HTMLDivElement);
 
 function createWorld(root: HTMLDivElement) {
-	const gameWorld = new GameWorld({
+	const gameCtx = new GameContext({
 		modules: {
 			cannon: new CannonPhysicsModule(),
 			nebula: new NebulaParticlesModule(),
@@ -32,9 +31,10 @@ function createWorld(root: HTMLDivElement) {
 				preserveDrawingBuffer: true,
 			},
 		},
+		autoRenderOnFrame: true,
 	});
 
-	const { three, animationFrameLoop, modules } = gameWorld;
+	const { three, animationFrameLoop, modules } = gameCtx;
 	const { postprocessing, cannon, input } = modules;
 
 	postprocessing.setPixelRatio(window.devicePixelRatio);
@@ -46,9 +46,8 @@ function createWorld(root: HTMLDivElement) {
 		0.2,
 		1.38
 	);
-	three.addEventListener("resize", (event) => {
-		const { width, height } = event;
-		bloomPass.resolution.set(width * 0.5, height * 0.5);
+	three.addEventListener("resize", ({ width, height }) => {
+		bloomPass.setSize(width, height);
 	});
 	postprocessing.composer.insertPass(bloomPass, 1);
 
@@ -57,8 +56,8 @@ function createWorld(root: HTMLDivElement) {
 	three.camera.position.setScalar(20);
 	three.camera.lookAt(new THREE.Vector3().setScalar(0));
 
-	gameWorld.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
-	gameWorld.add(new GameObject());
+	gameCtx.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
+	gameCtx.add(ObjectFeaturability.new(THREE.Object3D));
 
 	const cube = new THREE.Mesh(
 		new THREE.BoxGeometry(),
@@ -67,7 +66,8 @@ function createWorld(root: HTMLDivElement) {
 			emissiveIntensity: 4,
 		})
 	);
-	gameWorld.add(cube);
+	cube.position.setX(4);
+	gameCtx.add(cube);
 
 	// start
 	three.mount(root as HTMLDivElement);
@@ -109,16 +109,24 @@ function createWorld(root: HTMLDivElement) {
 	const planeBody = new CANNON.Body().addShape(new CANNON.Plane());
 	cannon.world.addBody(planeBody);
 
-	gameWorld.addFeature(OrbitCameraGof, {
+	gameCtx.getRoot().addFeature(OrbitCameraGof, {
 		options: {
 			maxDistance: 50,
 			initDistance: 40,
 			enablePan: true,
 		},
 	});
-	gameWorld.addFeature(CannonPhysicsDebuggerGof);
+	gameCtx.getRoot().addFeature(CannonPhysicsDebuggerGof);
 	// gameWorld.create().addFeature(TestGof)
-	const go = new GameObject();
-	go.addFeature(TestGof);
-	gameWorld.add(go);
+	const go = ObjectFeaturability.new(THREE.Object3D);
+	go.userData.featurability.addFeature(TestGof);
+
+	setTimeout(() => {
+		go.removeFromParent()
+		setTimeout(() => {
+			gameCtx.add(go);
+		}, 1000)
+	}, 1000)
+
+	gameCtx.add(go);
 }

@@ -1,13 +1,13 @@
-import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
+import { GameContext, GameContextModule } from "@vladkrutenyuk/game-world";
 import * as NEBULA from "three-nebula";
 import * as THREE from "three";
 
-export class NebulaParticlesModule extends GameWorldModule {
+export class NebulaParticlesModule extends GameContextModule {
 	system!: NEBULA.System;
 	spriteRenderer!: NEBULA.SpriteRenderer;
 
-	protected onInit<TModules extends Readonly<Record<string, GameWorldModule>>>(
-		world: GameWorld<TModules>
+	protected onInit<TModules extends Readonly<Record<string, GameContextModule>>>(
+		world: GameContext<TModules>
 	): void {
 		this.system = new NEBULA.System();
 		this.spriteRenderer = new NEBULA.SpriteRenderer(
@@ -18,7 +18,6 @@ export class NebulaParticlesModule extends GameWorldModule {
 		this.system.addRenderer(this.spriteRenderer);
 
 		world.three.addEventListener("beforeRender", this.onBeforeRender);
-		world.three.addEventListener("destroy", this.onDestroy);
 	}
 
 	protected onDestroy() {

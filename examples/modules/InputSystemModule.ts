@@ -1,7 +1,7 @@
-import { GameWorld, GameWorldModule, GameWorldModulesRecord } from "@vladkrutenyuk/game-world";
+import { GameContext, GameContextModule, GameContextModulesRecord } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
-export class InputSystemModule extends GameWorldModule {
+export class InputSystemModule extends GameContextModule {
 	private _dom!: HTMLElement;
 
 	private readonly _keys = new Set<string>();
@@ -56,8 +56,8 @@ export class InputSystemModule extends GameWorldModule {
 		return this._keys.has(key);
 	};
 
-	protected onInit<TModules extends GameWorldModulesRecord>(
-		world: GameWorld<TModules>
+	protected onInit<TModules extends GameContextModulesRecord>(
+		world: GameContext<TModules>
 	): void {
 		this._dom = world.three.renderer.domElement;
 
@@ -76,11 +76,11 @@ export class InputSystemModule extends GameWorldModule {
 	}
 
 	protected onDestroy<
-		TModules extends Readonly<Record<string, GameWorldModule>>
-	>(event: { world: GameWorld<TModules> }): void {
+		TModules extends Readonly<Record<string, GameContextModule>>
+	>(ctx: GameContext<TModules>): void {
 		window.removeEventListener("resize", this.onWindowResize);
 		window.removeEventListener("scroll", this.onWindowScroll);
-		event.world.three.removeEventListener("resize", this.onDomResize);
+		ctx.three.removeEventListener("resize", this.onDomResize);
 		this._dom.removeEventListener("focus", this.onFocus);
 		this._dom.removeEventListener("blur", this.onBlur);
 		this._dom.removeEventListener("pointerenter", this.onPointerEnter);

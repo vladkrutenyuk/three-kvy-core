@@ -1,15 +1,15 @@
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { GameWorld, GameWorldModule } from "@vladkrutenyuk/game-world";
+import { GameContext, GameContextModule } from "@vladkrutenyuk/game-world";
 
-export class ThreePostProcessingModule extends GameWorldModule {
+export class ThreePostProcessingModule extends GameContextModule {
 	public composer!: EffectComposer;
 
 	private _renderer!: THREE.WebGLRenderer;
 
-	protected onInit<TModules extends Readonly<Record<string, GameWorldModule>>>(
-		world: GameWorld<TModules>
+	protected onInit<TModules extends Readonly<Record<string, GameContextModule>>>(
+		world: GameContext<TModules>
 	): void {
 		const { three } = world;
 		this._renderer = three.renderer;
@@ -27,9 +27,9 @@ export class ThreePostProcessingModule extends GameWorldModule {
 	}
 
 	protected onDestroy<
-		TModules extends Readonly<Record<string, GameWorldModule>>
-	>(event: { world: GameWorld<TModules> }): void {
-		const { three } = event.world;
+		TModules extends Readonly<Record<string, GameContextModule>>
+	>(ctx: GameContext<TModules>): void {
+		const { three } = ctx;
 		three.removeEventListener("resize", this.onResize);
 		three.clearRenderFn();
 		const passes = [...this.composer.passes];

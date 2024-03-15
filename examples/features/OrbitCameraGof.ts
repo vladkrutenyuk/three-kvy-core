@@ -1,6 +1,11 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GameWorld, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
+import { OrbitControls } from "three/examples/jsm/Addons.js";
+import {
+	GameContext,
+	Feature,
+	FeatureProps,
+	FeatureEventMap,
+} from "@vladkrutenyuk/game-world";
 
 export type OrbitCameraGofOptions = {
 	initDistance?: number;
@@ -19,7 +24,7 @@ export type OrbitCameraGofProps = {
 export class OrbitCameraGof extends Feature<
 	{},
 	OrbitCameraGofProps,
-	{ start: {}; end: {} }
+	FeatureEventMap<{}, { start: {val: number}; end: {} }>
 > {
 	readonly type = OrbitCameraGof.name;
 
@@ -43,17 +48,19 @@ export class OrbitCameraGof extends Feature<
 		return this._isDragging;
 	}
 
-	private _options?: OrbitCameraGofOptions;
+	private _options: OrbitCameraGofOptions = {};
 
 	constructor(props: FeatureProps<{}, OrbitCameraGofProps>) {
 		super(props);
 		this.initEventMethod("onBeforeRender");
 		this.target = props.target ?? null;
-		this._options = props.options;
+		this._options = props.options
+			? { ...this._options, ...props.options }
+			: this._options;
 	}
 
-	protected onAttach(world: GameWorld<{}>): void {
-		const { three } = world;
+	protected useAttachedCtx(ctx: GameContext<{}>) {
+		const { three } = ctx;
 		this.controls = new OrbitControls(three.camera, three.renderer.domElement);
 
 		if (this.target) {
@@ -66,9 +73,9 @@ export class OrbitCameraGof extends Feature<
 		this.maxDistance = this._options?.maxDistance ?? this.maxDistance;
 		const initDistance = (this.maxDistance - this.minDistance) / 2;
 
-		this.controls.minDistance = this._options?.initDistance ?? initDistance;
-		this.controls.maxDistance = this._options?.initDistance ?? initDistance;
-		this.controls.minPolarAngle = this._options?.minPolarAngle ?? 0;
+		this.controls.minDistance = this._options.initDistance ?? initDistance;
+		this.controls.maxDistance = this._options.initDistance ?? initDistance;
+		this.controls.minPolarAngle = this._options.minPolarAngle ?? 0;
 		this.controls.maxPolarAngle = this._options?.maxPolarAngle ?? Math.PI;
 		this.controls.minAzimuthAngle = this._options?.minAzimuthAngle ?? Infinity;
 		this.controls.maxAzimuthAngle = this._options?.maxAzimuthAngle ?? Infinity;
@@ -83,22 +90,20 @@ export class OrbitCameraGof extends Feature<
 			target.maxDistance = dist;
 
 			this.setIsDragging(false);
-			// console.debug(`orbit isDragging = ${this.isDragging}`)
 		});
 		this.controls.addEventListener("change", () => {
 			this.setIsDragging(true);
-			// console.debug(`orbit isDragging = ${this.isDragging}`)
 		});
 
 		this.controls.update();
+
+		return () => {
+			this.controls?.dispose();
+			this.controls = undefined;
+		};
 	}
 
-	protected onDetach(_: GameWorld<{}>): void {
-		this.controls?.dispose();
-		this.controls = undefined;
-	}
-
-	protected onBeforeRender(_: GameWorld<{}>): void {
+	protected onBeforeRender(_: GameContext<{}>): void {
 		if (!this.controls) return;
 
 		if (this.target) {
@@ -109,12 +114,12 @@ export class OrbitCameraGof extends Feature<
 	}
 
 	reset(radius: number, phi: number, theta: number, target?: THREE.Vector3) {
-		if (!this.controls || !this.gameObject.world) return;
+		if (!this.controls || !this.featurabiliy.world) return;
 
 		this.controls.minDistance = radius;
 		this.controls.maxDistance = radius;
 
-		this.gameObject.world.three.camera.position.setFromSphericalCoords(
+		this.featurabiliy.world.three.camera.position.setFromSphericalCoords(
 			radius,
 			phi,
 			theta
