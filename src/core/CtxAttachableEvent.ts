@@ -1,9 +1,9 @@
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 
-export enum CtxAttachableEvent {
-	ATTACHED_TO_CTX = 'attachedtoctx',
-	DETACHED_FROM_CTX = 'detachedfromctx'
-}
+export const CtxAttachableEvent = {
+	ATTACHED_TO_CTX: "attachedtoctx",
+	DETACHED_FROM_CTX: "detachedfromctx",
+} as const;
 
 export type CtxAttachableEventMap<TModules extends GameContextModulesRecord = {}> = {
 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
@@ -13,4 +13,3 @@ export type CtxAttachableEventMap<TModules extends GameContextModulesRecord = {}
 		ctx: GameContext<TModules>;
 	};
 };
-

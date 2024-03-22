@@ -1,8 +1,7 @@
-export enum DestroyableEvent {
-	DESTROYED = 'destroyed',
-}
+export const DestroyableEvent = {
+	DESTROYED: "destroyed",
+} as const;
 
 export type DestroyableEventMap = {
-	[DestroyableEvent.DESTROYED]: {}
+	[DestroyableEvent.DESTROYED]: {};
 };
-

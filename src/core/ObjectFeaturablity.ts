@@ -6,10 +6,21 @@ import { removeArrayItem } from "../utils/general/remove-array-item";
 import { traverseAncestorsInterruptible } from "../utils/three/traverse-ancestors-interruptible";
 import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 
+export const ObjectFeaturabilityEvent = {
+	FEATURE_ADDED: "featureadded",
+	FEATURE_REMOVED: "featureremoved",
+} as const;
+
+export type ObjectFeaturabilityEventMap<TModules extends GameContextModulesRecord = {}> =
+	{
+		[ObjectFeaturabilityEvent.FEATURE_ADDED]: { feature: Feature<TModules> };
+		[ObjectFeaturabilityEvent.FEATURE_REMOVED]: { feature: Feature<TModules> };
+	} & CtxAttachableEventMap<TModules>;
+
 export class ObjectFeaturability<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
-> extends THREE.EventDispatcher<CtxAttachableEventMap<TModules>> {
+> extends THREE.EventDispatcher<ObjectFeaturabilityEventMap<TModules>> {
 	public readonly isObjectFeaturability = true;
 	public readonly ref: TObj;
 
@@ -20,7 +31,7 @@ export class ObjectFeaturability<
 	protected _world: GameContext<TModules> | null = null;
 	private readonly _features: Feature<any>[] = [];
 
-	/** it works recursively */
+	/** @warning it works recursively */
 	static wrap<
 		TObj extends THREE.Object3D = THREE.Object3D,
 		TModules extends GameContextModulesRecord = {}
@@ -94,7 +105,11 @@ export class ObjectFeaturability<
 		>;
 		const instance = new feature(props ? { ...props, object } : { object });
 		this._features.push(instance);
-		instance.init();
+		instance._init();
+
+		_event[ObjectFeaturabilityEvent.FEATURE_ADDED].feature = instance;
+		this.dispatchEvent(_event[ObjectFeaturabilityEvent.FEATURE_ADDED]);
+
 		return instance;
 	}
 
@@ -111,11 +126,14 @@ export class ObjectFeaturability<
 		const foundAndRemoved = removeArrayItem(this._features, feature);
 		if (foundAndRemoved) {
 			feature.destroy();
+
+			_event[ObjectFeaturabilityEvent.FEATURE_REMOVED].feature = feature;
+			this.dispatchEvent(_event[ObjectFeaturabilityEvent.FEATURE_REMOVED]);
 		}
 	}
 
-	/** @description You should be careful to use this method manually. */
-	setWorld(world: typeof this.world) {
+	/** @warning You should be careful to use this method manually. */
+	_setWorld(world: typeof this.world) {
 		if (world) {
 			this.attachToWorld(world);
 		} else {
@@ -224,21 +242,32 @@ export type IFeaturable<
 };
 
 const _event: {
-	[K in keyof CtxAttachableEventMap<any>]: {
+	[K in keyof ObjectFeaturabilityEventMap<any>]: {
 		type: K;
-	} & CtxAttachableEventMap<any>[K];
+	} & ObjectFeaturabilityEventMap<any>[K];
 } = {
 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
 		type: CtxAttachableEvent.ATTACHED_TO_CTX,
-		ctx: {} as any,
+		ctx: null as any,
 	},
 	[CtxAttachableEvent.DETACHED_FROM_CTX]: {
 		type: CtxAttachableEvent.DETACHED_FROM_CTX,
-		ctx: {} as any,
+		ctx: null as any,
+	},
+	[ObjectFeaturabilityEvent.FEATURE_ADDED]: {
+		type: ObjectFeaturabilityEvent.FEATURE_ADDED,
+		feature: null as any,
+	},
+	[ObjectFeaturabilityEvent.FEATURE_REMOVED]: {
+		type: ObjectFeaturabilityEvent.FEATURE_REMOVED,
+		feature: null as any,
 	},
 };
 
-const obj = ObjectFeaturability.new(THREE.Object3D)
-obj.userData.featurability.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, (event) => {
-	event.ctx
-})
+const obj = ObjectFeaturability.new(THREE.Object3D);
+obj.userData.featurability.addEventListener(
+	CtxAttachableEvent.ATTACHED_TO_CTX,
+	(event) => {
+		event.ctx;
+	}
+);

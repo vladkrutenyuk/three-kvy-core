@@ -24,7 +24,7 @@ export type OrbitCameraGofProps = {
 export class OrbitCameraGof extends Feature<
 	{},
 	OrbitCameraGofProps,
-	FeatureEventMap<{}, { start: {val: number}; end: {} }>
+	FeatureEventMap<{}, { start: { val: number }; end: {} }>
 > {
 	readonly type = OrbitCameraGof.name;
 
@@ -59,7 +59,7 @@ export class OrbitCameraGof extends Feature<
 			: this._options;
 	}
 
-	protected useAttachedCtx(ctx: GameContext<{}>) {
+	protected useCtx(ctx: GameContext<{}>) {
 		const { three } = ctx;
 		this.controls = new OrbitControls(three.camera, three.renderer.domElement);
 

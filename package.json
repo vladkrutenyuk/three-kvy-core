@@ -1,9 +1,9 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "0.0.2-alpha.1",
+  "version": "0.1.0",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
   "license": "MIT",
-  "description": "Game world for `three.js`.",
+  "description": "Objects featurability and its game context based on `three.js` and other customizable modules",
   "homepage": "https://github.com/vladkrutenyuk/game-world",
   "repository": {
     "type": "git",

@@ -9,7 +9,9 @@ import { InputSystemModule } from "../examples/modules/InputSystemModule";
 import { NebulaParticlesModule } from "../examples/modules/NebulaParticlesModule";
 import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
 import { GameContext } from "../src/core/GameContext";
-import { ObjectFeaturability } from "../src/core/ObjectFeaturablity";
+import {
+	ObjectFeaturability
+} from "../src/core/ObjectFeaturablity";
 
 console.log("main.ts");
 
@@ -117,16 +119,27 @@ function createWorld(root: HTMLDivElement) {
 		},
 	});
 	gameCtx.getRoot().addFeature(CannonPhysicsDebuggerGof);
-	// gameWorld.create().addFeature(TestGof)
-	const go = ObjectFeaturability.new(THREE.Object3D);
-	go.userData.featurability.addFeature(TestGof);
 
-	setTimeout(() => {
-		go.removeFromParent()
-		setTimeout(() => {
-			gameCtx.add(go);
-		}, 1000)
-	}, 1000)
+	const go = ObjectFeaturability.new(THREE.Object3D);
+	go.userData.featurability.addEventListener("featureadded", (event) => {
+		console.log("feature added", event.feature.type);
+	});
+	go.userData.featurability.addEventListener("featureremoved", (event) => {
+		console.log("feature removed", event.feature.type);
+	});
+	const testGof = go.userData.featurability.addFeature(TestGof);
+
+	const delay = (ms: number) => {
+		return new Promise((res) => setTimeout(res, ms));
+	};
+	(async () => {
+		await delay(1000);
+		go.removeFromParent();
+		await delay(1000);
+		gameCtx.add(go);
+		await delay(1000);
+		testGof.destroy();
+	})();
 
 	gameCtx.add(go);
 }

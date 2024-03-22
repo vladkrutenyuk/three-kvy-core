@@ -16,10 +16,10 @@ export abstract class GameContextModule {
 		if (this._isInited) return;
 		this._isInited = true;
 		let reverse: ReturnType<typeof this.useEffect>;
-		reverse = this.useEffect(ctx)
+		reverse = this.useEffect(ctx);
 		this.onInit(ctx);
 		ctx.addEventListener(DestroyableEvent.DESTROYED, (event) => {
-			reverse && reverse()
+			reverse && reverse();
 			this.onDestroy(event.target);
 		});
 	}

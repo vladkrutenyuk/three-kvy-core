@@ -11,7 +11,7 @@ export type GameContextProps<TModules extends GameContextModulesRecord = {}> = {
 	three?: ThreeRenderingProps;
 	modules: TModules;
 	autoRenderOnFrame?: boolean;
-}
+};
 
 export class GameContext<
 	TModules extends GameContextModulesRecord = {}
@@ -22,23 +22,23 @@ export class GameContext<
 	public readonly three: ThreeRendering;
 	public readonly modules: TModules;
 	public get isDestroyed() {
-		return this._isDestroyed
+		return this._isDestroyed;
 	}
-	
+
 	private readonly _root: IFeaturable<TModules>;
-	private _isDestroyed = false
+	private _isDestroyed = false;
 
 	constructor(props: GameContextProps<TModules>) {
 		super();
 		this.three = new ThreeRendering(props?.three);
 		this.animationFrameLoop = new AnimationFrameLoop();
-		
+
 		this.modules = props?.modules ?? {};
 		for (const key in this.modules) {
 			this.modules[key].init(this);
 		}
 
-		this._root = this.prepareRoot()
+		this._root = this.prepareRoot();
 
 		if (props.autoRenderOnFrame) {
 			this.animationFrameLoop.addEventListener("frame", this.onFrame.bind(this));
@@ -48,39 +48,39 @@ export class GameContext<
 	}
 
 	add: typeof this._root.add = (...args) => {
-		return this._root.add(...args)
-	}
+		return this._root.add(...args);
+	};
 
 	remove: typeof this._root.remove = (...args) => {
-		return this._root.remove(...args)
-	}
+		return this._root.remove(...args);
+	};
 
 	getRoot(): ObjectFeaturability<TModules, THREE.Object3D> {
-		return this._root.userData.featurability
+		return this._root.userData.featurability;
 	}
 
 	destroy() {
-		this._isDestroyed = true
+		this._isDestroyed = true;
 		this.animationFrameLoop.stop();
 		this.three.destroy();
-		this.dispatchEvent(_events[DestroyableEvent.DESTROYED])
+		this.dispatchEvent(_events[DestroyableEvent.DESTROYED]);
 	}
 
 	private prepareRoot(): IFeaturable<TModules> {
 		const root = ObjectFeaturability.new(THREE.Object3D) as IFeaturable<TModules>;
-		root.name = "GameContext_root"
+		root.name = "GameContext_root";
 		this.three.scene.add(root);
-		root.userData.featurability.setWorld(this)
+		root.userData.featurability._setWorld(this);
 
 		// protect from deletion
-		root.addEventListener('removed', (event) => {
-			if (this._isDestroyed) return
-			console.error("It is prohibited to remove GameContext's root.")
+		root.addEventListener("removed", (event) => {
+			if (this._isDestroyed) return;
+			console.error("It is prohibited to remove GameContext's root.");
 			this.three.scene.add(this._root);
-			event.target.userData.featurability.setWorld(this)
-		})
+			event.target.userData.featurability._setWorld(this);
+		});
 
-		return root
+		return root;
 	}
 
 	private onFrame() {
@@ -109,6 +109,6 @@ export class GameContext<
 
 const _events = {
 	[DestroyableEvent.DESTROYED]: {
-		type: DestroyableEvent.DESTROYED
-	}
-}
+		type: DestroyableEvent.DESTROYED,
+	},
+};

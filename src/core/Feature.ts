@@ -4,8 +4,10 @@ import { IFeaturable, ObjectFeaturability } from "./ObjectFeaturablity";
 import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 
-export type FeatureEventMap<TModules extends GameContextModulesRecord = {}, TMap extends {} = {} > =
-	CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap
+export type FeatureEventMap<
+	TModules extends GameContextModulesRecord = {},
+	TMap extends {} = {}
+> = CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap;
 
 export type FeatureProps<
 	TModules extends GameContextModulesRecord = {},
@@ -25,11 +27,11 @@ export abstract class Feature<
 	public readonly object: IFeaturable<TModules>;
 	public featurabiliy: ObjectFeaturability<TModules>;
 
-	protected get world() {
-		return this._world;
+	protected get ctx() {
+		return this._ctx;
 	}
 
-	private _world: GameContext<TModules> | null = null;
+	private _ctx: GameContext<TModules> | null = null;
 
 	constructor(props: FeatureProps<TModules, TProps>) {
 		super();
@@ -48,10 +50,10 @@ export abstract class Feature<
 			this.objectDetachedFromCtxHandler
 		);
 
-		let reverse: ReturnType<typeof this.useAttachedCtx>;
+		let reverse: ReturnType<typeof this.useCtx>;
 		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, ({ ctx }) => {
 			this.onAttach(ctx);
-			reverse = this.useAttachedCtx(ctx);
+			reverse = this.useCtx(ctx);
 		});
 		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, ({ ctx }) => {
 			this.onDetach(ctx);
@@ -60,18 +62,19 @@ export abstract class Feature<
 				reverse = undefined;
 			}
 		});
-		this.addEventListener("destroy", () => {
+		this.addEventListener(DestroyableEvent.DESTROYED, () => {
 			this.onDestroy();
 		});
 	}
 
-	/** It is prohibited to call this method manually by yourself! */
-	init() {
+	/** @warning It is prohibited to call this method manually by yourself! */
+	_init() {
 		this.featurabiliy.world && this.attachToWorld(this.featurabiliy.world);
 	}
 
 	destroy() {
 		this._log("remove...");
+		this.detachFromWorld();
 		this.featurabiliy.removeEventListener(
 			CtxAttachableEvent.ATTACHED_TO_CTX,
 			this.objectAttachedToCtxHandler
@@ -80,20 +83,32 @@ export abstract class Feature<
 			CtxAttachableEvent.DETACHED_FROM_CTX,
 			this.objectDetachedFromCtxHandler
 		);
-		this.detachFromWorld();
 		this.featurabiliy.destroyFeature(this);
 
-		//TODO: fix type error
-		//@ts-ignore
-		this.dispatchEvent(_event.destroy);
+		this.dispatchEvent(_event[DestroyableEvent.DESTROYED]);
 	}
 
-	protected useAttachedCtx(_: GameContext<TModules>): undefined | (() => void) | void {
+	// Overridable Event Methods
+
+	/**
+	 * It is called on **ctx attached**. Returned function is called on **ctx detaching**.
+	 * Essentially similar to *useEffect()* from *react*, but ctx atttach/detach instead of component mount/unmount.
+	 * @override
+	 */
+	protected useCtx(_ctx: GameContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
-	protected onAttach(_: GameContext<TModules>) {}
-	protected onDetach(_: GameContext<TModules>) {}
+
+	/** It is called on **ctx attached**. @override */
+	protected onAttach(_ctx: GameContext<TModules>) {}
+
+	/** It is called in **ctx detached**. @override */
+	protected onDetach(_ctx: GameContext<TModules>) {}
+
+	/** It is called on this feature destroyed. @override */
 	protected onDestroy() {}
+
+	// Attaching/Detaching private methods
 
 	private objectAttachedToCtxHandler = (event: { ctx: GameContext<TModules> }) => {
 		this._log("gameObjectAttachedToWorld");
@@ -106,28 +121,31 @@ export abstract class Feature<
 
 	private attachToWorld = (world: GameContext<TModules>) => {
 		this._log("attachToWorld...");
-		if (this._world) {
-			if (this.world === world) return;
+		if (this._ctx) {
+			if (this.ctx === world) return;
 			this._log("attachToWorld has world");
 			this.detachFromWorld();
 		}
-		this._world = world;
+		this._ctx = world;
 
-		_event[CtxAttachableEvent.ATTACHED_TO_CTX].ctx = this._world;
-		this._log("attachToWorld done!");
+		_event[CtxAttachableEvent.ATTACHED_TO_CTX].ctx = this._ctx;
 		this.dispatchEvent(_event[CtxAttachableEvent.ATTACHED_TO_CTX]);
+
+		this._log("attachToWorld done!");
 	};
 	private detachFromWorld = () => {
 		this._log("detachFromWorld...");
-		if (!this._world) return;
-		const world = this._world;
-		this._world = null;
+		if (!this._ctx) return;
+		const ctx = this._ctx;
+		this._ctx = null;
 
-		_event[CtxAttachableEvent.DETACHED_FROM_CTX].ctx = world;
+		_event[CtxAttachableEvent.DETACHED_FROM_CTX].ctx = ctx;
+		this.dispatchEvent(_event[CtxAttachableEvent.DETACHED_FROM_CTX]);
+
 		this._log("detachFromWorld done!");
-
-		this.dispatchEvent(_event[DestroyableEvent.DESTROYED]);
 	};
+
+	// Event methods
 
 	protected initEventMethod(name: keyof typeof _eventMethods) {
 		let listener: (() => void) | null = null;
@@ -143,30 +161,26 @@ export abstract class Feature<
 			init(event.ctx);
 		});
 		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, (event) => {
-			listener && event.ctx.three.removeEventListener("beforeRender", listener);
+			listener &&
+				event.ctx.three.removeEventListener(_eventMethods[name], listener);
 		});
 
-		this._world && init(this._world);
+		this._ctx && init(this._ctx);
 	}
-	protected onBeforeRender(_: GameContext<TModules>) {}
-	protected onAfterRender(_: GameContext<TModules>) {}
-	protected onUnmount(_: GameContext<TModules>) {}
-	protected onMount(_: GameContext<TModules>) {}
-	protected onResize(_: GameContext<TModules>) {}
+	protected onBeforeRender(_ctx: GameContext<TModules>) {}
+	protected onAfterRender(_ctx: GameContext<TModules>) {}
+	protected onResize(_ctx: GameContext<TModules>) {}
+
+	// Debug Logs
 
 	private _log(...args: any[]) {
-		console.log(
-			`F-${this.object.id} ${this.constructor.name}-${this.id}`,
-			...args
-		);
+		console.log(`F-${this.object.id} ${this.constructor.name}-${this.id}`, ...args);
 	}
 }
 
 const _eventMethods = {
 	onBeforeRender: "beforeRender",
 	onAfterRender: "afterRender",
-	onUnmount: "unmount",
-	onMount: "mount",
 	onResize: "resize",
 } as const;
 
