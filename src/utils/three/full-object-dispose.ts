@@ -1,5 +1,6 @@
 import { isDisposable } from "../typeguards/is-disposable";
 import { isMesh } from "../typeguards/is-mesh";
+import * as THREE from "three";
 
 export function fullObjectDispose(obj: THREE.Object3D, deep?: boolean) {
 	if (isMesh(obj)) {

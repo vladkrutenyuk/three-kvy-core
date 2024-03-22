@@ -113,7 +113,7 @@ export class ObjectFeaturability<
 		return instance;
 	}
 
-	getFeaturesList(): typeof this._features {
+	getFeatureList(): Feature<any>[] {
 		return this._features
 	}
 

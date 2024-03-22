@@ -29,3 +29,5 @@ export class NebulaParticlesModule extends GameContextModule {
 		this.system.update();
 	};
 }
+
+// export {}

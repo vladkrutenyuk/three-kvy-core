@@ -10,16 +10,16 @@ dependencies:
     version: 7.23.8
   '@vladkrutenyuk/cannon-es-debugger-pro':
     specifier: 0.2.4
-    version: 0.2.4(cannon-es@0.20.0)(three@0.162.0)(typescript@5.3.3)
+    version: 0.2.4(cannon-es@0.20.0)(three@0.160.1)(typescript@5.3.3)
   cannon-es:
     specifier: 0.20.0
     version: 0.20.0
   three:
-    specifier: 0.162.0
-    version: 0.162.0
+    specifier: ^0.160.0
+    version: 0.160.1
   three-nebula:
-    specifier: 10.0.3
-    version: 10.0.3(three@0.162.0)
+    specifier: ^10.0.3
+    version: 10.0.3(three@0.160.1)
   typescript:
     specifier: ^5.2.2
     version: 5.3.3
@@ -32,10 +32,10 @@ devDependencies:
     specifier: 2.11.0
     version: 2.11.0(@parcel/core@2.11.0)(typescript@5.3.3)
   '@types/three':
-    specifier: 0.162.0
-    version: 0.162.0
+    specifier: ^0.160.0
+    version: 0.160.0
   '@types/three-nebula':
-    specifier: 10.0.3
+    specifier: ^10.0.3
     version: 10.0.3
   buffer:
     specifier: ^5.5.0||^6.0.0
@@ -1226,10 +1226,6 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /@tweenjs/tween.js@23.1.1:
-    resolution: {integrity: sha512-ZpboH7pCPPeyBWKf8c7TJswtCEQObFo3bOBYalm99NzZarATALYCo5OhbCa/n4RQyJyHfhkdx+hNrdL5ByFYDw==}
-    dev: true
-
   /@types/stats.js@0.17.3:
     resolution: {integrity: sha512-pXNfAD3KHOdif9EQXZ9deK82HVNaXP5ZIF5RP2QG6OQFNTaY2YIetfrE9t528vEreGQvEPRDDc8muaoYeK0SxQ==}
     dev: true
@@ -1237,13 +1233,12 @@ packages:
   /@types/three-nebula@10.0.3:
     resolution: {integrity: sha512-eMn93aun6Ot2sGPMtgkuoVdnVFQGkL6RMPM35KAUs0+0JVRj6QzTSRGpl3Vgk3gbrgIH0RG8nA3psacGOQkVIA==}
     dependencies:
-      '@types/three': 0.162.0
+      '@types/three': 0.160.0
     dev: true
 
-  /@types/three@0.162.0:
-    resolution: {integrity: sha512-0j5yZcVukVIhrhSIC7+LmBPkkMoMuEJ1AfYBZfgNytdYqYREMuiyXWhYOMeZLBElTEAlJIZn7r2W3vqTIgjWlg==}
+  /@types/three@0.160.0:
+    resolution: {integrity: sha512-jWlbUBovicUKaOYxzgkLlhkiEQJkhCVvg4W2IYD2trqD2om3VK4DGLpHH5zQHNr7RweZK/5re/4IVhbhvxbV9w==}
     dependencies:
-      '@tweenjs/tween.js': 23.1.1
       '@types/stats.js': 0.17.3
       '@types/webxr': 0.5.10
       fflate: 0.6.10
@@ -1254,7 +1249,7 @@ packages:
     resolution: {integrity: sha512-n3u5sqXQJhf1CS68mw3Wf16FQ4cRPNBBwdYLFzq3UddiADOim1Pn3Y6PBdDilz1vOJF3ybLxJ8ZEDlLIzrOQZg==}
     dev: true
 
-  /@vladkrutenyuk/cannon-es-debugger-pro@0.2.4(cannon-es@0.20.0)(three@0.162.0)(typescript@5.3.3):
+  /@vladkrutenyuk/cannon-es-debugger-pro@0.2.4(cannon-es@0.20.0)(three@0.160.1)(typescript@5.3.3):
     resolution: {integrity: sha512-7YleJQXZtHLUu4XwSixwkvtwpp2sJ/LwEKm0+yuYxVU1Nhy2o+cm0Q9UY/J5NGtUMo9v79CkiXLxDOmjRApMOA==}
     peerDependencies:
       cannon-es: '>=0.20.0'
@@ -1265,7 +1260,7 @@ packages:
         optional: true
     dependencies:
       cannon-es: 0.20.0
-      three: 0.162.0
+      three: 0.160.1
       typescript: 5.3.3
     dev: false
 
@@ -2388,19 +2383,19 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /three-nebula@10.0.3(three@0.162.0):
+  /three-nebula@10.0.3(three@0.160.1):
     resolution: {integrity: sha512-cX0UVkCGKx1r36z/yo26HAjsMGa3NcSvGZlODTLo6lfNikpK7oYXgq5r4yVrjaGjhpeKnFalNTI8LsHiZ8KlYw==}
     peerDependencies:
       three: '>=0.122.0 <1.0.0'
     dependencies:
       lodash: 4.17.21
       potpack: 1.0.2
-      three: 0.162.0
+      three: 0.160.1
       uuid: 3.4.0
     dev: false
 
-  /three@0.162.0:
-    resolution: {integrity: sha512-xfCYj4RnlozReCmUd+XQzj6/5OjDNHBy5nT6rVwrOKGENAvpXe2z1jL+DZYaMu4/9pNsjH/4Os/VvS9IrH7IOQ==}
+  /three@0.160.1:
+    resolution: {integrity: sha512-Bgl2wPJypDOZ1stAxwfWAcJ0WQf7QzlptsxkjYiURPz+n5k4RBDLsq+6f9Y75TYxn6aHLcWz+JNmwTOXWrQTBQ==}
     dev: false
 
   /timsort@0.3.0:

@@ -6,12 +6,9 @@ import { OrbitCameraGof } from "../examples/features/OrbitCameraGof";
 import { TestGof } from "../examples/features/TestGof";
 import { CannonPhysicsModule } from "../examples/modules/CannonPhysicsModule";
 import { InputSystemModule } from "../examples/modules/InputSystemModule";
-import { NebulaParticlesModule } from "../examples/modules/NebulaParticlesModule";
 import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
 import { GameContext } from "../src/core/GameContext";
-import {
-	ObjectFeaturability
-} from "../src/core/ObjectFeaturablity";
+import { ObjectFeaturability } from "../src/core/ObjectFeaturablity";
 
 console.log("main.ts");
 
@@ -19,10 +16,9 @@ const root = document.querySelector("#app");
 root && createWorld(root as HTMLDivElement);
 
 function createWorld(root: HTMLDivElement) {
-	const gameCtx = new GameContext({
+	const ctx = new GameContext({
 		modules: {
 			cannon: new CannonPhysicsModule(),
-			nebula: new NebulaParticlesModule(),
 			postprocessing: new ThreePostProcessingModule(),
 			input: new InputSystemModule(),
 		} as const,
@@ -36,7 +32,7 @@ function createWorld(root: HTMLDivElement) {
 		autoRenderOnFrame: true,
 	});
 
-	const { three, animationFrameLoop, modules } = gameCtx;
+	const { three, animationFrameLoop, modules } = ctx;
 	const { postprocessing, cannon, input } = modules;
 
 	postprocessing.setPixelRatio(window.devicePixelRatio);
@@ -58,8 +54,8 @@ function createWorld(root: HTMLDivElement) {
 	three.camera.position.setScalar(20);
 	three.camera.lookAt(new THREE.Vector3().setScalar(0));
 
-	gameCtx.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
-	gameCtx.add(ObjectFeaturability.new(THREE.Object3D));
+	ctx.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
+	ctx.add(ObjectFeaturability.new(THREE.Object3D));
 
 	const cube = new THREE.Mesh(
 		new THREE.BoxGeometry(),
@@ -69,7 +65,7 @@ function createWorld(root: HTMLDivElement) {
 		})
 	);
 	cube.position.setX(4);
-	gameCtx.add(cube);
+	ctx.add(cube);
 
 	// start
 	three.mount(root as HTMLDivElement);
@@ -111,14 +107,14 @@ function createWorld(root: HTMLDivElement) {
 	const planeBody = new CANNON.Body().addShape(new CANNON.Plane());
 	cannon.world.addBody(planeBody);
 
-	gameCtx.getRoot().addFeature(OrbitCameraGof, {
+	ctx.featurability.addFeature(OrbitCameraGof, {
 		options: {
 			maxDistance: 50,
 			initDistance: 40,
 			enablePan: true,
 		},
 	});
-	gameCtx.getRoot().addFeature(CannonPhysicsDebuggerGof);
+	ctx.featurability.addFeature(CannonPhysicsDebuggerGof);
 
 	const go = ObjectFeaturability.new(THREE.Object3D);
 	go.userData.featurability.addEventListener("featureadded", (event) => {
@@ -136,10 +132,10 @@ function createWorld(root: HTMLDivElement) {
 		await delay(1000);
 		go.removeFromParent();
 		await delay(1000);
-		gameCtx.add(go);
+		ctx.add(go);
 		await delay(1000);
 		testGof.destroy();
 	})();
 
-	gameCtx.add(go);
+	ctx.add(go);
 }

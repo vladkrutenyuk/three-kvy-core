@@ -21,6 +21,12 @@ export class GameContext<
 	public readonly animationFrameLoop: AnimationFrameLoop;
 	public readonly three: ThreeRendering;
 	public readonly modules: TModules;
+	public get root() {
+		return this._root
+	}
+	public get featurability() {
+		return this._root.userData.featurability
+	}
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
@@ -47,17 +53,13 @@ export class GameContext<
 		this.initFrameLoopPausingOnSwitchTab();
 	}
 
-	add: typeof this._root.add = (...args) => {
+	add: IFeaturable<TModules>['add'] = (...args) => {
 		return this._root.add(...args);
 	};
 
-	remove: typeof this._root.remove = (...args) => {
+	remove: IFeaturable<TModules>['remove'] = (...args) => {
 		return this._root.remove(...args);
 	};
-
-	getRoot(): ObjectFeaturability<TModules, THREE.Object3D> {
-		return this._root.userData.featurability;
-	}
 
 	destroy() {
 		this._isDestroyed = true;
