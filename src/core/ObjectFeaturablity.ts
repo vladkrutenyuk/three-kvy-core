@@ -113,6 +113,10 @@ export class ObjectFeaturability<
 		return instance;
 	}
 
+	getFeaturesList(): typeof this._features {
+		return this._features
+	}
+
 	getFeature<TFeatureType extends typeof Feature>(
 		f: TFeatureType
 	): InstanceType<TFeatureType> | null {

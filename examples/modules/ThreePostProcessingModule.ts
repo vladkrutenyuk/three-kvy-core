@@ -2,6 +2,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { GameContext, GameContextModule } from "@vladkrutenyuk/game-world";
+import * as THREE from "three";
 
 export class ThreePostProcessingModule extends GameContextModule {
 	public composer!: EffectComposer;
@@ -26,9 +27,9 @@ export class ThreePostProcessingModule extends GameContextModule {
 		});
 	}
 
-	protected onDestroy<
-		TModules extends Readonly<Record<string, GameContextModule>>
-	>(ctx: GameContext<TModules>): void {
+	protected onDestroy<TModules extends Readonly<Record<string, GameContextModule>>>(
+		ctx: GameContext<TModules>
+	): void {
 		const { three } = ctx;
 		three.removeEventListener("resize", this.onResize);
 		three.clearRenderFn();
