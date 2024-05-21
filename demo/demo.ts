@@ -8,7 +8,7 @@ import { CannonPhysicsModule } from "../examples/modules/CannonPhysicsModule";
 import { InputSystemModule } from "../examples/modules/InputSystemModule";
 import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
 import { GameContext } from "../src/core/GameContext";
-import { ObjectFeaturability } from "../src/core/ObjectFeaturablity";
+import { IFeaturable, ObjectFeaturability } from "../src/core/ObjectFeaturablity";
 
 console.log("main.ts");
 

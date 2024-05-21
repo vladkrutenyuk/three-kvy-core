@@ -40,14 +40,15 @@ export class ObjectFeaturability<
 			const featurable = child as IFeaturable;
 			featurable.userData.featurability = new ObjectFeaturability(child);
 		});
-		return obj as IFeaturable<TModules, TObj>;
+		return obj as unknown as IFeaturable<TModules, TObj>;
 	}
 
 	static has<
 		TModules extends GameContextModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
+		//@ts-expect-error ts suck
 	>(obj: TObj): obj is IFeaturable<TModules, TObj> {
-		const _f = (obj as IFeaturable<TModules, TObj>).userData.featurability;
+		const _f = (obj as unknown as IFeaturable<TModules, TObj>).userData.featurability;
 		const f = _f as typeof _f | undefined;
 		return f !== undefined && f.isObjectFeaturability;
 	}
@@ -114,7 +115,7 @@ export class ObjectFeaturability<
 	}
 
 	getFeatureList(): Feature<any>[] {
-		return this._features
+		return this._features;
 	}
 
 	getFeature<TFeatureType extends typeof Feature>(
@@ -236,14 +237,15 @@ export class ObjectFeaturability<
 	};
 }
 
-export type IFeaturable<
+//@ts-expect-error ts suck
+export interface IFeaturable<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
-> = TObj & {
+> extends TObj {
 	userData: {
 		featurability: ObjectFeaturability<TModules, TObj>;
 	};
-};
+}
 
 const _event: {
 	[K in keyof ObjectFeaturabilityEventMap<any>]: {
