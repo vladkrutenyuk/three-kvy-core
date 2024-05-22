@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
   "license": "MIT",
   "description": "Objects featurability and its game context based on `three.js` and other customizable modules",
@@ -37,7 +37,8 @@
     "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build && rimraf dist/src/index.d.ts.map",
     "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc",
     "demo": "parcel demo/index.html --dist-dir .demo-cache",
-    "alpha-release": "npm run build && npm version prerelease --preid=alpha && npm publish"
+    "alpha-release": "npm run build && npm version prerelease --preid=alpha && npm publish",
+    "dts": "dts-bundle-generator --umd-module-name KVY -o dist/delivr/index.d.ts dist/src/index.d.ts"
   },
   "files": [
     "dist/build",
@@ -53,6 +54,7 @@
     "@types/three": "^0.160.0",
     "@types/three-nebula": "^10.0.3",
     "buffer": "^5.5.0||^6.0.0",
+    "dts-bundle-generator": "^9.5.1",
     "parcel": "^2.11.0",
     "process": "^0.11.10",
     "rimraf": "^5.0.5",

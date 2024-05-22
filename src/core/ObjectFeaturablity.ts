@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { CompatibleFeature, CompatibleModules } from "./_stash/GameObject";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 import { Feature, FeatureProps } from "./Feature";
 import { removeArrayItem } from "../utils/general/remove-array-item";
@@ -46,7 +45,6 @@ export class ObjectFeaturability<
 	static has<
 		TModules extends GameContextModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
-		//@ts-expect-error ts suck
 	>(obj: TObj): obj is IFeaturable<TModules, TObj> {
 		const _f = (obj as unknown as IFeaturable<TModules, TObj>).userData.featurability;
 		const f = _f as typeof _f | undefined;
@@ -102,7 +100,6 @@ export class ObjectFeaturability<
 	): TFeature {
 		const object = this.ref as unknown as IFeaturable<
 			CompatibleModules<TFeatureModules, TModules>
-			// ,TEventMap
 		>;
 		const instance = new feature(props ? { ...props, object } : { object });
 		this._features.push(instance);
@@ -138,7 +135,7 @@ export class ObjectFeaturability<
 	}
 
 	/** @warning You should be careful to use this method manually. */
-	_setWorld(world: typeof this.world) {
+	_setWorld(world: GameContext<TModules> | null) {
 		if (world) {
 			this.attachToWorld(world);
 		} else {
@@ -146,7 +143,7 @@ export class ObjectFeaturability<
 		}
 	}
 
-	protected onAdded = ({ target }: THREE.Event<"added", typeof this.ref>) => {
+	protected onAdded = ({ target }: THREE.Event<"added", TObj>) => {
 		this._log("onAdded...");
 		const parent = target.parent;
 		if (parent && ObjectFeaturability.has<TModules>(parent)) {
@@ -179,7 +176,7 @@ export class ObjectFeaturability<
 		}
 	};
 
-	private onRemoved = (_: THREE.Event<"removed", typeof this.ref>) => {
+	private onRemoved = (_: THREE.Event<"removed", TObj>) => {
 		this._log("onRemoved...");
 		this.detachFromWorldRecursively();
 	};
@@ -237,15 +234,14 @@ export class ObjectFeaturability<
 	};
 }
 
-//@ts-expect-error ts suck
-export interface IFeaturable<
+export type IFeaturable<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
-> extends TObj {
+> = TObj & {
 	userData: {
 		featurability: ObjectFeaturability<TModules, TObj>;
 	};
-}
+};
 
 const _event: {
 	[K in keyof ObjectFeaturabilityEventMap<any>]: {
@@ -277,3 +273,28 @@ obj.userData.featurability.addEventListener(
 		event.ctx;
 	}
 );
+
+export type isSubsetRecord<
+	TSub extends Record<TKey, TValue>,
+	TRecord extends Record<TKey, TValue>,
+	TKey extends string | number | symbol = string,
+	TValue = any
+> = {
+	[K in keyof TSub]: K extends keyof TRecord
+		? TSub[K] extends TRecord[K]
+			? never
+			: K
+		: K;
+}[keyof TSub];
+
+export type CompatibleFeature<
+	TFeatureModules extends GameContextModulesRecord,
+	TGameObjectModules extends GameContextModulesRecord
+> = isSubsetRecord<TFeatureModules, TGameObjectModules> extends never
+	? Feature<TFeatureModules>
+	: never;
+
+export type CompatibleModules<
+	TSubModules extends GameContextModulesRecord,
+	TModules extends GameContextModulesRecord
+> = isSubsetRecord<TSubModules, TModules> extends never ? TSubModules : never;
