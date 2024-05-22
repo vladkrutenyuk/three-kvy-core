@@ -1,1 +1,1 @@
-export const REVISION = '5';
+export const REVISION = '6';
