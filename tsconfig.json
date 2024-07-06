@@ -16,7 +16,9 @@
     "isolatedModules": true, // Убедитесь, что каждый файл может быть транспилирован без учета других файлов
     "noEmitOnError": true, // Не генерировать выходные файлы, если есть ошибки
     "paths": {
-      "@vladkrutenyuk/game-world": ["./src/index.ts"]
+      "@vladkrutenyuk/game-world": [
+        "./src/index.ts"
+      ]
     }
   },
   "include": [

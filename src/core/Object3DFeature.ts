@@ -1,31 +1,33 @@
 import * as THREE from "three";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
-import { IFeaturable, ObjectFeaturability } from "./ObjectFeaturablity";
+import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 
-export type FeatureEventMap<
+export type Object3DFeatureEventMap<
 	TModules extends GameContextModulesRecord = {},
 	TMap extends {} = {}
 > = CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap;
 
-export type FeatureProps<
+
+//TODO add first generic `TObj extends THREE.Object3D`
+export type Object3DFeatureProps<
 	TModules extends GameContextModulesRecord = {},
 	TProps extends {} = {}
 > = TProps & {
 	object: IFeaturable<TModules>;
 };
 
-export abstract class Feature<
+export abstract class Object3DFeature<
 	TModules extends GameContextModulesRecord = {},
 	TProps extends {} = {},
-	TEventMap extends FeatureEventMap<TModules> = FeatureEventMap<TModules>
-> extends THREE.EventDispatcher<FeatureEventMap<TModules> & TEventMap> {
+	TEventMap extends Object3DFeatureEventMap<TModules> = Object3DFeatureEventMap<TModules>
+> extends THREE.EventDispatcher<Object3DFeatureEventMap<TModules> & TEventMap> {
 	public readonly type: string;
 	public readonly id: number;
 	public uuid: string;
 	public readonly object: IFeaturable<TModules>;
-	public featurabiliy: ObjectFeaturability<TModules>;
+	public featurabiliy: Object3DFeaturability<TModules>;
 
 	protected get ctx() {
 		return this._ctx;
@@ -33,7 +35,7 @@ export abstract class Feature<
 
 	private _ctx: GameContext<TModules> | null = null;
 
-	constructor(props: FeatureProps<TModules, TProps>) {
+	constructor(props: Object3DFeatureProps<TModules, TProps>) {
 		super();
 		this.type = this.constructor.name;
 		this.object = props.object;
@@ -69,7 +71,7 @@ export abstract class Feature<
 
 	/** @warning It is prohibited to call this method manually by yourself! */
 	_init() {
-		this.featurabiliy.world && this.attachToWorld(this.featurabiliy.world);
+		this.featurabiliy.ctx && this.attachToWorld(this.featurabiliy.ctx);
 	}
 
 	destroy() {
@@ -91,19 +93,20 @@ export abstract class Feature<
 	// Overridable Event Methods
 
 	/**
+	 * @param {GameContext} ctx
 	 * It is called on **ctx attached**. Returned function is called on **ctx detaching**.
 	 * Essentially similar to *useEffect()* from *react*, but ctx atttach/detach instead of component mount/unmount.
 	 * @override
 	 */
-	protected useCtx(_ctx: GameContext<TModules>): undefined | (() => void) | void {
+	protected useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
 
 	/** It is called on **ctx attached**. @override */
-	protected onAttach(_ctx: GameContext<TModules>) {}
+	protected onAttach(ctx: GameContext<TModules>) {}
 
 	/** It is called in **ctx detached**. @override */
-	protected onDetach(_ctx: GameContext<TModules>) {}
+	protected onDetach(ctx: GameContext<TModules>) {}
 
 	/** It is called on this feature destroyed. @override */
 	protected onDestroy() {}
@@ -167,9 +170,12 @@ export abstract class Feature<
 
 		this._ctx && init(this._ctx);
 	}
-	protected onBeforeRender(_ctx: GameContext<TModules>) {}
-	protected onAfterRender(_ctx: GameContext<TModules>) {}
-	protected onResize(_ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx 
+	 */
+	protected onBeforeRender(ctx: GameContext<TModules>) {}
+	protected onAfterRender(ctx: GameContext<TModules>) {}
+	protected onResize(ctx: GameContext<TModules>) {}
 
 	// Debug Logs
 
@@ -185,7 +191,7 @@ const _eventMethods = {
 } as const;
 
 const _event: {
-	[K in keyof FeatureEventMap<any>]: { type: K } & FeatureEventMap<any>[K];
+	[K in keyof Object3DFeatureEventMap<any>]: { type: K } & Object3DFeatureEventMap<any>[K];
 } = {
 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
 		type: CtxAttachableEvent.ATTACHED_TO_CTX,

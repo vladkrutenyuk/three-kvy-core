@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { AnimationFrameLoop } from "./AnimationFrameLoop";
 import { GameContextModule } from "./GameContextModule";
-import { ThreeRendering, ThreeRenderingProps } from "./ThreeRendering";
-import { IFeaturable, ObjectFeaturability } from "./ObjectFeaturablity";
+import { ThreeContext, ThreeRenderingProps } from "./ThreeContext";
+import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 
 export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>>;
@@ -19,16 +19,23 @@ export class GameContext<
 	public readonly isGameContext = true;
 
 	public readonly animationFrameLoop: AnimationFrameLoop;
-	public readonly three: ThreeRendering;
+	public readonly three: ThreeContext;
 	public readonly modules: TModules;
 	public get root() {
-		return this._root
+		return this._root;
 	}
 	public get featurability() {
-		return this._root.userData.featurability
+		return this._root.userData.featurability;
 	}
 	public get isDestroyed() {
 		return this._isDestroyed;
+	}
+
+	public get deltaTime() {
+		return this.animationFrameLoop.globalUniforms.deltaTime.value
+	}
+	public get time() {
+		return this.animationFrameLoop.globalUniforms.time.value
 	}
 
 	private readonly _root: IFeaturable<TModules>;
@@ -36,7 +43,7 @@ export class GameContext<
 
 	constructor(props: GameContextProps<TModules>) {
 		super();
-		this.three = new ThreeRendering(props?.three);
+		this.three = new ThreeContext(props?.three);
 		this.animationFrameLoop = new AnimationFrameLoop();
 
 		this.modules = props?.modules ?? {};
@@ -46,22 +53,23 @@ export class GameContext<
 
 		this._root = this.prepareRoot();
 
-		if (props.autoRenderOnFrame) {
+		if (props.autoRenderOnFrame !== false) {
 			this.animationFrameLoop.addEventListener("frame", this.onFrame.bind(this));
 		}
 
 		this.initFrameLoopPausingOnSwitchTab();
 	}
 
-	add: IFeaturable<TModules>['add'] = (...args) => {
+	add: IFeaturable<TModules>["add"] = (...args) => {
 		return this._root.add(...args);
 	};
 
-	remove: IFeaturable<TModules>['remove'] = (...args) => {
+	remove: IFeaturable<TModules>["remove"] = (...args) => {
 		return this._root.remove(...args);
 	};
 
 	destroy() {
+		if (this._isDestroyed) return; 
 		this._isDestroyed = true;
 		this.animationFrameLoop.stop();
 		this.three.destroy();
@@ -69,7 +77,7 @@ export class GameContext<
 	}
 
 	private prepareRoot(): IFeaturable<TModules> {
-		const root = ObjectFeaturability.new(THREE.Object3D) as IFeaturable<TModules>;
+		const root = Object3DFeaturability.new(THREE.Object3D) as IFeaturable<TModules>;
 		root.name = "GameContext_root";
 		this.three.scene.add(root);
 		root.userData.featurability._setWorld(this);

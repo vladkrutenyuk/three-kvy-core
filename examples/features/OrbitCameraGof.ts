@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
 	GameContext,
-	Feature,
-	FeatureProps,
-	FeatureEventMap,
+	Object3DFeature,
+	Object3DFeatureProps,
+	Object3DFeatureEventMap,
 } from "@vladkrutenyuk/game-world";
 
 export type OrbitCameraGofOptions = {
@@ -21,10 +21,10 @@ export type OrbitCameraGofProps = {
 	target?: THREE.Object3D;
 	options?: OrbitCameraGofOptions;
 };
-export class OrbitCameraGof extends Feature<
+export class OrbitCameraGof extends Object3DFeature<
 	{},
 	OrbitCameraGofProps,
-	FeatureEventMap<{}, { start: { val: number }; end: {} }>
+	Object3DFeatureEventMap<{}, { start: { val: number }; end: {} }>
 > {
 	readonly type = OrbitCameraGof.name;
 
@@ -50,7 +50,7 @@ export class OrbitCameraGof extends Feature<
 
 	private _options: OrbitCameraGofOptions = {};
 
-	constructor(props: FeatureProps<{}, OrbitCameraGofProps>) {
+	constructor(props: Object3DFeatureProps<{}, OrbitCameraGofProps>) {
 		super(props);
 		this.initEventMethod("onBeforeRender");
 		this.target = props.target ?? null;
@@ -114,12 +114,12 @@ export class OrbitCameraGof extends Feature<
 	}
 
 	reset(radius: number, phi: number, theta: number, target?: THREE.Vector3) {
-		if (!this.controls || !this.featurabiliy.world) return;
+		if (!this.controls || !this.featurabiliy.ctx) return;
 
 		this.controls.minDistance = radius;
 		this.controls.maxDistance = radius;
 
-		this.featurabiliy.world.three.camera.position.setFromSphericalCoords(
+		this.featurabiliy.ctx.three.camera.position.setFromSphericalCoords(
 			radius,
 			phi,
 			theta

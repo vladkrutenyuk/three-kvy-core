@@ -1,10 +1,10 @@
 import { REVISION } from "./constants";
 export * from "./core/AnimationFrameLoop";
-export * from "./core/Feature";
+export * from "./core/Object3DFeature";
 export * from "./core/GameContext";
 export * from "./core/GameContextModule";
-export * from "./core/ObjectFeaturablity";
-export * from "./core/ThreeRendering";
+export * from "./core/Object3DFeaturablity";
+export * from "./core/ThreeContext";
 
 declare global {
 	interface Window {

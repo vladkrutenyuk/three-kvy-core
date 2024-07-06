@@ -1,6 +1,6 @@
 import * as CANNON from "cannon-es";
 import * as THREE from "three";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { CannonPhysicsDebuggerGof } from "../examples/features/CannonPhysicsDebuggerGof";
 import { OrbitCameraGof } from "../examples/features/OrbitCameraGof";
 import { TestGof } from "../examples/features/TestGof";
@@ -8,8 +8,7 @@ import { CannonPhysicsModule } from "../examples/modules/CannonPhysicsModule";
 import { InputSystemModule } from "../examples/modules/InputSystemModule";
 import { ThreePostProcessingModule } from "../examples/modules/ThreePostProcessingModule";
 import { GameContext } from "../src/core/GameContext";
-import { ObjectFeaturability } from "../src/core/ObjectFeaturablity";
-
+import { Object3DFeaturability } from "../src/core/Object3DFeaturablity";
 console.log("main.ts");
 
 const root = document.querySelector("#app");
@@ -55,7 +54,7 @@ function createWorld(root: HTMLDivElement) {
 	three.camera.lookAt(new THREE.Vector3().setScalar(0));
 
 	ctx.add(new THREE.GridHelper(100, 100, 0x000000, 0x000000));
-	ctx.add(ObjectFeaturability.new(THREE.Object3D));
+	ctx.add(Object3DFeaturability.new(THREE.Object3D));
 
 	const cube = new THREE.Mesh(
 		new THREE.BoxGeometry(),
@@ -116,7 +115,7 @@ function createWorld(root: HTMLDivElement) {
 	});
 	ctx.featurability.addFeature(CannonPhysicsDebuggerGof);
 
-	const go = ObjectFeaturability.new(THREE.Object3D);
+	const go = Object3DFeaturability.new(THREE.Object3D);
 	go.userData.featurability.addEventListener("featureadded", (event) => {
 		console.log("feature added", event.feature.type);
 	});

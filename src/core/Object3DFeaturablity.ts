@@ -1,34 +1,35 @@
 import * as THREE from "three";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
-import { Feature, FeatureProps } from "./Feature";
+import { Object3DFeature, Object3DFeatureProps } from "./Object3DFeature";
 import { removeArrayItem } from "../utils/general/remove-array-item";
 import { traverseAncestorsInterruptible } from "../utils/three/traverse-ancestors-interruptible";
 import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 
-export const ObjectFeaturabilityEvent = {
+export const Object3DFeaturabilityEvent = {
 	FEATURE_ADDED: "featureadded",
 	FEATURE_REMOVED: "featureremoved",
 } as const;
 
-export type ObjectFeaturabilityEventMap<TModules extends GameContextModulesRecord = {}> =
-	{
-		[ObjectFeaturabilityEvent.FEATURE_ADDED]: { feature: Feature<TModules> };
-		[ObjectFeaturabilityEvent.FEATURE_REMOVED]: { feature: Feature<TModules> };
-	} & CtxAttachableEventMap<TModules>;
+export type Object3DFeaturabilityEventMap<
+	TModules extends GameContextModulesRecord = {}
+> = {
+	[Object3DFeaturabilityEvent.FEATURE_ADDED]: { feature: Object3DFeature<TModules> };
+	[Object3DFeaturabilityEvent.FEATURE_REMOVED]: { feature: Object3DFeature<TModules> };
+} & CtxAttachableEventMap<TModules>;
 
-export class ObjectFeaturability<
+export class Object3DFeaturability<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
-> extends THREE.EventDispatcher<ObjectFeaturabilityEventMap<TModules>> {
+> extends THREE.EventDispatcher<Object3DFeaturabilityEventMap<TModules>> {
 	public readonly isObjectFeaturability = true;
 	public readonly ref: TObj;
 
-	public get world() {
-		return this._world;
+	public get ctx() {
+		return this._ctx;
 	}
 
-	protected _world: GameContext<TModules> | null = null;
-	private readonly _features: Feature<any>[] = [];
+	protected _ctx: GameContext<TModules> | null = null;
+	private readonly _features: Object3DFeature<any>[] = [];
 
 	/** @warning it works recursively */
 	static wrap<
@@ -37,8 +38,9 @@ export class ObjectFeaturability<
 	>(obj: TObj): IFeaturable<TModules, TObj> {
 		obj.traverse((child) => {
 			const featurable = child as IFeaturable;
-			featurable.userData.featurability = new ObjectFeaturability(child);
+			featurable.userData.featurability = new Object3DFeaturability(child);
 		});
+		//TODO handle case if wrap happend after object added to root with ctx
 		return obj as unknown as IFeaturable<TModules, TObj>;
 	}
 
@@ -74,9 +76,13 @@ export class ObjectFeaturability<
 		TProps extends {} = {}
 	>(
 		feature: new (
-			p: FeatureProps<CompatibleModules<TFeatureModules, TFeatureModules>, TProps>
+			p: Object3DFeatureProps<
+				CompatibleModules<TFeatureModules, TFeatureModules>,
+				TProps
+			>
 		) => TFeature,
-		props: TProps
+		props: TProps,
+		beforeAttach?: (feature: TFeature) => void
 	): TFeature;
 
 	addFeature<
@@ -84,9 +90,10 @@ export class ObjectFeaturability<
 		TFeatureModules extends GameContextModulesRecord = {}
 	>(
 		feature: new (
-			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>>
+			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
 		) => TFeature,
-		props?: undefined
+		props?: undefined,
+		beforeAttach?: (feature: TFeature) => void
 	): TFeature;
 
 	addFeature<
@@ -94,28 +101,30 @@ export class ObjectFeaturability<
 		TFeatureModules extends GameContextModulesRecord = {}
 	>(
 		feature: new (
-			p: FeatureProps<CompatibleModules<TFeatureModules, TModules>>
+			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
 		) => TFeature,
-		props: unknown
+		props: unknown,
+		beforeAttach?: (feature: TFeature) => void
 	): TFeature {
 		const object = this.ref as unknown as IFeaturable<
 			CompatibleModules<TFeatureModules, TModules>
 		>;
 		const instance = new feature(props ? { ...props, object } : { object });
+		beforeAttach && beforeAttach(instance);
 		this._features.push(instance);
 		instance._init();
 
-		_event[ObjectFeaturabilityEvent.FEATURE_ADDED].feature = instance;
-		this.dispatchEvent(_event[ObjectFeaturabilityEvent.FEATURE_ADDED]);
+		_event[Object3DFeaturabilityEvent.FEATURE_ADDED].feature = instance;
+		this.dispatchEvent(_event[Object3DFeaturabilityEvent.FEATURE_ADDED]);
 
 		return instance;
 	}
 
-	getFeatureList(): Feature<any>[] {
+	getFeatureList(): Object3DFeature<any>[] {
 		return this._features;
 	}
 
-	getFeature<TFeatureType extends typeof Feature>(
+	getFeature<TFeatureType extends typeof Object3DFeature>(
 		f: TFeatureType
 	): InstanceType<TFeatureType> | null {
 		return this._features.find(
@@ -123,14 +132,14 @@ export class ObjectFeaturability<
 		) as InstanceType<TFeatureType> | null;
 	}
 
-	destroyFeature<TFeature extends Feature<any>>(feature: TFeature) {
+	destroyFeature<TFeature extends Object3DFeature<any>>(feature: TFeature) {
 		this._log(`destroyFeature...`, feature.constructor.name, feature.id);
 		const foundAndRemoved = removeArrayItem(this._features, feature);
 		if (foundAndRemoved) {
 			feature.destroy();
 
-			_event[ObjectFeaturabilityEvent.FEATURE_REMOVED].feature = feature;
-			this.dispatchEvent(_event[ObjectFeaturabilityEvent.FEATURE_REMOVED]);
+			_event[Object3DFeaturabilityEvent.FEATURE_REMOVED].feature = feature;
+			this.dispatchEvent(_event[Object3DFeaturabilityEvent.FEATURE_REMOVED]);
 		}
 	}
 
@@ -146,10 +155,10 @@ export class ObjectFeaturability<
 	protected onAdded = ({ target }: THREE.Event<"added", TObj>) => {
 		this._log("onAdded...");
 		const parent = target.parent;
-		if (parent && ObjectFeaturability.has<TModules>(parent)) {
+		if (parent && Object3DFeaturability.has<TModules>(parent)) {
 			const parentFtblt = parent.userData.featurability;
 			this._log("onAdded parent is featurable");
-			parentFtblt._world && this.attachToWorldRecursively(parentFtblt._world);
+			parentFtblt._ctx && this.attachToWorldRecursively(parentFtblt._ctx);
 			return;
 		}
 		this._log("onAdded parent is just object3d");
@@ -158,7 +167,7 @@ export class ObjectFeaturability<
 		// ищем предка который был бы IFeaturable
 		let featurableAncestor: IFeaturable<TModules> | null = null;
 		traverseAncestorsInterruptible(target, (ancestor: THREE.Object3D) => {
-			const isObjectFeaturable = ObjectFeaturability.has<TModules>(ancestor);
+			const isObjectFeaturable = Object3DFeaturability.has<TModules>(ancestor);
 			if (isObjectFeaturable) {
 				featurableAncestor = ancestor;
 			}
@@ -169,9 +178,9 @@ export class ObjectFeaturability<
 		// если нашли и если у него есть мир то аттачимся к нему
 		if (featurableAncestor !== null) {
 			this._log("onAdded found game object ancestor");
-			featurableAncestor.userData.featurability.world &&
+			featurableAncestor.userData.featurability.ctx &&
 				this.attachToWorldRecursively(
-					featurableAncestor.userData.featurability.world
+					featurableAncestor.userData.featurability.ctx
 				);
 		}
 	};
@@ -183,9 +192,9 @@ export class ObjectFeaturability<
 
 	private attachToWorld(world: GameContext<TModules>) {
 		this._log("attachToWorld", "...");
-		if (this._world !== null) {
+		if (this._ctx !== null) {
 			this._log("attachToWorld", "there is some world here");
-			if (this._world !== world) {
+			if (this._ctx !== world) {
 				console.error(
 					"Cannot attach this object. It had attached to another world."
 				);
@@ -195,8 +204,8 @@ export class ObjectFeaturability<
 			return;
 		}
 
-		this._world = world;
-		_event[CtxAttachableEvent.ATTACHED_TO_CTX].ctx = this._world;
+		this._ctx = world;
+		_event[CtxAttachableEvent.ATTACHED_TO_CTX].ctx = this._ctx;
 		this.dispatchEvent(_event[CtxAttachableEvent.ATTACHED_TO_CTX]);
 
 		this._log("attachToWorld done!");
@@ -204,10 +213,10 @@ export class ObjectFeaturability<
 
 	private detachFromWorld() {
 		this._log("detachFromWorld...");
-		if (this._world === null) return;
+		if (this._ctx === null) return;
 
-		_event[CtxAttachableEvent.DETACHED_FROM_CTX].ctx = this._world;
-		this._world = null;
+		_event[CtxAttachableEvent.DETACHED_FROM_CTX].ctx = this._ctx;
+		this._ctx = null;
 		this.dispatchEvent(_event[CtxAttachableEvent.DETACHED_FROM_CTX]);
 
 		this._log("detachFromWorld done!");
@@ -216,7 +225,7 @@ export class ObjectFeaturability<
 	private attachToWorldRecursively(world: GameContext<TModules>) {
 		this._log("attachToWorldRecursively...");
 		this.ref.traverse((child) => {
-			ObjectFeaturability.has<TModules>(child) &&
+			Object3DFeaturability.has<TModules>(child) &&
 				child.userData.featurability.attachToWorld(world);
 		});
 	}
@@ -224,7 +233,7 @@ export class ObjectFeaturability<
 	private detachFromWorldRecursively() {
 		this._log("detachFromWorldRecursively...");
 		this.ref.traverse((child) => {
-			ObjectFeaturability.has(child) &&
+			Object3DFeaturability.has(child) &&
 				child.userData.featurability.detachFromWorld();
 		});
 	}
@@ -239,14 +248,14 @@ export type IFeaturable<
 	TObj extends THREE.Object3D = THREE.Object3D
 > = TObj & {
 	userData: {
-		featurability: ObjectFeaturability<TModules, TObj>;
+		featurability: Object3DFeaturability<TModules, TObj>;
 	};
 };
 
 const _event: {
-	[K in keyof ObjectFeaturabilityEventMap<any>]: {
+	[K in keyof Object3DFeaturabilityEventMap<any>]: {
 		type: K;
-	} & ObjectFeaturabilityEventMap<any>[K];
+	} & Object3DFeaturabilityEventMap<any>[K];
 } = {
 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
 		type: CtxAttachableEvent.ATTACHED_TO_CTX,
@@ -256,17 +265,17 @@ const _event: {
 		type: CtxAttachableEvent.DETACHED_FROM_CTX,
 		ctx: null as any,
 	},
-	[ObjectFeaturabilityEvent.FEATURE_ADDED]: {
-		type: ObjectFeaturabilityEvent.FEATURE_ADDED,
+	[Object3DFeaturabilityEvent.FEATURE_ADDED]: {
+		type: Object3DFeaturabilityEvent.FEATURE_ADDED,
 		feature: null as any,
 	},
-	[ObjectFeaturabilityEvent.FEATURE_REMOVED]: {
-		type: ObjectFeaturabilityEvent.FEATURE_REMOVED,
+	[Object3DFeaturabilityEvent.FEATURE_REMOVED]: {
+		type: Object3DFeaturabilityEvent.FEATURE_REMOVED,
 		feature: null as any,
 	},
 };
 
-const obj = ObjectFeaturability.new(THREE.Object3D);
+const obj = Object3DFeaturability.new(THREE.Object3D);
 obj.userData.featurability.addEventListener(
 	CtxAttachableEvent.ATTACHED_TO_CTX,
 	(event) => {
@@ -291,7 +300,7 @@ export type CompatibleFeature<
 	TFeatureModules extends GameContextModulesRecord,
 	TGameObjectModules extends GameContextModulesRecord
 > = isSubsetRecord<TFeatureModules, TGameObjectModules> extends never
-	? Feature<TFeatureModules>
+	? Object3DFeature<TFeatureModules>
 	: never;
 
 export type CompatibleModules<

@@ -1,16 +1,16 @@
 import { CannonEsDebuggerPro } from "@vladkrutenyuk/cannon-es-debugger-pro";
 import * as THREE from "three";
-import { GameContext, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
+import { GameContext, Object3DFeature, Object3DFeatureProps } from "@vladkrutenyuk/game-world";
 import { CannonPhysicsModule } from "../modules/CannonPhysicsModule";
 
-export class CannonPhysicsDebuggerGof extends Feature<{
+export class CannonPhysicsDebuggerGof extends Object3DFeature<{
 	cannon: CannonPhysicsModule;
 }> {
 	private _cannonDebugger: CannonEsDebuggerPro | null = null;
 	private _root: THREE.Group;
 
 	constructor(
-		props: FeatureProps<{
+		props: Object3DFeatureProps<{
 			cannon: CannonPhysicsModule;
 		}>
 	) {

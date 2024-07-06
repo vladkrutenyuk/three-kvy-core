@@ -1,9 +1,9 @@
-import { GameContext, Feature, FeatureProps } from "@vladkrutenyuk/game-world";
+import { GameContext, Object3DFeature, Object3DFeatureProps } from "@vladkrutenyuk/game-world";
 import * as THREE from "three";
 
-export class TestGof extends Feature<{}> {
+export class TestGof extends Object3DFeature<{}> {
 	mesh: THREE.Mesh;
-	constructor(props: FeatureProps<{}>) {
+	constructor(props: Object3DFeatureProps<{}>) {
 		super(props);
 		this.initEventMethod("onBeforeRender");
 		this.mesh = new THREE.Mesh(

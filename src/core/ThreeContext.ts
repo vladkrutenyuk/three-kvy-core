@@ -22,7 +22,7 @@ export type ThreeRenderingProps = {
 	};
 };
 
-export class ThreeRendering extends THREE.EventDispatcher<ThreeRenderingEventMap> {
+export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
 	public readonly camera: THREE.PerspectiveCamera;
