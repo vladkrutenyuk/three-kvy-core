@@ -12,7 +12,7 @@
   "type": "module",
   "source": "src/index.ts",
   "main": "./dist/build/index.cjs",
-  "module": "./dist/build/index.module.js",
+  "module": "./dist/build/index.module.min.js",
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {

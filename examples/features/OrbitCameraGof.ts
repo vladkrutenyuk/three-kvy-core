@@ -80,10 +80,12 @@ export class OrbitCameraGof extends Object3DFeature<
 		this.controls.minAzimuthAngle = this._options?.minAzimuthAngle ?? Infinity;
 		this.controls.maxAzimuthAngle = this._options?.maxAzimuthAngle ?? Infinity;
 
+		//@ts-ignore
 		this.controls.addEventListener("start", ({ target }) => {
 			target.minDistance = this.minDistance;
 			target.maxDistance = this.maxDistance;
 		});
+		//@ts-ignore
 		this.controls.addEventListener("end", ({ target }) => {
 			const dist = target.getDistance();
 			target.minDistance = dist;

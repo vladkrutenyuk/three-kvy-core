@@ -10,7 +10,7 @@
     "outDir": "./dist", // Папка для скомпилированных файлов
     "strict": true, // Включить строгие проверки типов
     "esModuleInterop": true, // Разрешить интероперабельность с модулями ES6
-    "moduleResolution": "node", // Разрешение модулей как в Node.js
+    "moduleResolution": "bundler", // Разрешение модулей как в Node.js
     "forceConsistentCasingInFileNames": true, // Требовать согласованность регистра в именах файлов
     "resolveJsonModule": true, // Разрешить импорт JSON модулей
     "isolatedModules": true, // Убедитесь, что каждый файл может быть транспилирован без учета других файлов
