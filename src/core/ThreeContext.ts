@@ -4,7 +4,9 @@ import { fullObjectDispose } from "../utils/three/full-object-dispose";
 export type ThreeRenderingEventMap = {
 	beforeRender: {};
 	afterRender: {};
-	mount: {};
+	mount: {
+		root: HTMLDivElement
+	};
 	unmount: {};
 	destroy: {};
 	resize: {
@@ -25,7 +27,7 @@ export type ThreeRenderingProps = {
 export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
-	public readonly camera: THREE.PerspectiveCamera;
+	public camera: THREE.PerspectiveCamera;
 
 	public get root() {
 		return this._root;
@@ -71,7 +73,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		this._renderFn = fn;
 	}
 
-	clearRenderFn() {
+	resetRenderFn() {
 		this._renderFn = _emptyFn;
 	}
 
@@ -89,6 +91,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		this.renderer.domElement.style.touchAction = "none";
 		this.renderer.domElement.focus();
 
+		_event.mount.root = root
 		this.dispatchEvent(_event.mount);
 	}
 
@@ -145,7 +148,7 @@ const _event: {
 } = {
 	beforeRender: { type: "beforeRender" },
 	afterRender: { type: "afterRender" },
-	mount: { type: "mount" },
+	mount: { type: "mount", root: null as unknown as HTMLDivElement },
 	unmount: { type: "unmount" },
 	destroy: { type: "destroy" },
 	resize: { type: "resize", width: 100, height: 100 },

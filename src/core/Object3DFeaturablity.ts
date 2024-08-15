@@ -40,7 +40,7 @@ export class Object3DFeaturability<
 		return obj as unknown as IFeaturable<TModules, TObj>;
 	}
 
-	private static _newF = (obj: THREE.Object3D) => new Object3DFeaturability(obj)
+	private static _newF = (obj: THREE.Object3D) => new Object3DFeaturability(obj);
 
 	static has<
 		TModules extends GameContextModulesRecord = {},
@@ -67,13 +67,14 @@ export class Object3DFeaturability<
 		ref.addEventListener("added", this.onAdded);
 		ref.addEventListener("removed", this.onRemoved);
 
-		Object.defineProperty(ref.userData, 'featurability', {
+		Object.defineProperty(ref.userData, "featurability", {
 			value: this,
-			enumerable: false
+			enumerable: false,
 		});
 
-		//TODO: handle case if wrap happend after object added to root with ctx
-		// -> if (ref.parent) { this.onAdded({target: ref.parent}) }
+		if (ref.parent) {
+			this.onAdded({ target: ref.parent });
+		}
 	}
 
 	destroy(recursively?: boolean) {
@@ -166,10 +167,10 @@ export class Object3DFeaturability<
 		}
 	}
 
-	protected onAdded = ({ target }: THREE.Event<"added", TObj>) => {
+	protected onAdded = ({ target }: { target: THREE.Object3D }) => {
 		this._log("onAdded...");
 		const parent = target.parent;
-		if(!parent) return;
+		if (!parent) return;
 
 		if (Object3DFeaturability.has<TModules>(parent)) {
 			const parentFtblt = parent.userData.featurability;

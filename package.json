@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
   "license": "MIT",
   "description": "Objects featurability and its game context based on `three.js` and other customizable modules",
@@ -10,41 +10,20 @@
     "url": "https://github.com/vladkrutenyuk/game-world"
   },
   "type": "module",
-  "source": "src/index.ts",
-  "main": "./dist/build/index.cjs",
-  "module": "./dist/build/index.module.min.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./dist/esm/kvy.esm.min.js",
+  "module": "./dist/esm/kvy.esm.min.js",
+  "types": "./dist/esm/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/build/index.module.js",
-      "require": "./dist/build/index.cjs",
-      "types": "./dist/src/index.d.ts"
-    },
-    "./modules/*": "./dist/examples/modules/*.js",
-    "./features/*": "./dist/examples/features/*.js"
-  },
-  "targets": {
-    "main": {
-      "optimize": true
-    },
-    "module": {
-      "optimize": true
+      "import": "./dist/esm/kvy.esm.min.js",
+      "types": "./dist/esm/types/index.d.ts"
     }
   },
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "npm run clean && npm run build:core && npm run build:examples",
-    "build:core": "rimraf .parcel-cache && parcel build --dist-dir dist/build && rimraf dist/src/index.d.ts.map",
-    "build:examples": "tsc --p ./examples.tsconfig.jsonc --declaration && tsc-alias && tsc --p ./examples.tsconfig.jsonc",
-    "demo": "parcel demo/index.html --dist-dir .demo-cache",
-    "alpha-release": "npm run build && npm version prerelease --preid=alpha && npm publish",
-    "dts": "dts-bundle-generator --umd-module-name KVY -o dist/delivr/index.d.ts dist/src/index.d.ts"
+    "rbuild": "rimraf ./dist && rollup -c"
   },
   "files": [
-    "dist/build",
-    "dist/examples",
-    "dist/src",
-    "dist/delivr",
+    "dist",
     "package.json",
     "LICENSE",
     "README.md"
@@ -58,11 +37,15 @@
     "parcel": "^2.11.0",
     "process": "^0.11.10",
     "rimraf": "^5.0.5",
-    "tsc-alias": "^1.8.8"
+    "tsc-alias": "^1.8.8",
+    "typescript": "^5.5.4",
+    "rollup": "^4.20.0",
+    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-terser": "^7.0.2",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6"
   },
   "peerDependencies": {
-    "@vladkrutenyuk/cannon-es-debugger-pro": "0.2.4",
-    "cannon-es": "0.20.0",
     "three": "^0.164.1",
     "typescript": "^5.5.2"
   },
