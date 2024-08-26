@@ -151,9 +151,10 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		this.dispatchEvent(_event.resize);
 	};
 
-	private cameraChanged() {
-		if (!this._root) return;
-		this._camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
+	private cameraChanged = () => {
+		if (this._root) {
+			this._camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
+		}
 		this._camera.updateProjectionMatrix();
 		this.dispatchEvent(_event.camerachanged);
 	}
