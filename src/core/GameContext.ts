@@ -5,16 +5,20 @@ import { ThreeContext, ThreeRenderingProps } from "./ThreeContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 
-export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>>;
+export interface GlobalGameContextModules {}
+export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>> &
+	GlobalGameContextModules;
 
-export type GameContextProps<TModules extends GameContextModulesRecord = {}> = {
+export type GameContextProps<
+	TModules extends GameContextModulesRecord = GameContextModulesRecord
+> = {
 	three?: ThreeRenderingProps;
 	modules: TModules;
 	autoRenderOnFrame?: boolean;
 };
 
 export class GameContext<
-	TModules extends GameContextModulesRecord = {}
+	TModules extends GameContextModulesRecord = GameContextModulesRecord
 > extends THREE.EventDispatcher<DestroyableEventMap> {
 	public readonly isGameContext = true;
 
@@ -32,10 +36,10 @@ export class GameContext<
 	}
 
 	public get deltaTime() {
-		return this.animationFrameLoop.globalUniforms.deltaTime.value
+		return this.animationFrameLoop.globalUniforms.deltaTime.value;
 	}
 	public get time() {
-		return this.animationFrameLoop.globalUniforms.time.value
+		return this.animationFrameLoop.globalUniforms.time.value;
 	}
 
 	private readonly _root: IFeaturable<TModules>;
@@ -69,7 +73,7 @@ export class GameContext<
 	};
 
 	destroy() {
-		if (this._isDestroyed) return; 
+		if (this._isDestroyed) return;
 		this._isDestroyed = true;
 		this.animationFrameLoop.stop();
 		this.three.destroy();

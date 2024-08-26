@@ -5,7 +5,7 @@ export type ThreeRenderingEventMap = {
 	beforeRender: {};
 	afterRender: {};
 	mount: {
-		root: HTMLDivElement
+		root: HTMLDivElement;
 	};
 	unmount: {};
 	destroy: {};
@@ -13,6 +13,7 @@ export type ThreeRenderingEventMap = {
 		width: number;
 		height: number;
 	};
+	camerachanged: {};
 };
 
 export type ThreeRenderingProps = {
@@ -27,7 +28,14 @@ export type ThreeRenderingProps = {
 export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
-	public camera: THREE.PerspectiveCamera;
+
+	public get camera() {
+		return this._camera;
+	}
+	public set camera(value: THREE.PerspectiveCamera) {
+		this._camera = value;
+		this.cameraChanged();
+	}
 
 	public get root() {
 		return this._root;
@@ -39,6 +47,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		return this._isDestroyed;
 	}
 
+	private _camera: THREE.PerspectiveCamera;
 	private _root: HTMLDivElement | null = null;
 	private _resizeObserver: ResizeObserver | null = null;
 	private _isMounted = false;
@@ -51,7 +60,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 
 		this.renderer = new THREE.WebGLRenderer(props?.renderer);
 		this.scene = new THREE.Scene();
-		this.camera = new THREE.PerspectiveCamera(
+		this._camera = new THREE.PerspectiveCamera(
 			props?.camera?.fov,
 			1,
 			props?.camera?.near,
@@ -59,7 +68,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		);
 
 		this._renderFn = () => {
-			this.renderer.render(this.scene, this.camera);
+			this.renderer.render(this.scene, this._camera);
 		};
 	}
 
@@ -91,7 +100,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		this.renderer.domElement.style.touchAction = "none";
 		this.renderer.domElement.focus();
 
-		_event.mount.root = root
+		_event.mount.root = root;
 		this.dispatchEvent(_event.mount);
 	}
 
@@ -132,14 +141,22 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		const width = this._root.offsetWidth;
 		const height = this._root.offsetHeight;
 
-		this.camera.aspect = width / height;
-		this.camera.updateProjectionMatrix();
+		this._camera.aspect = width / height;
+		this._camera.updateProjectionMatrix();
+
 		this.renderer.setSize(width, height);
 
 		_event.resize.width = width;
 		_event.resize.height = height;
 		this.dispatchEvent(_event.resize);
 	};
+
+	private cameraChanged() {
+		if (!this._root) return;
+		this._camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
+		this._camera.updateProjectionMatrix();
+		this.dispatchEvent(_event.camerachanged);
+	}
 }
 
 const _emptyFn = () => {};
@@ -152,4 +169,5 @@ const _event: {
 	unmount: { type: "unmount" },
 	destroy: { type: "destroy" },
 	resize: { type: "resize", width: 100, height: 100 },
+	camerachanged: { type: "camerachanged" },
 };
