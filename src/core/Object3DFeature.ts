@@ -9,7 +9,6 @@ export type Object3DFeatureEventMap<
 	TMap extends {} = {}
 > = CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap;
 
-
 //TODO add first generic `TObj extends THREE.Object3D`
 export type Object3DFeatureProps<
 	TModules extends GameContextModulesRecord = {},
@@ -23,6 +22,7 @@ export abstract class Object3DFeature<
 	TProps extends {} = {},
 	TEventMap extends Object3DFeatureEventMap<TModules> = Object3DFeatureEventMap<TModules>
 > extends THREE.EventDispatcher<Object3DFeatureEventMap<TModules> & TEventMap> {
+	static log: (target: Object3DFeature, msg: string) => void = () => {};
 	public readonly type: string;
 	public readonly id: number;
 	public uuid: string;
@@ -171,7 +171,7 @@ export abstract class Object3DFeature<
 		this._ctx && init(this._ctx);
 	}
 	/**
-	 * @param {GameContext<TModules>} ctx 
+	 * @param {GameContext<TModules>} ctx
 	 */
 	protected onBeforeRender(ctx: GameContext<TModules>) {}
 	protected onAfterRender(ctx: GameContext<TModules>) {}
@@ -179,8 +179,9 @@ export abstract class Object3DFeature<
 
 	// Debug Logs
 
-	private _log(...args: any[]) {
-		console.log(`F-${this.object.id} ${this.constructor.name}-${this.id}`, ...args);
+	private _log(msg: string) {
+		Object3DFeature.log(this as unknown as Object3DFeature, msg);
+		// console.log(`F-${this.object.id} ${this.constructor.name}-${this.id}`, ...args);
 	}
 }
 
@@ -191,7 +192,9 @@ const _eventMethods = {
 } as const;
 
 const _event: {
-	[K in keyof Object3DFeatureEventMap<any>]: { type: K } & Object3DFeatureEventMap<any>[K];
+	[K in keyof Object3DFeatureEventMap<any>]: {
+		type: K;
+	} & Object3DFeatureEventMap<any>[K];
 } = {
 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
 		type: CtxAttachableEvent.ATTACHED_TO_CTX,

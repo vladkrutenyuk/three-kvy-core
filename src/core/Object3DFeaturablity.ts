@@ -21,6 +21,8 @@ export class Object3DFeaturability<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
 > extends THREE.EventDispatcher<Object3DFeaturabilityEventMap<TModules>> {
+	static log: (target: Object3DFeaturability, msg: string) => void = () => {};
+	
 	public readonly isObjectFeaturability = true;
 	public readonly ref: TObj;
 
@@ -148,7 +150,7 @@ export class Object3DFeaturability<
 	}
 
 	destroyFeature<TFeature extends Object3DFeature<any>>(feature: TFeature) {
-		this._log(`destroyFeature...`, feature.constructor.name, feature.id);
+		this._log(`destroyFeature... name=${feature.constructor.name} id=${feature.id}`);
 		const foundAndRemoved = removeArrayItem(this._features, feature);
 		if (foundAndRemoved) {
 			feature.destroy();
@@ -208,9 +210,9 @@ export class Object3DFeaturability<
 	};
 
 	private attachToWorld(world: GameContext<TModules>) {
-		this._log("attachToWorld", "...");
+		this._log("attachToWorld: ...");
 		if (this._ctx !== null) {
-			this._log("attachToWorld", "there is some world here");
+			this._log("attachToWorld: there is some world here");
 			if (this._ctx !== world) {
 				console.error(
 					"Cannot attach this object. It had attached to another world."
@@ -255,8 +257,9 @@ export class Object3DFeaturability<
 		});
 	}
 
-	private _log = (...args: any[]) => {
-		console.log(`OF-${this.ref.id}-${this.ref.name}`, ...args);
+	private _log = (msg: string) => {
+		Object3DFeaturability.log(this as unknown as Object3DFeaturability, msg);
+		// console.log(`OF-${this.ref.id}-${this.ref.name}`, ...args);
 	};
 }
 

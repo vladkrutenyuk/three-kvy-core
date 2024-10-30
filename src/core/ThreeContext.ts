@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { fullObjectDispose } from "../utils/three/full-object-dispose";
 
-export type ThreeRenderingEventMap = {
+export type ThreeContextEventMap = {
 	beforeRender: {};
 	afterRender: {};
 	mount: {
@@ -16,7 +16,7 @@ export type ThreeRenderingEventMap = {
 	camerachanged: {};
 };
 
-export type ThreeRenderingProps = {
+export type ThreeContextProps = {
 	renderer?: THREE.WebGLRendererParameters;
 	camera?: {
 		fov?: number;
@@ -25,7 +25,7 @@ export type ThreeRenderingProps = {
 	};
 };
 
-export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> {
+export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
 
@@ -55,7 +55,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 
 	private _renderFn = _emptyFn;
 
-	constructor(props?: ThreeRenderingProps) {
+	constructor(props?: ThreeContextProps) {
 		super();
 
 		this.renderer = new THREE.WebGLRenderer(props?.renderer);
@@ -141,8 +141,10 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 		const width = this._root.offsetWidth;
 		const height = this._root.offsetHeight;
 
-		this._camera.aspect = width / height;
-		this._camera.updateProjectionMatrix();
+		const camera = this._camera;
+
+		camera.aspect = width / height;
+		camera.updateProjectionMatrix();
 
 		this.renderer.setSize(width, height);
 
@@ -152,17 +154,18 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeRenderingEventMap> 
 	};
 
 	private cameraChanged = () => {
+		const camera = this._camera;
 		if (this._root) {
-			this._camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
+			camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
 		}
-		this._camera.updateProjectionMatrix();
+		camera.updateProjectionMatrix();
 		this.dispatchEvent(_event.camerachanged);
-	}
+	};
 }
 
 const _emptyFn = () => {};
 const _event: {
-	[K in keyof ThreeRenderingEventMap]: { type: K } & ThreeRenderingEventMap[K];
+	[K in keyof ThreeContextEventMap]: { type: K } & ThreeContextEventMap[K];
 } = {
 	beforeRender: { type: "beforeRender" },
 	afterRender: { type: "afterRender" },

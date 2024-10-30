@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://kvy.world)",
   "license": "MIT",
   "description": "Objects featurability and its game context based on `three.js` and other customizable modules",
@@ -29,16 +29,13 @@
     "README.md"
   ],
   "devDependencies": {
-    "@parcel/packager-ts": "2.11.0",
-    "@parcel/transformer-typescript-types": "2.11.0",
     "@types/three": "^0.164.1",
     "buffer": "^5.5.0||^6.0.0",
     "dts-bundle-generator": "^9.5.1",
-    "parcel": "^2.11.0",
     "process": "^0.11.10",
-    "rimraf": "^5.0.5",
     "tsc-alias": "^1.8.8",
     "typescript": "^5.5.4",
+    "rimraf": "^5.0.5",
     "rollup": "^4.20.0",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-terser": "^7.0.2",

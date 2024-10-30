@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { AnimationFrameLoop } from "./AnimationFrameLoop";
-import { GameContextModule } from "./GameContextModule";
-import { ThreeContext, ThreeRenderingProps } from "./ThreeContext";
-import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
+import { GameContextModule } from "./GameContextModule";
+import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
+import { ThreeContext, ThreeContextProps } from "./ThreeContext";
 
 export interface GlobalGameContextModules {}
 export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>> &
@@ -12,7 +12,7 @@ export type GameContextModulesRecord = Readonly<Record<string, GameContextModule
 export type GameContextProps<
 	TModules extends GameContextModulesRecord = GameContextModulesRecord
 > = {
-	three?: ThreeRenderingProps;
+	three?: ThreeContextProps;
 	modules: TModules;
 	autoRenderOnFrame?: boolean;
 };
@@ -90,8 +90,9 @@ export class GameContext<
 		root.addEventListener("removed", (event) => {
 			if (this._isDestroyed) return;
 			console.error("It is prohibited to remove GameContext's root.");
-			this.three.scene.add(this._root);
-			event.target.userData.featurability._setWorld(this);
+			const target = event.target;
+			this.three.scene.add(target);
+			target.userData.featurability._setWorld(this);
 		});
 
 		return root;
