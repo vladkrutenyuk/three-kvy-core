@@ -3,23 +3,28 @@ import { AnimationFrameLoop } from "./AnimationFrameLoop";
 import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
 import { GameContextModule } from "./GameContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
-import { ThreeContext, ThreeContextProps } from "./ThreeContext";
+import { ThreeContext } from "./ThreeContext";
 
-export interface GlobalGameContextModules {}
-export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>> &
-	GlobalGameContextModules;
+// type ThreeObject = {
+// 	WebGLRenderer: typeof THREE.WebGLRenderer
+// }
 
-export type GameContextProps<
-	TModules extends GameContextModulesRecord = GameContextModulesRecord
-> = {
-	three?: ThreeContextProps;
-	modules: TModules;
-	autoRenderOnFrame?: boolean;
-};
+export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>>;
 
 export class GameContext<
 	TModules extends GameContextModulesRecord = GameContextModulesRecord
 > extends THREE.EventDispatcher<DestroyableEventMap> {
+	static create<TModules extends GameContextModulesRecord = {}>(
+		THREE: typeof import("three"),
+		modules?: TModules,
+		props?: THREE.WebGLRendererParameters,
+	) {
+		const scene = new THREE.Scene();
+		const r = new THREE.WebGLRenderer(props);
+		const c = new THREE.PerspectiveCamera();
+		const three = new ThreeContext(r, c, scene);
+		return new GameContext(three, scene, modules);
+	}
 	public readonly isGameContext = true;
 
 	public readonly animationFrameLoop: AnimationFrameLoop;
@@ -36,32 +41,39 @@ export class GameContext<
 	}
 
 	public get deltaTime() {
-		return this.animationFrameLoop.globalUniforms.deltaTime.value;
+		return this.animationFrameLoop.uniforms.deltaTime.value;
 	}
 	public get time() {
-		return this.animationFrameLoop.globalUniforms.time.value;
+		return this.animationFrameLoop.uniforms.time.value;
 	}
 
 	private readonly _root: IFeaturable<TModules>;
 	private _isDestroyed = false;
 
-	constructor(props: GameContextProps<TModules>) {
+	constructor(three: ThreeContext, root: THREE.Object3D, modules?: TModules) {
 		super();
-		this.three = new ThreeContext(props?.three);
+		this.three = three;
 		this.animationFrameLoop = new AnimationFrameLoop();
 
-		this.modules = props?.modules ?? {};
+		this.modules = modules ?? ({} as TModules);
 		for (const key in this.modules) {
 			this.modules[key].init(this);
 		}
 
-		this._root = this.prepareRoot();
+		const _root = Object3DFeaturability.wrap<typeof root, TModules>(root);
+		this._root = _root;
+		_root.userData.featurability.setCtx(this);
 
-		if (props.autoRenderOnFrame !== false) {
-			this.animationFrameLoop.addEventListener("frame", this.onFrame.bind(this));
-		}
+		this.animationFrameLoop.addEventListener("frame", () => {
+			this.three.render();
+		});
 
 		this.initFrameLoopPausingOnSwitchTab();
+	}
+
+	mountAndRun(container: HTMLDivElement) {
+		this.three.mount(container);
+		this.animationFrameLoop.run();
 	}
 
 	add: IFeaturable<TModules>["add"] = (...args) => {
@@ -80,44 +92,25 @@ export class GameContext<
 		this.dispatchEvent(_events[DestroyableEvent.DESTROYED]);
 	}
 
-	private prepareRoot(): IFeaturable<TModules> {
-		const root = Object3DFeaturability.new(THREE.Object3D) as IFeaturable<TModules>;
-		root.name = "GameContext_root";
-		this.three.scene.add(root);
-		root.userData.featurability._setWorld(this);
-
-		// protect from deletion
-		root.addEventListener("removed", (event) => {
-			if (this._isDestroyed) return;
-			console.error("It is prohibited to remove GameContext's root.");
-			const target = event.target;
-			this.three.scene.add(target);
-			target.userData.featurability._setWorld(this);
-		});
-
-		return root;
-	}
-
-	private onFrame() {
-		this.three.render();
-	}
-
 	private initFrameLoopPausingOnSwitchTab() {
+		const loop = this.animationFrameLoop;
+		const three = this.three;
 		const onWindowFocus = () => {
 			// console.log("onWindowFocus");
-			this.animationFrameLoop.run();
+			loop.run();
 		};
 		const onWindowBlur = () => {
 			// console.log("onWindowBlur");
-			this.animationFrameLoop.stop();
+			loop.stop();
 		};
-		this.three.addEventListener("mount", () => {
+		three.addEventListener("mount", () => {
 			window.addEventListener("focus", onWindowFocus);
 			window.addEventListener("blur", onWindowBlur);
 		});
-		this.three.addEventListener("unmount", () => {
+		three.addEventListener("unmount", () => {
 			window.removeEventListener("focus", onWindowFocus);
 			window.removeEventListener("blur", onWindowBlur);
+			loop.stop();
 		});
 	}
 }

@@ -16,15 +16,6 @@ export type ThreeContextEventMap = {
 	camerachanged: {};
 };
 
-export type ThreeContextProps = {
-	renderer?: THREE.WebGLRendererParameters;
-	camera?: {
-		fov?: number;
-		near?: number;
-		far?: number;
-	};
-};
-
 export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
 	public readonly scene: THREE.Scene;
@@ -53,23 +44,22 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	private _isMounted = false;
 	private _isDestroyed = false;
 
-	private _renderFn = _emptyFn;
+	private _srcRenderFn = () => {
+		this.renderer.render(this.scene, this._camera);
+	};
+	private _renderFn = this._srcRenderFn;
 
-	constructor(props?: ThreeContextProps) {
+	constructor(
+		renderer: THREE.WebGLRenderer,
+		camera: THREE.PerspectiveCamera,
+		scene: THREE.Scene
+	) {
 		super();
 
-		this.renderer = new THREE.WebGLRenderer(props?.renderer);
-		this.scene = new THREE.Scene();
-		this._camera = new THREE.PerspectiveCamera(
-			props?.camera?.fov,
-			1,
-			props?.camera?.near,
-			props?.camera?.far
-		);
-
-		this._renderFn = () => {
-			this.renderer.render(this.scene, this._camera);
-		};
+		this.renderer = renderer;
+		this.scene = scene;
+		this._camera = camera;
+		this._renderFn = this._srcRenderFn;
 	}
 
 	render() {
@@ -83,22 +73,25 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	}
 
 	resetRenderFn() {
-		this._renderFn = _emptyFn;
+		this._renderFn = this._srcRenderFn;
 	}
 
 	mount(root: HTMLDivElement) {
 		if (this._isMounted) return;
 		this._isMounted = true;
 
+		const canvas = this.renderer.domElement;
+
 		this._root = root;
-		this._root.append(this.renderer.domElement);
+		this._root.append(canvas);
 		this._resizeObserver = new ResizeObserver(this.resizeHandler);
 		this._resizeObserver.observe(this._root);
 		this.resizeHandler();
 
-		this.renderer.domElement.tabIndex = 0;
-		this.renderer.domElement.style.touchAction = "none";
-		this.renderer.domElement.focus();
+		
+		canvas.tabIndex = 0;
+		canvas.style.touchAction = "none";
+		canvas.focus();
 
 		_event.mount.root = root;
 		this.dispatchEvent(_event.mount);
@@ -119,10 +112,16 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		if (this._isDestroyed) return;
 		this._isDestroyed = true;
 
-		this.render = _emptyFn;
+		const noRender = () => {
+			console.error("render try after ThreeContext destroyed.")
+		}
+		this._renderFn = noRender;
+		this._srcRenderFn = noRender;
+
 		this.unmount();
 		this.clearScene(true);
 		this.renderer.dispose();
+
 		this.dispatchEvent(_event.destroy);
 	}
 
@@ -155,15 +154,15 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 
 	private cameraChanged = () => {
 		const camera = this._camera;
-		if (this._root) {
-			camera.aspect = this._root.offsetWidth / this._root.offsetHeight;
+		const root = this._root;
+		if (root) {
+			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
 		camera.updateProjectionMatrix();
 		this.dispatchEvent(_event.camerachanged);
 	};
 }
 
-const _emptyFn = () => {};
 const _event: {
 	[K in keyof ThreeContextEventMap]: { type: K } & ThreeContextEventMap[K];
 } = {

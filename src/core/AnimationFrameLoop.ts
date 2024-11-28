@@ -5,7 +5,7 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<{
 	run: {};
 	stop: {};
 }> {
-	public readonly globalUniforms = {
+	public readonly uniforms = {
 		deltaTime: {
 			value: 0,
 		},
@@ -20,6 +20,10 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<{
 	private _isRunning = false;
 	private _animationFrameToken: number | null = null;
 	private _clock = new THREE.Clock(false);
+
+	constructor() {
+		super();
+	}
 
 	run() {
 		if (this._isRunning) return;
@@ -42,8 +46,8 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<{
 	}
 
 	private animate = () => {
-		this.globalUniforms.deltaTime.value = this._clock.getDelta();
-		this.globalUniforms.time.value = this._clock.getElapsedTime();
+		this.uniforms.deltaTime.value = this._clock.getDelta();
+		this.uniforms.time.value = this._clock.getElapsedTime();
 		this._animationFrameToken = requestAnimationFrame(this.animate);
 		this.dispatchEvent(_frameEvent);
 	};

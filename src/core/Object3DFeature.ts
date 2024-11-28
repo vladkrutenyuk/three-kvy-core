@@ -149,12 +149,12 @@ export abstract class Object3DFeature<
 	};
 
 	// Event methods
-
+	//TODO revise and check this !!!
 	protected initEventMethod(name: keyof typeof _eventMethods) {
 		let listener: (() => void) | null = null;
 
 		const init = (world: GameContext<TModules>) => {
-			let listener = () => {
+			listener = () => {
 				this[name](world);
 			};
 			world.three.addEventListener(_eventMethods[name], listener);

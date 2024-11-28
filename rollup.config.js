@@ -19,7 +19,7 @@ export default [
 	{
 		input: _tsInput,
 		output: {
-			file: `${_outputDir}/esm/${_fileName}.esm.js`,
+			file: `${_outputDir}/esm/index.js`,
 			format: "esm",
 		},
 		plugins: [
@@ -27,7 +27,7 @@ export default [
 			typescript({
 				tsconfig: _tsconfig,
 				declaration: true,
-				declarationDir: `${_outputDir}/types`,
+				declarationDir: `${_outputDir}`,
 				emitDeclarationOnly: true, // Сборка только деклараций
 			}),
 		],
@@ -37,7 +37,7 @@ export default [
 	{
 		input: _tsInput,
 		output: {
-			file: `${_outputDir}/esm/${_fileName}.esm.min.js`,
+			file: `${_outputDir}/esm/index.min.js`,
 			format: "esm",
 		},
 		plugins: [
@@ -92,7 +92,7 @@ export default [
 	},
 	// Bundle all TypeScript types into a single .d.ts file
 	{
-		input: `${_outputDir}/esm/types/index.d.ts`,
+		input: `${_outputDir}/esm/index.d.ts`,
 		output: [
 			{
 				file: `${_outputDir}/umd/${_fileName}.umd.d.ts`,
