@@ -49,16 +49,14 @@
   },
   "peerDependencies": {
     "three": "^0.164.1",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "@types/three": "^0.164.1"
   },
   "peerDependenciesMeta": {
     "typescript": {
       "optional": true
     },
-    "cannon-es": {
-      "optional": true
-    },
-    "@vladkrutenyuk/cannon-es-debugger-pro": {
+    "@types/three": {
       "optional": true
     }
   }

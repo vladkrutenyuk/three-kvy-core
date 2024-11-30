@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo</title>
-    <link rel="stylesheet" href="./styles.css">
-    <script type="importmap">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Demo</title>
+	<link rel="stylesheet" href="./styles.css">
+	<script type="importmap">
         {
           "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
@@ -14,8 +15,68 @@
         }
       </script>
 </head>
-<body> 
-    <div id="container"></div>
-    <script type="module" src="./index.js"></script>
+
+<body>
+	<div id="container"></div>
+	<script type="module" src="./index.js"></script>
+	<!-- <script>
+		const payload = {
+			moved: { x: 0, y: 0 },
+			stopped: {},
+			jumped: { height: 0 },
+		}
+
+		function wrapIntoProxyWithKvyValueChangeFn(obj) {
+			const proxy = new Proxy(() => {}, {
+				apply(target, thisArg, args) {
+					const [key,value] = args;
+					obj[key] = value;
+					return proxy;
+				},
+				get(target, key) {
+					return key in obj ? obj[key] : target[key];
+				},
+				set(target, key, value) {
+					if (!(key in obj)) return false;
+					obj[key] = value
+					return true;
+				}
+
+			})
+			return proxy;
+		}
+
+		function use(type) {
+			return wrapIntoProxyWithKvyValueChangeFn(payload[type])
+		}
+
+		const jumpedEvent = use("jumped");
+		console.log(jumpedEvent.height)
+		jumpedEvent.height = 228;
+		console.log(jumpedEvent.height)
+		jumpedEvent("height", 1488);
+		console.log(jumpedEvent.height);
+
+		console.log('---')
+
+		const movedEvent = use("moved")("x", 300)("y", 200);
+		console.log(movedEvent.x,movedEvent.y);
+		const movedEvent2 = use("moved")("x", 100)("y", 1000);
+		console.log(movedEvent2.x,movedEvent.y);
+		console.log(movedEvent.x,movedEvent.y);
+		movedEvent.x = 228;
+		console.log(movedEvent2.x,movedEvent.y);
+		movedEvent.xx = 100;
+		console.log(movedEvent.xx)
+		// movedEvent("x", 300)("y", 200);
+		// console.log(movedEvent.x,movedEvent.y);
+		// console.log({...movedEvent});
+
+		// jumpedEvent("height", 1488);
+		// console.log("proxyObj.height", proxyObj.height)
+		// const proxyCallRes = proxyObj();
+		// console.log("proxyCallRes", proxyCallRes)
+	</script> -->
 </body>
+
 </html>

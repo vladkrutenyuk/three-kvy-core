@@ -1,20 +1,6 @@
 import * as THREE from "three";
-import { fullObjectDispose } from "../utils/three/full-object-dispose";
-
-export type ThreeContextEventMap = {
-	beforeRender: {};
-	afterRender: {};
-	mount: {
-		root: HTMLDivElement;
-	};
-	unmount: {};
-	destroy: {};
-	resize: {
-		width: number;
-		height: number;
-	};
-	camerachanged: {};
-};
+import { disposeObject3DFully } from "../utils/dispose-object3d";
+import { EventCache, EventCacheMapInfer } from "../addons/EventCache";
 
 export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	public readonly renderer: THREE.WebGLRenderer;
@@ -63,9 +49,9 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 	}
 
 	render() {
-		this.dispatchEvent(_event.beforeRender);
+		this.dispatchEvent(cache.use("renderbefore"));
 		this._renderFn();
-		this.dispatchEvent(_event.afterRender);
+		this.dispatchEvent(cache.use("renderafter"));
 	}
 
 	overrideRenderFn(fn: () => void) {
@@ -88,13 +74,11 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		this._resizeObserver.observe(this._root);
 		this.resizeHandler();
 
-		
 		canvas.tabIndex = 0;
 		canvas.style.touchAction = "none";
 		canvas.focus();
 
-		_event.mount.root = root;
-		this.dispatchEvent(_event.mount);
+		this.dispatchEvent(cache.use("mount")("root", root));
 	}
 
 	unmount() {
@@ -105,7 +89,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		this._resizeObserver = null;
 		this.renderer.domElement.remove();
 
-		this.dispatchEvent(_event.unmount);
+		this.dispatchEvent(cache.use("unmount"));
 	}
 
 	destroy() {
@@ -113,8 +97,8 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		this._isDestroyed = true;
 
 		const noRender = () => {
-			console.error("render try after ThreeContext destroyed.")
-		}
+			console.error("render try after ThreeContext destroyed.");
+		};
 		this._renderFn = noRender;
 		this._srcRenderFn = noRender;
 
@@ -122,7 +106,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		this.clearScene(true);
 		this.renderer.dispose();
 
-		this.dispatchEvent(_event.destroy);
+		this.dispatchEvent(cache.use("destroy"));
 	}
 
 	private clearScene(dispose?: boolean) {
@@ -130,7 +114,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 		for (let i = 0; i < children.length; i++) {
 			const child = children[i];
 			this.scene.remove(child);
-			dispose && fullObjectDispose(child, true);
+			dispose && disposeObject3DFully(child, true);
 		}
 	}
 
@@ -147,9 +131,7 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 
 		this.renderer.setSize(width, height);
 
-		_event.resize.width = width;
-		_event.resize.height = height;
-		this.dispatchEvent(_event.resize);
+		this.dispatchEvent(cache.use("resize")("width", width)("height", height));
 	};
 
 	private cameraChanged = () => {
@@ -159,18 +141,18 @@ export class ThreeContext extends THREE.EventDispatcher<ThreeContextEventMap> {
 			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
 		camera.updateProjectionMatrix();
-		this.dispatchEvent(_event.camerachanged);
+		this.dispatchEvent(cache.use("camerachanged"));
 	};
 }
 
-const _event: {
-	[K in keyof ThreeContextEventMap]: { type: K } & ThreeContextEventMap[K];
-} = {
-	beforeRender: { type: "beforeRender" },
-	afterRender: { type: "afterRender" },
-	mount: { type: "mount", root: null as unknown as HTMLDivElement },
-	unmount: { type: "unmount" },
-	destroy: { type: "destroy" },
-	resize: { type: "resize", width: 100, height: 100 },
-	camerachanged: { type: "camerachanged" },
-};
+const cache = new EventCache({
+	renderbefore: {},
+	renderafter: {},
+	mount: { root: null as unknown as HTMLDivElement },
+	unmount: {},
+	destroy: {},
+	resize: { width: 100, height: 100 },
+	camerachanged: {},
+});
+
+export type ThreeContextEventMap = EventCacheMapInfer<typeof cache>;

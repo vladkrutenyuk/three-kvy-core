@@ -1,9 +1,9 @@
 import * as THREE from "three";
+import { removeArrayItem } from "../utils/remove-array-item";
+import { traverseAncestorsInterruptible } from "../utils/traverse-ancestors-interruptible";
+import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 import { Object3DFeature, Object3DFeatureProps } from "./Object3DFeature";
-import { removeArrayItem } from "../utils/general/remove-array-item";
-import { traverseAncestorsInterruptible } from "../utils/three/traverse-ancestors-interruptible";
-import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
 
 export const Object3DFeaturabilityEvent = {
 	FEATURE_ADDED: "featureadded",
@@ -23,22 +23,23 @@ export class Object3DFeaturability<
 > extends THREE.EventDispatcher<Object3DFeaturabilityEventMap<TModules>> {
 	/** @warning it works recursively */
 	static wrap<
-		TObj extends THREE.Object3D = THREE.Object3D,
-		TModules extends GameContextModulesRecord = {}
+		TModules extends GameContextModulesRecord = {},
+		TObj extends THREE.Object3D = THREE.Object3D
 	>(obj: TObj, recursively: boolean = false): IFeaturable<TModules, TObj> {
 		const X = Object3DFeaturability;
 		if (recursively) {
 			obj.traverse(X.from);
 		} else {
-			X.from(obj)
+			X.from(obj);
 		}
 		//TODO try find and attach ancestor ctx
 		return obj as unknown as IFeaturable<TModules, TObj>;
 	}
 
-	static from = (obj: THREE.Object3D) => new Object3DFeaturability(obj);
+	static from = <TModules extends GameContextModulesRecord = {}>(obj: THREE.Object3D) =>
+		new Object3DFeaturability<TModules, typeof obj>(obj);
 
-	static has<
+	static isIn<
 		TModules extends GameContextModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
 	>(obj: TObj): obj is IFeaturable<TModules, TObj> {
@@ -47,25 +48,41 @@ export class Object3DFeaturability<
 		return f !== undefined && f.isObjectFeaturability;
 	}
 
+	static extract<
+		TModules extends GameContextModulesRecord = {},
+		TObj extends THREE.Object3D = THREE.Object3D
+	>(obj: TObj): Object3DFeaturability<TModules, TObj> | null {
+		const _f = (obj as unknown as IFeaturable<TModules, TObj>).userData.featurability;
+		const f = _f as typeof _f | undefined;
+		return f !== undefined && f.isObjectFeaturability ? f : null;
+	}
+
 	static create<
 		T extends new (...args: any[]) => THREE.Object3D,
 		TModules extends GameContextModulesRecord = {},
 		TReturn = IFeaturable<TModules, InstanceType<T>>
 	>(ObjClass: T, ...args: ConstructorParameters<T>): TReturn {
 		const obj = new ObjClass(...args);
-		const featurable = this.wrap<THREE.Object3D, TModules>(obj);
+		const featurable = this.wrap<TModules>(obj);
 		return featurable as TReturn;
 	}
 
 	static log: (target: Object3DFeaturability, msg: string) => void = () => {};
 
 	public readonly isObjectFeaturability = true;
-	public readonly ref: TObj;
+	public readonly object: IFeaturable<TModules, TObj>;
 	public get ctx() {
 		return this._ctx;
 	}
 	public get features() {
 		return [...this._features];
+	}
+	private _pair?: [object: IFeaturable<TModules, TObj>, featurability:this]
+	public get pair(): [object: IFeaturable<TModules, TObj>, featurability:this] {
+		if (!this._pair) {
+			this._pair = [this.object, this];
+		}
+		return this._pair
 	}
 
 	private _ctx: GameContext<TModules> | null = null;
@@ -73,7 +90,7 @@ export class Object3DFeaturability<
 
 	private constructor(obj: TObj) {
 		super();
-		this.ref = obj;
+		this.object = obj as IFeaturable<TModules, TObj>;
 		obj.addEventListener("added", this.onObjectAdded);
 		obj.addEventListener("removed", this.onObjectRemoved);
 
@@ -90,13 +107,13 @@ export class Object3DFeaturability<
 
 	destroy() {
 		this.detachCtx();
-		const obj = this.ref;
+		const obj = this.object;
 		obj.removeEventListener("added", this.onObjectAdded);
 		obj.removeEventListener("removed", this.onObjectRemoved);
 
 		//TODO: destroy all features
 
-		delete obj.userData.featurability;
+		delete (obj as IFeaturableToDelete).userData.featurability;
 	}
 
 	addFeature<
@@ -135,13 +152,13 @@ export class Object3DFeaturability<
 		props: unknown,
 		beforeAttach?: (feature: TFeature) => void
 	): TFeature {
-		const object = this.ref as unknown as IFeaturable<
+		const object = this.object as unknown as IFeaturable<
 			CompatibleModules<TFeatureModules, TModules>
 		>;
 		const instance = new feature(props ? { ...props, object } : { object });
 		beforeAttach && beforeAttach(instance);
 		this._features.push(instance);
-		instance._init();
+		instance._init_();
 
 		_event[Object3DFeaturabilityEvent.FEATURE_ADDED].feature = instance;
 		this.dispatchEvent(_event[Object3DFeaturabilityEvent.FEATURE_ADDED]);
@@ -175,6 +192,12 @@ export class Object3DFeaturability<
 		} else {
 			this.detachCtx();
 		}
+		return this;
+	}
+
+	rename(name:string): this {
+		this.object.name = name;
+		return this;
 	}
 
 	private onObjectAdded = ({ target }: { target: THREE.Object3D }) => {
@@ -182,7 +205,7 @@ export class Object3DFeaturability<
 		const parent = target.parent;
 		if (!parent) return;
 
-		if (Object3DFeaturability.has<TModules>(parent)) {
+		if (Object3DFeaturability.isIn<TModules>(parent)) {
 			const parentFtblt = parent.userData.featurability;
 			this._log("onAdded parent is featurable");
 			parentFtblt._ctx && this.attachCtxRecursively(parentFtblt._ctx);
@@ -194,7 +217,7 @@ export class Object3DFeaturability<
 		// ищем предка который был бы IFeaturable
 		let featurableAncestor: IFeaturable<TModules> | null = null;
 		traverseAncestorsInterruptible(target, (ancestor: THREE.Object3D) => {
-			const isObjectFeaturable = Object3DFeaturability.has<TModules>(ancestor);
+			const isObjectFeaturable = Object3DFeaturability.isIn<TModules>(ancestor);
 			if (isObjectFeaturable) {
 				featurableAncestor = ancestor;
 			}
@@ -210,8 +233,8 @@ export class Object3DFeaturability<
 		}
 	};
 
-	private onObjectRemoved = (_: THREE.Event<"removed", TObj>) => {
-		this._log("object removed")
+	private onObjectRemoved = () => {
+		this._log("object removed");
 		this.detachCtxRecursively();
 	};
 
@@ -249,16 +272,16 @@ export class Object3DFeaturability<
 
 	private attachCtxRecursively(world: GameContext<TModules>) {
 		this._log("attachToWorldRecursively...");
-		this.ref.traverse((child) => {
-			Object3DFeaturability.has(child) &&
+		this.object.traverse((child) => {
+			Object3DFeaturability.isIn(child) &&
 				child.userData.featurability.attachCtx(world);
 		});
 	}
 
 	private detachCtxRecursively() {
 		this._log("detachFromWorldRecursively...");
-		this.ref.traverse((child) => {
-			Object3DFeaturability.has(child) && child.userData.featurability.detachCtx();
+		this.object.traverse((child) => {
+			Object3DFeaturability.isIn(child) && child.userData.featurability.detachCtx();
 		});
 	}
 
@@ -275,6 +298,10 @@ export type IFeaturable<
 	userData: {
 		featurability: Object3DFeaturability<TModules, TObj>;
 	};
+};
+
+type IFeaturableToDelete = {
+	userData: Partial<IFeaturable["userData"]>;
 };
 
 const _event: {

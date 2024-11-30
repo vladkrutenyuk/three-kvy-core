@@ -1,10 +1,13 @@
-import { REVISION } from "./revision";
-export * from "./core/AnimationFrameLoop";
-export * from "./core/Object3DFeature";
-export * from "./core/GameContext";
-export * from "./core/GameContextModule";
-export * from "./core/Object3DFeaturablity";
-export * from "./core/ThreeContext";
+export * from "./utils/remove-array-item.js";
+export * from "./addons/EventCache.js";
+export * from "./core/AnimationFrameLoop.js";
+export * from "./core/ThreeContext.js";
+export * from "./core/Object3DFeature.js";
+export * from "./core/GameContext.js";
+export * from "./core/GameContextModule.js";
+export * from "./core/Object3DFeaturablity.js";
+
+export const REVISION = '11';
 
 declare global {
 	interface Window {

@@ -1,10 +1,7 @@
 import * as THREE from "three";
+import { EventCache, EventCacheMapInfer } from "../addons/EventCache";
 
-export class AnimationFrameLoop extends THREE.EventDispatcher<{
-	frame: {};
-	run: {};
-	stop: {};
-}> {
+export class AnimationFrameLoop extends THREE.EventDispatcher<AnimationFrameLoopEventMap> {
 	public readonly uniforms = {
 		deltaTime: {
 			value: 0,
@@ -19,10 +16,14 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<{
 
 	private _isRunning = false;
 	private _animationFrameToken: number | null = null;
-	private _clock = new THREE.Clock(false);
+	private _clock: THREE.Clock;
 
-	constructor() {
+	private onFrame: () => void;
+
+	constructor(clock: THREE.Clock, onFrame: () => void) {
 		super();
+		this._clock = clock;
+		this.onFrame = onFrame;
 	}
 
 	run() {
@@ -30,29 +31,34 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<{
 		this._isRunning = true;
 		this._clock.start();
 
-		this.dispatchEvent(_runEvent);
+		this.dispatchEvent(cache.use("run"));
 		this.animate();
+		console.log("run");
 	}
 
 	stop() {
 		if (!this._isRunning) return;
+		console.log("stop");
 		this._isRunning = false;
 		this._clock.stop();
 
 		this._animationFrameToken !== null &&
 			cancelAnimationFrame(this._animationFrameToken);
 		this._animationFrameToken = null;
-		this.dispatchEvent(_stopEvent);
+		this.dispatchEvent(cache.use("stop"));
 	}
 
 	private animate = () => {
 		this.uniforms.deltaTime.value = this._clock.getDelta();
 		this.uniforms.time.value = this._clock.getElapsedTime();
 		this._animationFrameToken = requestAnimationFrame(this.animate);
-		this.dispatchEvent(_frameEvent);
+		// this.dispatchEvent(_frameEvent);
+		this.onFrame();
 	};
 }
 
-const _runEvent = { type: "run" } as const;
-const _stopEvent = { type: "stop" } as const;
-const _frameEvent = { type: "frame" } as const;
+const cache = new EventCache({
+	run: {},
+	stop: {},
+});
+export type AnimationFrameLoopEventMap = EventCacheMapInfer<typeof cache>;
