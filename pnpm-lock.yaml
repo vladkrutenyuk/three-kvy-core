@@ -4,15 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
+devDependencies:
   '@dimforge/rapier3d-compat':
     specifier: ^0.14.0
     version: 0.14.0
-  eventemitter3:
-    specifier: ^5.0.1
-    version: 5.0.1
-
-devDependencies:
   '@eslint/js':
     specifier: ^9.15.0
     version: 9.15.0
@@ -43,6 +38,9 @@ devDependencies:
   eslint:
     specifier: ^9.15.0
     version: 9.15.0
+  eventemitter3:
+    specifier: ^5.0.1
+    version: 5.0.1
   globals:
     specifier: ^15.12.0
     version: 15.12.0
@@ -460,7 +458,7 @@ packages:
 
   /@dimforge/rapier3d-compat@0.14.0:
     resolution: {integrity: sha512-/uHrUzS+CRQ+NQrrJCEDUkhwHlNsAAexbNXgbN9sHY+GwR+SFFAFrxRr8Llf5/AJZzqiLANdQIfJ63Cw4gJVqw==}
-    dev: false
+    dev: true
 
   /@eslint-community/eslint-utils@4.4.1(eslint@9.15.0):
     resolution: {integrity: sha512-s3O3waFUrMV8P/XaF/+ZTp1X9XBZW1a4B97ZnjQF2KYWaFD2A8KyFBsrsfSjEmjn3RGWAIuvlneuZm3CUK3jbA==}
@@ -2085,7 +2083,7 @@ packages:
 
   /eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
-    dev: false
+    dev: true
 
   /execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
