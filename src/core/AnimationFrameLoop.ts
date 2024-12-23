@@ -1,7 +1,12 @@
-import * as THREE from "three";
-import { EventCache, EventCacheMapInfer } from "../addons/EventCache";
+import { EventEmitter } from "eventemitter3";
+import type * as THREE from "three";
 
-export class AnimationFrameLoop extends THREE.EventDispatcher<AnimationFrameLoopEventMap> {
+export type AnimationFrameLoopEventTypes = {
+	run: [];
+	stop: [];
+};
+
+export class AnimationFrameLoop extends EventEmitter<AnimationFrameLoopEventTypes> {
 	public readonly uniforms = {
 		deltaTime: {
 			value: 0,
@@ -15,7 +20,7 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<AnimationFrameLoop
 	}
 
 	private _isRunning = false;
-	private _animationFrameToken: number | null = null;
+	private _token: number | null = null;
 	private _clock: THREE.Clock;
 
 	private onFrame: () => void;
@@ -31,7 +36,7 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<AnimationFrameLoop
 		this._isRunning = true;
 		this._clock.start();
 
-		this.dispatchEvent(cache.use("run"));
+		this.emit("run");
 		this.animate();
 		console.log("run");
 	}
@@ -42,23 +47,15 @@ export class AnimationFrameLoop extends THREE.EventDispatcher<AnimationFrameLoop
 		this._isRunning = false;
 		this._clock.stop();
 
-		this._animationFrameToken !== null &&
-			cancelAnimationFrame(this._animationFrameToken);
-		this._animationFrameToken = null;
-		this.dispatchEvent(cache.use("stop"));
+		this._token !== null && cancelAnimationFrame(this._token);
+		this._token = null;
+		this.emit("stop");
 	}
 
 	private animate = () => {
 		this.uniforms.deltaTime.value = this._clock.getDelta();
 		this.uniforms.time.value = this._clock.getElapsedTime();
-		this._animationFrameToken = requestAnimationFrame(this.animate);
-		// this.dispatchEvent(_frameEvent);
+		this._token = requestAnimationFrame(this.animate);
 		this.onFrame();
 	};
 }
-
-const cache = new EventCache({
-	run: {},
-	stop: {},
-});
-export type AnimationFrameLoopEventMap = EventCacheMapInfer<typeof cache>;

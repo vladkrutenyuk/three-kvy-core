@@ -1,18 +1,13 @@
-import * as THREE from "three";
-import { CtxAttachableEvent, CtxAttachableEventMap } from "./CtxAttachableEvent";
-import { DestroyableEvent, DestroyableEventMap } from "./DestroyableEvent";
-import {
-	GameContext,
-	GameContextModulesRecord
-} from "./GameContext";
+import { EventEmitter } from "eventemitter3";
+import { Evnt } from "./Events";
+import { GameContext, GameContextModulesRecord } from "./GameContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
-import { ThreeContextEventMap } from "./ThreeContext";
-import { EventCache } from "../addons/EventCache";
 
-export type Object3DFeatureEventMap<
-	TModules extends GameContextModulesRecord = {},
-	TMap extends {} = {}
-> = CtxAttachableEventMap<TModules> & DestroyableEventMap & TMap;
+export type Object3DFeatureEventTypes<TModules extends GameContextModulesRecord = {}> = {
+	[Evnt.AttachedCtx]: [ctx: GameContext<TModules>];
+	[Evnt.DetachedCtx]: [ctx: GameContext<TModules>];
+	[Evnt.Destroy]: [];
+};
 
 //TODO add first generic `TObj extends THREE.Object3D`
 export type Object3DFeatureProps<
@@ -25,8 +20,8 @@ export type Object3DFeatureProps<
 export abstract class Object3DFeature<
 	TModules extends GameContextModulesRecord = {},
 	TProps extends {} = {},
-	TEventMap extends Object3DFeatureEventMap<TModules> = Object3DFeatureEventMap<TModules>
-> extends THREE.EventDispatcher<Object3DFeatureEventMap<TModules> & TEventMap> {
+	TEventMap extends EventEmitter.ValidEventTypes = {}
+> extends EventEmitter<TEventMap | Object3DFeatureEventTypes<TModules>> {
 	static log: (target: Object3DFeature, msg: string) => void = () => {};
 	public readonly type: string;
 	public readonly id: number;
@@ -34,7 +29,7 @@ export abstract class Object3DFeature<
 	public readonly object: IFeaturable<TModules>;
 	public featurabiliy: Object3DFeaturability<TModules>;
 
-	protected get ctx() {
+	public get ctx() {
 		return this._ctx;
 	}
 
@@ -48,76 +43,65 @@ export abstract class Object3DFeature<
 		this.id = _featureId++;
 		this.uuid = GameContext.generateUUID();
 
-		this.featurabiliy.addEventListener(
-			CtxAttachableEvent.ATTACHED_TO_CTX,
-			this.objectAttachedToCtxHandler
-		);
-		this.featurabiliy.addEventListener(
-			CtxAttachableEvent.DETACHED_FROM_CTX,
-			this.objectDetachedFromCtxHandler
-		);
+		this.featurabiliy.on(Evnt.AttachedCtx, this.objectAttachedToCtxHandler, this);
+		this.featurabiliy.on(Evnt.DetachedCtx, this.objectDetachedFromCtxHandler, this);
 
-		let reverse: ReturnType<typeof this.useCtx>;
-		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, ({ ctx }) => {
-			this.onAttach(ctx);
-			reverse = this.useCtx(ctx);
-		});
-		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, ({ ctx }) => {
-			this.onDetach(ctx);
-			if (reverse) {
-				reverse();
-				reverse = undefined;
-			}
-		});
-		this.addEventListener(DestroyableEvent.DESTROYED, () => {
-			this.onDestroy();
-		});
+		this.on(Evnt.AttachedCtx, this._onAttach, this);
+		this.on(Evnt.DetachedCtx, this._onDetach, this);
+		this.on(Evnt.Destroy, this._onDestroy, this);
 	}
-
-	/** @warning It is prohibited to call this method manually by yourself! */
+	/** @private */
 	_init_() {
 		this.featurabiliy.ctx && this.attachCtx(this.featurabiliy.ctx);
 	}
 
-	destroy() {
-		this._log("destroy...");
-		this.detachCtx();
-		this.featurabiliy.removeEventListener(
-			CtxAttachableEvent.ATTACHED_TO_CTX,
-			this.objectAttachedToCtxHandler
-		);
-		this.featurabiliy.removeEventListener(
-			CtxAttachableEvent.DETACHED_FROM_CTX,
-			this.objectDetachedFromCtxHandler
-		);
-		this.featurabiliy.destroyFeature(this);
-
-		this.dispatchEvent(cache.use("destroyed"));
+	private _useCtxReturn: ReturnType<typeof this.useCtx>;
+	private _onAttach(ctx: GameContext<TModules>) {
+		this.initCtxEventMethods(ctx);
+		this.onCtxAttach(ctx);
+		this._useCtxReturn = this.useCtx(ctx);
+	}
+	private _onDetach(ctx: GameContext<TModules>) {
+		this.onCtxDetach(ctx);
+		if (!this._useCtxReturn) return;
+		this._useCtxReturn();
+		this._useCtxReturn = undefined;
+	}
+	private _onDestroy() {
+		this.onDestroy();
 	}
 
-	// Attaching/Detaching private methods
+	destroy() {
+		this._log("destroy()");
+		this.detachCtx();
+		this.featurabiliy.off(Evnt.AttachedCtx, this.objectAttachedToCtxHandler, this);
+		this.featurabiliy.off(Evnt.DetachedCtx, this.objectDetachedFromCtxHandler, this);
+		this.featurabiliy.destroyFeature(this);
 
-	private objectAttachedToCtxHandler = (event: { ctx: GameContext<TModules> }) => {
+		this.emit(Evnt.Destroy);
+	}
+
+	private objectAttachedToCtxHandler(ctx: GameContext<TModules>) {
 		this._log("gameObjectAttachedToWorld");
-		this.attachCtx(event.ctx);
-	};
-	private objectDetachedFromCtxHandler = (_: { ctx: GameContext<TModules> }) => {
+		this.attachCtx(ctx);
+	}
+	private objectDetachedFromCtxHandler(_ctx: GameContext<TModules>) {
 		this._log("gameObjectDetachedFromWorld");
 		this.detachCtx();
-	};
+	}
 
 	private attachCtx = (ctx: GameContext<TModules>) => {
-		this._log("attachToWorld...");
+		this._log("attachCtx()");
 		if (this._ctx) {
-			if (this.ctx === ctx) return;
+			if (this._ctx === ctx) return;
 			this._log("attachToWorld has world");
 			this.detachCtx();
 		}
 		this._ctx = ctx;
 
-		this.dispatchEvent(cache.use("attachedtoctx")("ctx", ctx));
+		this.emit(Evnt.AttachedCtx, ctx);
 
-		this._log("attachToWorld done!");
+		this._log("attachCtx() done");
 	};
 	private detachCtx = () => {
 		this._log("detachFromWorld...");
@@ -125,63 +109,10 @@ export abstract class Object3DFeature<
 		const ctx = this._ctx;
 		this._ctx = null;
 
-		this.dispatchEvent(cache.use("detachedfromctx")("ctx", ctx));
+		this.emit(Evnt.DetachedCtx, ctx);
 
 		this._log("detachFromWorld done!");
 	};
-
-	// Event methods
-	//TODO revise and check this !!!
-	protected useEventHandlerMethod<
-		TTarget extends THREE.EventDispatcher<any> = THREE.EventDispatcher<any>
-	>(
-		target: TTarget,
-		type: Parameters<TTarget["dispatchEvent"]>[0]["type"],
-		handlerMethodName: string
-	) {
-		let listener: (() => void) | null = null;
-
-		const init = (ctx: GameContext<TModules>) => {
-			listener = () => {
-				this[handlerMethodName](ctx);
-			};
-			target.addEventListener(type, listener);
-		};
-
-		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, (event) => {
-			init(event.ctx);
-		});
-		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, (event) => {
-			listener && target.removeEventListener(type, listener);
-		});
-
-		this._ctx && init(this._ctx);
-	}
-
-	protected useThreeEventHandler(
-		type: keyof ThreeContextEventMap,
-		handlerMethodName: string
-	) {
-		let listener: (() => void) | null = null;
-
-		const init = (ctx: GameContext<TModules>) => {
-			listener = () => {
-				this[handlerMethodName](ctx);
-			};
-			ctx.three.addEventListener(type, listener);
-		};
-
-		this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, (event) => {
-			init(event.ctx);
-		});
-		this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, (event) => {
-			listener && event.ctx.three.removeEventListener(type, listener);
-		});
-
-		this._ctx && init(this._ctx);
-	}
-
-	// Overridable Event Methods
 
 	/**
 	 * @param {GameContext} ctx
@@ -189,25 +120,109 @@ export abstract class Object3DFeature<
 	 * Essentially similar to *useEffect()* from *react*, but ctx atttach/detach instead of component mount/unmount.
 	 * @override
 	 */
-	protected useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
+	useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
 
-	/** It is called on **ctx attached**. @override */
-	protected onAttach(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext} ctx
+	 * @override
+	 */
+	onCtxAttach(ctx: GameContext<TModules>) {}
 
-	/** It is called in **ctx detached**. @override */
-	protected onDetach(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext} ctx
+	 * @override
+	 */
+	onCtxDetach(ctx: GameContext<TModules>) {}
 
-	/** It is called on this feature destroyed. @override */
-	protected onDestroy() {}
+	/**
+	 * @override
+	 */
+	onDestroy() {}
+
+	private initCtxEventMethods(ctx: GameContext<TModules>) {
+		const p = Object3DFeature.prototype;
+		if (this.onAfterRender !== p.onAfterRender) {
+			this.initEventHandlerMethod(ctx.three, "renderafter", "onAfterRender");
+		}
+		if (this.onBeforeRender !== p.onBeforeRender) {
+			this.initEventHandlerMethod(ctx.three, "renderbefore", "onBeforeRender");
+		}
+		if (this.onMount !== p.onMount) {
+			this.initEventHandlerMethod(ctx.three, "mount", "onMount");
+		}
+		if (this.onResize !== p.onResize) {
+			this.initEventHandlerMethod(ctx.three, "unmount", "onUnmount");
+		}
+		if (this.onLoopRun !== p.onLoopRun) {
+			this.initEventHandlerMethod(ctx.loop, "run", "onLoopRun");
+		}
+		if (this.onLoopStop !== p.onLoopStop) {
+			this.initEventHandlerMethod(ctx.loop, "stop", "onLoopStop");
+		}
+	}
+
+	initEventHandlerMethod<TTarget extends EventEmitter, TMethod extends keyof this>(
+		target: TTarget,
+		type: Parameters<TTarget["on"]>[0],
+		handlerMethodName: TMethod
+	) {
+		let listener: (() => void) | null = null;
+
+		const subscribe = (ctx: GameContext<TModules>) => {
+			listener = function () {
+				this[handlerMethodName](ctx);
+			};
+			target.on(type, listener, this);
+		};
+
+		const unsubscribe = (ctx: GameContext<TModules>) => {
+			if (!listener) return;
+			target.off(type, listener, this);
+		};
+
+		this.on(Evnt.AttachedCtx, subscribe);
+		this.on(Evnt.DetachedCtx, unsubscribe);
+
+		this._ctx && subscribe(this._ctx);
+	}
 
 	/**
 	 * @param {GameContext<TModules>} ctx
+	 * @override
 	 */
-	protected onBeforeRender(ctx: GameContext<TModules>) {}
-	protected onAfterRender(ctx: GameContext<TModules>) {}
-	protected onResize(ctx: GameContext<TModules>) {}
+	onBeforeRender(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onAfterRender(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onResize(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onMount(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onUnmount(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onLoopRun(ctx: GameContext<TModules>) {}
+	/**
+	 * @param {GameContext<TModules>} ctx
+	 * @override
+	 */
+	onLoopStop(ctx: GameContext<TModules>) {}
 
 	// Debug Logs
 
@@ -216,61 +231,5 @@ export abstract class Object3DFeature<
 		// console.log(`F-${this.object.id} ${this.constructor.name}-${this.id}`, ...args);
 	}
 }
-
-// type ExtractEventMap<T> = T extends THREE.EventDispatcher<infer U> ? U : never;
-// function useThreeEventHandler<
-// 	TTarget extends THREE.EventDispatcher<any> = THREE.EventDispatcher<any>
-// >(target: TTarget, type: Parameters<TTarget["dispatchEvent"]>[0]["type"]) {
-// 	let listener: (() => void) | null = null;
-
-// 	const init = (ctx: GameContext) => {
-// 		listener = () => {
-// 			this[handlerMethodName](ctx);
-// 		};
-// 		ctx.three.addEventListener(type, listener);
-// 	};
-
-// 	this.addEventListener(CtxAttachableEvent.ATTACHED_TO_CTX, (event) => {
-// 		init(event.ctx);
-// 	});
-// 	this.addEventListener(CtxAttachableEvent.DETACHED_FROM_CTX, (event) => {
-// 		listener && event.ctx.three.removeEventListener(type, listener);
-// 	});
-
-// 	this._ctx && init(this._ctx);
-// }
-// const a = {} as any as ThreeContext;
-// useThreeEventHandler(a, "camerachanged");
-
-// const _eventMethods = {
-// 	onBeforeRender: "beforeRender",
-// 	onAfterRender: "afterRender",
-// 	onResize: "resize",
-// } as const;
-
-// // const _event: {
-// // 	[K in keyof Object3DFeatureEventMap<any>]: {
-// // 		type: K;
-// // 	} & Object3DFeatureEventMap<any>[K];
-// // } = {
-// // 	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
-// // 		type: CtxAttachableEvent.ATTACHED_TO_CTX,
-// // 		ctx: {} as any,
-// // 	},
-// // 	[CtxAttachableEvent.DETACHED_FROM_CTX]: {
-// // 		type: CtxAttachableEvent.DETACHED_FROM_CTX,
-// // 		ctx: {} as any,
-// // 	},s
-// // 	[DestroyableEvent.DESTROYED]: { type: DestroyableEvent.DESTROYED },
-// // };
-const cache = new EventCache({
-	[CtxAttachableEvent.ATTACHED_TO_CTX]: {
-		ctx: null as any as GameContext<any>,
-	},
-	[CtxAttachableEvent.DETACHED_FROM_CTX]: {
-		ctx: null as any as GameContext<any>,
-	},
-	[DestroyableEvent.DESTROYED]: {},
-});
 
 let _featureId = 0;

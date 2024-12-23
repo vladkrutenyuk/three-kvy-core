@@ -1,26 +1,27 @@
-import * as KVY from "../dist/index.js";
+import Kvy4 from "./lib.js";
 
-export class RotateOF extends KVY.Object3DFeature {
+export class RotateOF extends Kvy4.Object3DFeature {
     speed = 5;
     constructor(props) {
         super(props);
         this.speed = props.speed ?? 5;
         console.log('new RotateOF');
-        this.useThreeEventHandler("renderafter", "onUpdate")
+        // this.useThreeEventHandler("renderafter", "onUpdate")
     }
 
-    /** @param {KVY.GameContext} ctx */
-    useCtx(ctx) {
-        console.log('useCtx');
-        
-        return () => {
-            console.log('useCtx return;');
-        }
-    }
+    // /** @param {KVY.GameContext} ctx */
+    // useCtx(ctx) {
+    //     console.log('useCtx');
+    //     ctx.three.on("renderbefore", this.onUpdate, this)
+    //     return () => {
+    //         ctx.three.off("renderbefore", this.onUpdate, this)
+    //         console.log('useCtx return;');
+    //     }
+    // }
 
-    /** @param {KVY.GameContext} ctx */
-    onUpdate(ctx) {
-        console.log("update")
+    /** @param {Kvy4.GameContext} ctx */
+    onBeforeRender(ctx) {
+        // console.log("onBeforeRender")
         this.object.rotation.y += ctx.deltaTime * this.speed;
     }
 }

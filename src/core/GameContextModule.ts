@@ -1,7 +1,10 @@
-import { DestroyableEvent } from "./DestroyableEvent";
+import EventEmitter from "eventemitter3";
+import { Evnt } from "./Events";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 
-export abstract class GameContextModule {
+export abstract class GameContextModule<
+	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol
+> extends EventEmitter<TEventTypes> {
 	public get isInited() {
 		return this._isInited;
 	}
@@ -12,18 +15,26 @@ export abstract class GameContextModule {
 	private _isInited = false;
 	private _isDestroyed = false;
 
-	init<TModules extends GameContextModulesRecord>(ctx: GameContext<TModules>) {
+	_init_<TModules extends GameContextModulesRecord>(ctx: GameContext<TModules>) {
 		if (this._isInited) return;
 		this._isInited = true;
-		const reverse = this.useEffect(ctx);
 		this.onInit(ctx);
-		ctx.addEventListener(DestroyableEvent.DESTROYED, (event) => {
-			reverse !== undefined && reverse();
-			this.onDestroy(event.target);
-		});
+		const reverse = this.useCtx(ctx);
+		ctx.once(
+			Evnt.Destroy,
+			() => {
+				reverse && reverse();
+				this.onDestroy(ctx);
+			},
+			ctx
+		);
 	}
 
-	protected useEffect<TModules extends GameContextModulesRecord>(
+	/**
+	 * @param ctx {GameContext}
+	 * @returns
+	 */
+	protected useCtx<TModules extends GameContextModulesRecord>(
 		ctx: GameContext<TModules>
 	): undefined | (() => void) | void {
 		return;

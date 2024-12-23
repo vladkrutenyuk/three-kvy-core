@@ -12,6 +12,12 @@ export function disposeMaterialFully(material) {
 	}
 }
 
+/**
+ * Disposes of a THREE.Object3D instance and its resources.
+ *
+ * @param {THREE.Object3D} obj - The object to dispose of.
+ * @param {boolean} [recursively=false] - Whether to dispose of the object's children recursively.
+ */
 export function disposeObject3DFully(obj, recursively = false) {
 	if (obj.isMesh) {
 		const mesh = obj;

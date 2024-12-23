@@ -1,7 +1,7 @@
-import * as THREE from "three";
-import { EventCache, EventCacheMapInfer } from "../addons/EventCache";
+import type * as THREE from "three";
 import { AnimationFrameLoop } from "./AnimationFrameLoop";
-import { DestroyableEvent } from "./DestroyableEvent";
+import { EventEmitter } from "eventemitter3";
+import { Evnt } from "./Events";
 import { GameContextModule } from "./GameContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
@@ -10,7 +10,7 @@ export type GameContextModulesRecord = Readonly<Record<string, GameContextModule
 
 export class GameContext<
 	TModules extends GameContextModulesRecord = GameContextModulesRecord
-> extends THREE.EventDispatcher<GameContextEventMap> {
+> extends EventEmitter<GameContextEventTypes> {
 	static create<TModules extends GameContextModulesRecord = {}>(
 		THREE: typeof import("three"),
 		modules?: TModules,
@@ -24,7 +24,7 @@ export class GameContext<
 	}
 	public readonly isGameContext = true;
 
-	public readonly animationFrameLoop: AnimationFrameLoop;
+	public readonly loop: AnimationFrameLoop;
 	public readonly three: ThreeContext;
 	public readonly modules: TModules;
 	public get root() {
@@ -38,7 +38,7 @@ export class GameContext<
 	}
 
 	public get uniforms() {
-		return this.animationFrameLoop.uniforms;
+		return this.loop.uniforms;
 	}
 	public get deltaTime() {
 		return this.uniforms.deltaTime.value;
@@ -58,23 +58,23 @@ export class GameContext<
 	) {
 		super();
 		this.three = three;
-		this.animationFrameLoop = new AnimationFrameLoop(clock, () => {
+		this.loop = new AnimationFrameLoop(clock, () => {
 			this.three.render();
 		});
 
 		this.modules = modules ?? ({} as TModules);
 		for (const key in this.modules) {
-			this.modules[key].init(this);
+			this.modules[key]._init_(this);
 		}
 
 		this._root = Object3DFeaturability.from<TModules>(root).setCtx(this).object;
 
-		this.initFrameLoopPausingOnSwitchTab();
+		this.setupFrameLoopPausingOnSwitchTab();
 	}
 
 	mountAndRun(container: HTMLDivElement) {
 		this.three.mount(container);
-		this.animationFrameLoop.run();
+		this.loop.run();
 	}
 
 	add: IFeaturable<TModules>["add"] = (...args) => {
@@ -88,13 +88,13 @@ export class GameContext<
 	destroy() {
 		if (this._isDestroyed) return;
 		this._isDestroyed = true;
-		this.animationFrameLoop.stop();
+		this.loop.stop();
 		this.three.destroy();
-		this.dispatchEvent(cache.use("destoryed"));
+		this.emit(Evnt.Destroy);
 	}
 
-	private initFrameLoopPausingOnSwitchTab() {
-		const loop = this.animationFrameLoop;
+	private setupFrameLoopPausingOnSwitchTab() {
+		const loop = this.loop;
 		const three = this.three;
 		const onWindowFocus = () => {
 			// console.log("onWindowFocus");
@@ -104,11 +104,11 @@ export class GameContext<
 			// console.log("onWindowBlur");
 			loop.stop();
 		};
-		three.addEventListener("mount", () => {
+		three.on("mount", () => {
 			window.addEventListener("focus", onWindowFocus);
 			window.addEventListener("blur", onWindowBlur);
 		});
-		three.addEventListener("unmount", () => {
+		three.on("unmount", () => {
 			window.removeEventListener("focus", onWindowFocus);
 			window.removeEventListener("blur", onWindowBlur);
 			loop.stop();
@@ -124,5 +124,6 @@ export class GameContext<
 	};
 }
 
-const cache = new EventCache({ destoryed: {} });
-export type GameContextEventMap = EventCacheMapInfer<typeof cache>;
+export type GameContextEventTypes = {
+	[Evnt.Destroy]: [];
+};

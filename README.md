@@ -5,20 +5,33 @@ Package is in development.
 
 ---
 
-You are ablo to contact with me via
+Contact me:
 
-- [Telegram (@vladkrutenyuk)](https://t.me/vladkrutenyuk)
+- [Linkedin (/in/vladkrutenyuk)](https://www.linkedin.com/in/vladkrutenyuk/)
 
 - [Instagram (@vlad_krutenyuk)](https://instagram.com/vlad_krutenyuk)
 
 - [Twitter/X (@vladkrutenyuk)](https://x.com/vladkrutenyuk)
 
-- [Twitch (vladdyusha)](https://twitch.tv/vladdyusha)
-
-- [kvy-4° (My funny telegram channel)](https://t.me/kvvy4)
-
-- [https://kvy.world](https://kvy.world)
+- [Telegram (@vladkrutenyuk)](https://t.me/vladkrutenyuk)
 
 ---
 
 _meow :3_
+
+Kvyore
+Kvytore
+Ctxiber
+featuber
+Featfiber
+
+kvy4us /ˈkwiːtʃəs/
+- context
+- modules
+- object featurability
+- features
+
+three-kvy4ures
+
+
+thinking about name...

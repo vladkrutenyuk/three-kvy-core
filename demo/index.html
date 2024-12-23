@@ -5,12 +5,27 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Demo</title>
-	<link rel="stylesheet" href="./styles.css">
+	<!-- <link rel="stylesheet" href="./styles.css"> -->
+	<style>
+		body {
+			background-color: black;
+		}
+		canvas {
+			border: none;
+			outline: none;
+		}
+		#container {
+			width: 90vw;
+			height: 90vh;
+			border: 2px solid black;
+		}
+	</style>
 	<script type="importmap">
         {
           "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three/examples/jsm/"
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three/examples/jsm/",
+			"eventemitter3": "https://unpkg.com/eventemitter3@latest/dist/eventemitter3.esm.min.js"
           }
         }
       </script>
@@ -18,65 +33,17 @@
 
 <body>
 	<div id="container"></div>
-	<script type="module" src="./index.js"></script>
-	<!-- <script>
-		const payload = {
-			moved: { x: 0, y: 0 },
-			stopped: {},
-			jumped: { height: 0 },
+	<script type="module">
+		import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
+		console.log(RAPIER);
+		const init = async () => {
+			await RAPIER.init();
+			window.RAPIER = RAPIER;
+			const res = await import("./index.js")
+			console.log('index.js', res)
 		}
-
-		function wrapIntoProxyWithKvyValueChangeFn(obj) {
-			const proxy = new Proxy(() => {}, {
-				apply(target, thisArg, args) {
-					const [key,value] = args;
-					obj[key] = value;
-					return proxy;
-				},
-				get(target, key) {
-					return key in obj ? obj[key] : target[key];
-				},
-				set(target, key, value) {
-					if (!(key in obj)) return false;
-					obj[key] = value
-					return true;
-				}
-
-			})
-			return proxy;
-		}
-
-		function use(type) {
-			return wrapIntoProxyWithKvyValueChangeFn(payload[type])
-		}
-
-		const jumpedEvent = use("jumped");
-		console.log(jumpedEvent.height)
-		jumpedEvent.height = 228;
-		console.log(jumpedEvent.height)
-		jumpedEvent("height", 1488);
-		console.log(jumpedEvent.height);
-
-		console.log('---')
-
-		const movedEvent = use("moved")("x", 300)("y", 200);
-		console.log(movedEvent.x,movedEvent.y);
-		const movedEvent2 = use("moved")("x", 100)("y", 1000);
-		console.log(movedEvent2.x,movedEvent.y);
-		console.log(movedEvent.x,movedEvent.y);
-		movedEvent.x = 228;
-		console.log(movedEvent2.x,movedEvent.y);
-		movedEvent.xx = 100;
-		console.log(movedEvent.xx)
-		// movedEvent("x", 300)("y", 200);
-		// console.log(movedEvent.x,movedEvent.y);
-		// console.log({...movedEvent});
-
-		// jumpedEvent("height", 1488);
-		// console.log("proxyObj.height", proxyObj.height)
-		// const proxyCallRes = proxyObj();
-		// console.log("proxyCallRes", proxyCallRes)
-	</script> -->
+		init();
+	</script>
 </body>
 
 </html>
