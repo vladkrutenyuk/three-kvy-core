@@ -133,9 +133,9 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		const timeout = this._rendererSetSizeTimeout;
 		if (timeout) {
-			clearTimeout(timeout);
+			window.clearTimeout(timeout);
 		}
-		this._rendererSetSizeTimeout = setTimeout(
+		this._rendererSetSizeTimeout = window.setTimeout(
 			() => this.renderer.setSize(width, height),
 			5
 		);
@@ -150,7 +150,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
 		camera.updateProjectionMatrix();
-		this.emit(ev.CameraChanged);
+		this.emit(ev.CameraChanged, camera);
 	}
 }
 
@@ -170,5 +170,5 @@ export type ThreeContextEventMap = {
 	[ev.Unmount]: [];
 	[ev.Destroy]: [];
 	[ev.Resize]: [width: number, height: number];
-	[ev.CameraChanged]: [];
+	[ev.CameraChanged]: [camera: THREE.PerspectiveCamera];
 };

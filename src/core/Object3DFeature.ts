@@ -120,7 +120,7 @@ export abstract class Object3DFeature<
 	 * Essentially similar to *useEffect()* from *react*, but ctx atttach/detach instead of component mount/unmount.
 	 * @override
 	 */
-	useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
+	protected useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
 
@@ -128,18 +128,18 @@ export abstract class Object3DFeature<
 	 * @param {GameContext} ctx
 	 * @override
 	 */
-	onCtxAttach(ctx: GameContext<TModules>) {}
+	protected onCtxAttach(ctx: GameContext<TModules>) {}
 
 	/**
 	 * @param {GameContext} ctx
 	 * @override
 	 */
-	onCtxDetach(ctx: GameContext<TModules>) {}
+	protected onCtxDetach(ctx: GameContext<TModules>) {}
 
 	/**
 	 * @override
 	 */
-	onDestroy() {}
+	protected onDestroy() {}
 
 	private initCtxEventMethods(ctx: GameContext<TModules>) {
 		const p = Object3DFeature.prototype;
