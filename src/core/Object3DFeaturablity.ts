@@ -4,7 +4,7 @@ import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseAncestorsInterruptible } from "../utils/traverse-ancestors-interruptible";
 import { Evnt } from "./Events";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
-import { Object3DFeature, Object3DFeatureProps } from "./Object3DFeature";
+import { Object3DFeature } from "./Object3DFeature";
 
 export type Object3DFeaturabilityEventTypes<
 	TModules extends GameContextModulesRecord = {}
@@ -125,16 +125,16 @@ export class Object3DFeaturability<
 	}
 
 
-	__addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
+	addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
 		Feature: new (object: IFeaturable, props: TProps) => TFeature,
 		props: keyof TProps extends never ? undefined : TProps,
 		beforeAttach?: (feature: TFeature) => void
 	): TFeature
-	__addFeature<TFeature extends Object3DFeature<any, any>>(
+	addFeature<TFeature extends Object3DFeature<any, any>>(
 		Feature: new (object: IFeaturable) => TFeature,
 		// props: keyof TProps extends never ? undefined : TProps
 	): TFeature
-	__addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
+	addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
 		Feature: new (object: IFeaturable, props?: TProps) => TFeature,
 		props?: TProps,
 		beforeAttach?: (feature: TFeature) => void

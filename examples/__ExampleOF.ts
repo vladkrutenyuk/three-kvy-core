@@ -36,14 +36,14 @@ class ExampleWithPropsOF extends Object3DFeature<
 
 const f = Object3DFeaturability.from<{ gameM: GameM }>(new THREE.Group());
 
-const res1 = f.__addFeature(ExampleWithPropsOF, { popa: 1 }); // OK
-const res2 = f.__addFeature(ExampleWithPropsOF, { popa: 1, over: 228 }, () => {}); // Object literal may only specify known properties, and 'over' does not exist in type '{ popa: number; }'
-const res3 = f.__addFeature(ExampleWithPropsOF, {}); // Argument of type '{}' is not assignable to parameter of type '{ popa: number; }'. Property 'popa' is missing in type '{}' but required in type '{ popa: number; }'
-const res4 = f.__addFeature(ExampleWithPropsOF); // should be ERROR
+const res1 = f.addFeature(ExampleWithPropsOF, { popa: 1 }); // OK
+const res2 = f.addFeature(ExampleWithPropsOF, { popa: 1, over: 228 }, () => {}); // Object literal may only specify known properties, and 'over' does not exist in type '{ popa: number; }'
+const res3 = f.addFeature(ExampleWithPropsOF, {}); // Argument of type '{}' is not assignable to parameter of type '{ popa: number; }'. Property 'popa' is missing in type '{}' but required in type '{ popa: number; }'
+const res4 = f.addFeature(ExampleWithPropsOF); // should be ERROR
 
-const a1 = f.__addFeature(ExampleNoPropsOF, { asd: 1 }); //Error: Object literal may only specify known properties, and 'asd' does not exist in type '{ object: IFeaturable<{ gameM: GameM; }>; }'
-const a2 = f.__addFeature(ExampleNoPropsOF, undefined, (f) => {
+const a1 = f.addFeature(ExampleNoPropsOF, { asd: 1 }); //Error: Object literal may only specify known properties, and 'asd' does not exist in type '{ object: IFeaturable<{ gameM: GameM; }>; }'
+const a2 = f.addFeature(ExampleNoPropsOF, undefined, (f) => {
     const b = f
 }); //Error: Argument of type 'undefined' is not assignable to parameter of type '{ object: IFeaturable<{ gameM: GameM; }>; }'
-const a3 = f.__addFeature(ExampleNoPropsOF, {}); //Error: Argument of type '{}' is not assignable to parameter of type '{ object: IFeaturable<{ gameM: GameM; }>; }'.Property 'object' is missing in type '{}' but required in type '{ object: IFeaturable<{ gameM: GameM; }>; }'.ts(2345)
-const a4 = f.__addFeature(ExampleNoPropsOF); //Error: Argument of type '{}' is not assignable to parameter of type '{ object: IFeaturable<{ gameM: GameM; }>; }'.Property 'object' is missing in type '{}' but required in type '{ object: IFeaturable<{ gameM: GameM; }>; }'.ts(2345)
+const a3 = f.addFeature(ExampleNoPropsOF, {}); //Error: Argument of type '{}' is not assignable to parameter of type '{ object: IFeaturable<{ gameM: GameM; }>; }'.Property 'object' is missing in type '{}' but required in type '{ object: IFeaturable<{ gameM: GameM; }>; }'.ts(2345)
+const a4 = f.addFeature(ExampleNoPropsOF); //Error: Argument of type '{}' is not assignable to parameter of type '{ object: IFeaturable<{ gameM: GameM; }>; }'.Property 'object' is missing in type '{}' but required in type '{ object: IFeaturable<{ gameM: GameM; }>; }'.ts(2345)

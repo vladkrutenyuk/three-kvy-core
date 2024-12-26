@@ -9,14 +9,6 @@ export type Object3DFeatureEventTypes<TModules extends GameContextModulesRecord 
 	[Evnt.Destroy]: [];
 };
 
-//TODO add first generic `TObj extends THREE.Object3D`
-export type Object3DFeatureProps<
-	TModules extends GameContextModulesRecord = {},
-	TProps extends {} = {}
-> = TProps & {
-	object: IFeaturable<TModules>;
-};
-
 export abstract class Object3DFeature<
 	TModules extends GameContextModulesRecord = {},
 	TEventMap extends EventEmitter.ValidEventTypes = string | symbol
