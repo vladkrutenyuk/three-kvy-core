@@ -19,8 +19,7 @@ export type Object3DFeatureProps<
 
 export abstract class Object3DFeature<
 	TModules extends GameContextModulesRecord = {},
-	TProps extends {} = {},
-	TEventMap extends EventEmitter.ValidEventTypes = {}
+	TEventMap extends EventEmitter.ValidEventTypes = string | symbol
 > extends EventEmitter<TEventMap | Object3DFeatureEventTypes<TModules>> {
 	static log: (target: Object3DFeature, msg: string) => void = () => {};
 	public readonly type: string;
@@ -35,10 +34,10 @@ export abstract class Object3DFeature<
 
 	private _ctx: GameContext<TModules> | null = null;
 
-	constructor(props: Object3DFeatureProps<TModules, TProps>) {
+	constructor(object: IFeaturable) {
 		super();
 		this.type = this.constructor.name;
-		this.object = props.object;
+		this.object = object;
 		this.featurabiliy = this.object.userData.featurability;
 		this.id = _featureId++;
 		this.uuid = GameContext.generateUUID();

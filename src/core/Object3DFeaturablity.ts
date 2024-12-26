@@ -124,99 +124,32 @@ export class Object3DFeaturability<
 		delete (obj as IFeaturableToDelete).userData.featurability;
 	}
 
-	_addFeature<
-		TFeature extends Object3DFeature<any, TProps, TEventTypes>,
-		TProps extends {} = {},
-		TEventTypes extends {} = {}
-	>(
-		Feature: new (
-			props: TProps & { object: IFeaturable<TModules, TObj> }
-		) => TFeature,
-		props: TProps,
-		beforeAttach?: (feature: TFeature) => void
-	): TFeature;
 
-	_addFeature<
-		TFeature extends Object3DFeature<any, {}, TEventTypes>,
-		TEventTypes extends {} = {}
-	>(
-		Feature: new (props: { object: IFeaturable<TModules, TObj> }) => TFeature,
-		props?: undefined,
+	__addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
+		Feature: new (object: IFeaturable, props: TProps) => TFeature,
+		props: keyof TProps extends never ? undefined : TProps,
 		beforeAttach?: (feature: TFeature) => void
-	): TFeature;
-
-	_addFeature<
-		TFeature extends Object3DFeature<any, TProps, TEventTypes>,
-		TProps extends {} = {},
-		TEventTypes extends {} = {}
-	>(
-		Feature: new (
-			props: TProps & { object: IFeaturable<TModules, TObj> }
-		) => TFeature,
+	): TFeature
+	__addFeature<TFeature extends Object3DFeature<any, any>>(
+		Feature: new (object: IFeaturable) => TFeature,
+		// props: keyof TProps extends never ? undefined : TProps
+	): TFeature
+	__addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
+		Feature: new (object: IFeaturable, props?: TProps) => TFeature,
 		props?: TProps,
 		beforeAttach?: (feature: TFeature) => void
-	): TFeature {
-		const object = this.object;
+	): TFeature
+	{
 		const instance = new Feature(
-			props
-				? { ...props, object }
-				: ({ object } as TProps & { object: IFeaturable<TModules, TObj> })
+			this.object as IFeaturable<any, any>,
+			props ?? ({} as any)
 		);
-		beforeAttach && beforeAttach(instance);
+		beforeAttach?.(instance);
+		
 		this._features.push(instance);
 		instance._init_();
 
 		this.emit(Evnt.FeatureAdded, instance as unknown as Object3DFeature<TModules>);
-
-		return instance;
-	}
-
-	addFeature<
-		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
-		TFeatureModules extends GameContextModulesRecord = {},
-		TProps extends {} = {}
-	>(
-		Feature: new (
-			p: Object3DFeatureProps<
-				CompatibleModules<TFeatureModules, TFeatureModules>,
-				TProps
-			>
-		) => TFeature,
-		props: TProps,
-		beforeAttach?: (feature: TFeature) => void
-	): TFeature;
-
-	addFeature<
-		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
-		TFeatureModules extends GameContextModulesRecord = {}
-	>(
-		Feature: new (
-			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
-		) => TFeature,
-		props?: undefined,
-		beforeAttach?: (feature: TFeature) => void
-	): TFeature;
-
-	addFeature<
-		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
-		TFeatureModules extends GameContextModulesRecord = {}
-	>(
-		Feature: new (
-			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
-		) => TFeature,
-		props: unknown,
-		beforeAttach?: (feature: TFeature) => void
-	): TFeature {
-		const object = this.object as unknown as IFeaturable<
-			CompatibleModules<TFeatureModules, TModules>
-		>;
-		const instance = new Feature(props ? { ...props, object } : { object });
-		beforeAttach && beforeAttach(instance);
-		this._features.push(instance);
-		instance._init_();
-
-		this.emit(Evnt.FeatureAdded, instance as unknown as Object3DFeature<TModules>);
-
 		return instance;
 	}
 
@@ -378,7 +311,7 @@ export class Object3DFeaturability<
 }
 
 export type IFeaturable<
-	TModules extends GameContextModulesRecord = {},
+	TModules extends GameContextModulesRecord = any,
 	TObj extends THREE.Object3D = THREE.Object3D
 > = TObj & {
 	userData: {
@@ -390,27 +323,64 @@ type IFeaturableToDelete = {
 	userData: Partial<IFeaturable["userData"]>;
 };
 
-export type isSubsetRecord<
-	TSub extends Record<TKey, TValue>,
-	TRecord extends Record<TKey, TValue>,
-	TKey extends string | number | symbol = string,
-	TValue = any
-> = {
-	[K in keyof TSub]: K extends keyof TRecord
-		? TSub[K] extends TRecord[K]
-			? never
-			: K
-		: K;
-}[keyof TSub];
+// export type isSubsetRecord<
+// 	TSub extends Record<TKey, TValue>,
+// 	TRecord extends Record<TKey, TValue>,
+// 	TKey extends string | number | symbol = string,
+// 	TValue = any
+// > = {
+// 	[K in keyof TSub]: K extends keyof TRecord
+// 		? TSub[K] extends TRecord[K]
+// 			? never
+// 			: K
+// 		: K;
+// }[keyof TSub];
 
-export type CompatibleFeature<
-	TFeatureModules extends GameContextModulesRecord,
-	TGameObjectModules extends GameContextModulesRecord
-> = isSubsetRecord<TFeatureModules, TGameObjectModules> extends never
-	? Object3DFeature<TFeatureModules>
-	: never;
+// export type CompatibleFeature<
+// 	TFeatureModules extends GameContextModulesRecord,
+// 	TGameObjectModules extends GameContextModulesRecord
+// > = isSubsetRecord<TFeatureModules, TGameObjectModules> extends never
+// 	? Object3DFeature<TFeatureModules, any, any>
+// 	: never;
 
-export type CompatibleModules<
-	TSubModules extends GameContextModulesRecord,
-	TModules extends GameContextModulesRecord
-> = isSubsetRecord<TSubModules, TModules> extends never ? TSubModules : never;
+// export type CompatibleModules<
+// 	TSubModules extends GameContextModulesRecord,
+// 	TModules extends GameContextModulesRecord
+// > = isSubsetRecord<TSubModules, TModules> extends never ? TSubModules : never;
+
+// addFeature<
+// 		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+// 		TFeatureModules extends GameContextModulesRecord = {},
+// 		TProps extends {} = {}
+// 	>(
+// 		Feature: new (
+// 			p: Object3DFeatureProps<
+// 				CompatibleModules<TFeatureModules, TFeatureModules>,
+// 				TProps
+// 			>
+// 		) => TFeature,
+// 		props: TProps,
+// 		beforeAttach?: (feature: TFeature) => void
+// 	): TFeature;
+
+// 	addFeature<
+// 		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+// 		TFeatureModules extends GameContextModulesRecord = {}
+// 	>(
+// 		Feature: new (
+// 			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
+// 		) => TFeature,
+// 		props?: undefined,
+// 		beforeAttach?: (feature: TFeature) => void
+// 	): TFeature;
+
+// 	addFeature<
+// 		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
+// 		TFeatureModules extends GameContextModulesRecord = {}
+// 	>(
+// 		Feature: new (
+// 			p: Object3DFeatureProps<CompatibleModules<TFeatureModules, TModules>>
+// 		) => TFeature,
+// 		props: unknown,
+// 		beforeAttach?: (feature: TFeature) => void
+// 	): TFeature

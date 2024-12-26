@@ -9,7 +9,7 @@ export * from "./core/GameContext.js";
 export * from "./core/GameContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
 
-export const REVISION = '11';
+export const REVISION = '1.3.0';
 
 declare global {
 	interface Window {
