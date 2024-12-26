@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/game-world",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://linkedin.com/in/vladkrutenyuk)",
   "license": "MIT",
   "description": "Objects featurability and its game context based on `three.js` and other customizable modules",
