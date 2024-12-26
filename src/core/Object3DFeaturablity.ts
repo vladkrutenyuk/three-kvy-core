@@ -124,6 +124,53 @@ export class Object3DFeaturability<
 		delete (obj as IFeaturableToDelete).userData.featurability;
 	}
 
+	_addFeature<
+		TFeature extends Object3DFeature<any, TProps, TEventTypes>,
+		TProps extends {} = {},
+		TEventTypes extends {} = {}
+	>(
+		Feature: new (
+			props: TProps & { object: IFeaturable<TModules, TObj> }
+		) => TFeature,
+		props: TProps,
+		beforeAttach?: (feature: TFeature) => void
+	): TFeature;
+
+	_addFeature<
+		TFeature extends Object3DFeature<any, {}, TEventTypes>,
+		TEventTypes extends {} = {}
+	>(
+		Feature: new (props: { object: IFeaturable<TModules, TObj> }) => TFeature,
+		props?: undefined,
+		beforeAttach?: (feature: TFeature) => void
+	): TFeature;
+
+	_addFeature<
+		TFeature extends Object3DFeature<any, TProps, TEventTypes>,
+		TProps extends {} = {},
+		TEventTypes extends {} = {}
+	>(
+		Feature: new (
+			props: TProps & { object: IFeaturable<TModules, TObj> }
+		) => TFeature,
+		props?: TProps,
+		beforeAttach?: (feature: TFeature) => void
+	): TFeature {
+		const object = this.object;
+		const instance = new Feature(
+			props
+				? { ...props, object }
+				: ({ object } as TProps & { object: IFeaturable<TModules, TObj> })
+		);
+		beforeAttach && beforeAttach(instance);
+		this._features.push(instance);
+		instance._init_();
+
+		this.emit(Evnt.FeatureAdded, instance as unknown as Object3DFeature<TModules>);
+
+		return instance;
+	}
+
 	addFeature<
 		TFeature extends CompatibleFeature<TFeatureModules, TModules>,
 		TFeatureModules extends GameContextModulesRecord = {},
@@ -176,9 +223,8 @@ export class Object3DFeaturability<
 	getFeature<TFeatureClass extends typeof Object3DFeature>(
 		FeatureClass: TFeatureClass
 	): InstanceType<TFeatureClass> | null {
-		return (this._features.find(
-			(feature) => feature instanceof FeatureClass
-		) ?? null) as InstanceType<TFeatureClass> | null;
+		return (this._features.find((feature) => feature instanceof FeatureClass) ??
+			null) as InstanceType<TFeatureClass> | null;
 	}
 
 	destroyFeature<TFeature extends Object3DFeature<any>>(feature: TFeature) {

@@ -136,11 +136,14 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 			window.clearTimeout(timeout);
 		}
 		this._rendererSetSizeTimeout = window.setTimeout(
-			() => this.renderer.setSize(width, height),
+			() => {
+				this.renderer.setSize(width, height);
+				this.emit(ev.Resize, width, height);
+			},
 			5
 		);
 
-		this.emit(ev.Resize, width, height);
+		// this.emit(ev.Resize, width, height);
 	};
 
 	private cameraChanged() {
