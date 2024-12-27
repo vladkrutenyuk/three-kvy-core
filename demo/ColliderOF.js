@@ -1,14 +1,10 @@
+import * as THREE from "three";
 import Kvy4 from "./lib.js";
 import { RapierPhysics } from "./RapierPhysics.js";
-import { RigidbodyOF } from "./RigidbodyOF.js";
-import * as THREE from "three";
 
 export class ColliderOF extends Kvy4.Object3DFeature {
-    /** @type {RapierPhysics["RAPIER_API"]} */
-    desc;
-	constructor(props) {
-		super(props);
-	}
+	/** @type {RapierPhysics["RAPIER_API"]} */
+	desc;
 
 	/** @param {Kvy4.GameContext} ctx */
 	useCtx(ctx) {
@@ -20,11 +16,11 @@ export class ColliderOF extends Kvy4.Object3DFeature {
 			console.error("RAPIER not found, world not created");
 			return;
 		}
-        
-        //TODO make it props
+
+		//TODO make it props
 		const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
 
-		const rbF = this.featurabiliy.getFeature(RigidbodyOF);
+		const rbF = this.featurabiliy.getFeatureBy((x) => x.isRigidbodyOF);
 		const rb = rbF?.rb ?? undefined;
 		if (!rb) {
 			const pos = new THREE.Vector3();
@@ -44,12 +40,4 @@ export class ColliderOF extends Kvy4.Object3DFeature {
 			this.collider = null;
 		};
 	}
-
-	// /** @param {Kvy4.GameContext} ctx */
-	// onBeforeRender(ctx) {
-	//     const pos = this.object.position;
-	//     const quat = this.object.quaternion;
-	//     this.collider?.setRotation(quat.x, quat.y, quat.z, quat.w);
-	//     this.collider?.setTranslation(pos.x, pos.y, pos.z);
-	// }
 }

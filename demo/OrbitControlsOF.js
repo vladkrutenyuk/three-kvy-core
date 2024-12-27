@@ -2,8 +2,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import Kvy4 from "./lib.js";
 
 export class OrbitControlsOF extends Kvy4.Object3DFeature {
-	constructor(props) {
-		super(props);
+	constructor(object, props) {
+		super(object);
         this.options = {
             enableDamping: true,
             dampingFactor: 0.25,

@@ -4,10 +4,6 @@ import { RigidbodyOF } from "./RigidbodyOF.js";
 import * as THREE from "three";
 
 export class RigidbodyDynamicOF extends RigidbodyOF {
-	constructor(props) {
-		super(props);
-	}
-
 	useCtx(ctx) {
 		/** @type {RapierPhysics} */
 		const rapier = ctx.modules.rapier;

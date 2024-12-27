@@ -124,28 +124,26 @@ export class Object3DFeaturability<
 		delete (obj as IFeaturableToDelete).userData.featurability;
 	}
 
-
 	addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
 		Feature: new (object: IFeaturable, props: TProps) => TFeature,
 		props: keyof TProps extends never ? undefined : TProps,
 		beforeAttach?: (feature: TFeature) => void
-	): TFeature
+	): TFeature;
 	addFeature<TFeature extends Object3DFeature<any, any>>(
-		Feature: new (object: IFeaturable) => TFeature,
-		// props: keyof TProps extends never ? undefined : TProps
-	): TFeature
+		Feature: new (object: IFeaturable) => TFeature
+	): // props: keyof TProps extends never ? undefined : TProps
+	TFeature;
 	addFeature<TFeature extends Object3DFeature<any, any>, TProps>(
 		Feature: new (object: IFeaturable, props?: TProps) => TFeature,
 		props?: TProps,
 		beforeAttach?: (feature: TFeature) => void
-	): TFeature
-	{
+	): TFeature {
 		const instance = new Feature(
 			this.object as IFeaturable<any, any>,
 			props ?? ({} as any)
 		);
 		beforeAttach?.(instance);
-		
+
 		this._features.push(instance);
 		instance._init_();
 
@@ -158,6 +156,12 @@ export class Object3DFeaturability<
 	): InstanceType<TFeatureClass> | null {
 		return (this._features.find((feature) => feature instanceof FeatureClass) ??
 			null) as InstanceType<TFeatureClass> | null;
+	}
+
+	getFeatureBy(
+		predicate: (feature: Object3DFeature) => boolean
+	): Object3DFeature | null {
+		return this._features.find(predicate) ?? null;
 	}
 
 	destroyFeature<TFeature extends Object3DFeature<any>>(feature: TFeature) {

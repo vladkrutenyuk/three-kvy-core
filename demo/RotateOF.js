@@ -2,8 +2,8 @@ import Kvy4 from "./lib.js";
 
 export class RotateOF extends Kvy4.Object3DFeature {
     speed = 5;
-    constructor(props) {
-        super(props);
+    constructor(object, props) {
+        super(object);
         this.speed = props.speed ?? 5;
         console.log('new RotateOF');
         // this.useThreeEventHandler("renderafter", "onUpdate")

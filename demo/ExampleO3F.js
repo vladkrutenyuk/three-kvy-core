@@ -1,10 +1,6 @@
 import Kvy4 from "./lib.js";
 
 export class ExampleO3F extends Kvy4.Object3DFeature {
-	constructor(props) {
-		super(props);
-	}
-    
     onLoopRun(ctx) {
         console.log("LOOP RUN")
     }
