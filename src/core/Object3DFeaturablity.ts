@@ -158,6 +158,7 @@ export class Object3DFeaturability<
 			null) as InstanceType<TFeatureClass> | null;
 	}
 
+	//TODO придумать что-то с типами
 	getFeatureBy(
 		predicate: (feature: Object3DFeature) => boolean
 	): Object3DFeature | null {

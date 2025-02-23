@@ -6,7 +6,7 @@ import { GameContextModule } from "./GameContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
 
-export type GameContextModulesRecord = Readonly<Record<string, GameContextModule>>;
+export type GameContextModulesRecord = Record<string, GameContextModule>;
 
 export class GameContext<
 	TModules extends GameContextModulesRecord = GameContextModulesRecord
@@ -62,14 +62,22 @@ export class GameContext<
 			this.three.render();
 		});
 
-		this.modules = modules ?? ({} as TModules);
-		for (const key in this.modules) {
-			this.modules[key]._init_(this);
-		}
-
+		//@ts-expect-error pisda
+		this.modules = {};
+		modules && this.setModules(modules);
 		this._root = Object3DFeaturability.from<TModules>(root).setCtx(this).object;
 
 		this.setupFrameLoopPausingOnSwitchTab();
+	}
+
+	setModules(modules: Partial<TModules>) {
+		for (const key in modules) {
+			const m = modules[key];
+			if (!m) continue;
+			this.modules[key] = m;
+			m._init_(this);
+		}
+		return this;
 	}
 
 	mountAndRun(container: HTMLDivElement) {
