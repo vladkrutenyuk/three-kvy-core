@@ -1,7 +1,7 @@
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import Kvy4 from "./lib.js";
+import KVY from "./lib.js";
 
-export class OrbitControlsOF extends Kvy4.Object3DFeature {
+export class OrbitControlsOF extends KVY.Object3DFeature {
 	constructor(object, props) {
 		super(object);
         this.options = {

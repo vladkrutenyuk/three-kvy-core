@@ -1,4 +1,4 @@
-import Kvy4 from "./lib.js";
+import KVY from "./lib.js";
 import { RapierPhysics } from "./RapierPhysics.js";
 import { RigidbodyOF } from "./RigidbodyOF.js";
 import * as THREE from "three";

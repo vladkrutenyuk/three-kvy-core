@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import Kvy4 from "./lib.js";
+import KVY from "./lib.js";
 import { RotateOF } from "./RotateOF.js";
 import { ExampleO3F } from "./ExampleO3F.js";
 import { RapierPhysics } from "./RapierPhysics.js";
@@ -7,12 +7,12 @@ import { OrbitControlsOF } from "./OrbitControlsOF.js";
 import { RigidbodyDynamicOF } from "./RigidbodyDynamicOF.js";
 import { ColliderOF } from "./ColliderOF.js";
 
-Kvy4.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
-Kvy4.Object3DFeaturability.log = (x, ...args) =>
+KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
+KVY.Object3DFeaturability.log = (x, ...args) =>
 	console.log(`OF-${x.object.id}`, ...args);
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics({ RAPIER: RAPIER });
-const ctx = Kvy4.GameContext.create(THREE, { rapier }, { antialias: true });
+const ctx = KVY.GameContext.create(THREE, { rapier }, { antialias: true });
 const { scene, camera } = ctx.three;
 const offsetRoot = new THREE.Group();
 offsetRoot.rotateX(0.2);
@@ -36,7 +36,7 @@ let rigidBody = world.createRigidBody(rigidBodyDesc);
 let colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
 let collider = world.createCollider(colliderDesc, rigidBody);
 
-const [physicalCube, physicalCubeF] = Kvy4.Object3DFeaturability.from(
+const [physicalCube, physicalCubeF] = KVY.from(
 	new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshMatcapMaterial({ color: 0x448888 }))
 ).pair;
 const knag = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2), new THREE.MeshMatcapMaterial());
@@ -54,13 +54,13 @@ scene.background = new THREE.Color("#202020");
 camera.position.set(5, 5, 5);
 camera.lookAt(new THREE.Vector3());
 
-const [cube, cubeF] = Kvy4.Object3DFeaturability.from(
+const [cube, cubeF] = KVY.from(
 	new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshMatcapMaterial())
 ).pair;
 scene.add(cube);
 cubeF.addFeature(RotateOF, { speed: 1 });
 
-const [octah, octahF] = Kvy4.Object3DFeaturability.from(
+const [octah, octahF] = KVY.from(
 	new THREE.Mesh(new THREE.OctahedronGeometry(), new THREE.MeshMatcapMaterial())
 ).pair;
 
@@ -90,7 +90,7 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay();
 	octahF.destroyFeature(octahF.getFeature(RotateOF));
 	await delay();
-	Kvy4.Object3DFeaturability.from(sphere).addFeature(RotateOF);
+	KVY.from(sphere).addFeature(RotateOF);
 	// Kvy4.Object3DFeaturability.from(sphere).addFeature(RotateOF);
 	await delay();
 	cube.removeFromParent();

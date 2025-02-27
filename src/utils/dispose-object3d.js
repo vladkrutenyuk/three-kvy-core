@@ -38,6 +38,7 @@ export function disposeObject3DFully(obj, recursively = false) {
 	}
 
 	if (recursively) {
+		
 		for (let i = 0; i < obj.children.length; i++) {
 			const child = obj.children[i];
 			disposeObject3DFully(child, true);

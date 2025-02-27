@@ -8,21 +8,23 @@ export * from "./core/Object3DFeature.js";
 export * from "./core/GameContext.js";
 export * from "./core/GameContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
+export * from "./core/factory.js";
 
-export const REVISION = '1.4.0';
+export const REVISION = '2.0.0-alpha.1';
 
 declare global {
 	interface Window {
-		__VLADKRUTENYUK_GAME_WORLD__?: string;
+		__THREE_KVY_CORE__?: string;
 	}
 }
 
+const key = "__THREE_KVY_CORE__";
 if (typeof window !== "undefined") {
-	if (window.__VLADKRUTENYUK_GAME_WORLD__) {
+	if (window[key]) {
 		console.warn(
-			"WARNING: Multiple instances of `three-game-ctx/react-fiber` being imported."
+			"WARNING: Multiple instances of `@vladkrutenyuk/three-kvy-core` being imported."
 		);
 	} else {
-		window.__VLADKRUTENYUK_GAME_WORLD__ = REVISION;
+		window[key] = REVISION;
 	}
 }

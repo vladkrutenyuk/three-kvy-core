@@ -34,6 +34,7 @@ class ExampleWithPropsOF extends Object3DFeature<
 	}
 }
 
+
 const f = Object3DFeaturability.from<{ gameM: GameM }>(new THREE.Group());
 
 const res1 = f.addFeature(ExampleWithPropsOF, { popa: 1 }); // OK

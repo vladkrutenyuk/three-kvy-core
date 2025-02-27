@@ -1,6 +1,6 @@
-import Kvy4 from "./lib.js";
+import KVY from "./lib.js";
 
-export class RigidbodyOF extends Kvy4.Object3DFeature {
+export class RigidbodyOF extends KVY.Object3DFeature {
     /** @type {true} */
     isRigidbodyOF;
 

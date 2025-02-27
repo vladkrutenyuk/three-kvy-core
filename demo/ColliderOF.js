@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import Kvy4 from "./lib.js";
+import KVY from "./lib.js";
 import { RapierPhysics } from "./RapierPhysics.js";
 
-export class ColliderOF extends Kvy4.Object3DFeature {
+export class ColliderOF extends KVY.Object3DFeature {
 	/** @type {RapierPhysics["RAPIER_API"]} */
 	desc;
 
-	/** @param {Kvy4.GameContext} ctx */
+	/** @param {KVY.GameContext} ctx */
 	useCtx(ctx) {
 		/** @type {RapierPhysics} */
 		const rapier = ctx.modules.rapier;

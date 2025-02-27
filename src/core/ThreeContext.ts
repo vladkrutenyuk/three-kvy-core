@@ -2,24 +2,48 @@ import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
 import { disposeObject3DFully } from "../utils/dispose-object3d";
 
+/**
+ * Manages the Three.js rendering context, including the renderer, scene, and camera.
+ * Provides lifecycle methods for mounting, unmounting, and destroying the rendering context.
+ * Also allows overriding and resetting the render function.
+ */
 export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContext> {
+	/**
+	 * The WebGL renderer used for rendering the scene.
+	 */
 	public readonly renderer: THREE.WebGLRenderer;
+	/**
+	 * The scene that contains all objects to be rendered.
+	 */
 	public readonly scene: THREE.Scene;
-
+	/**
+	 * The active camera used for rendering.
+	 */
 	public get camera() {
 		return this._camera;
 	}
+	/**
+	 * Sets the active camera and triggers a camera change event.
+	 */
 	public set camera(value: THREE.PerspectiveCamera) {
 		this._camera = value;
 		this.cameraChanged();
 	}
-
+	/**
+	 * The root HTML element where the renderer is mounted.
+	 */
 	public get root() {
 		return this._root;
 	}
+	/**
+	 * Indicates whether the renderer is currently mounted.
+	 */
 	public get isMounted() {
 		return this._isMounted;
 	}
+	/**
+	 * Indicates whether the context has been destroyed.
+	 */
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
@@ -35,6 +59,12 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	};
 	private _renderFn = this._srcRenderFn;
 
+	/**
+	 * Creates a new ThreeContext instance.
+	 * @param renderer The WebGL renderer.
+	 * @param camera The perspective camera.
+	 * @param scene The Three.js scene.
+	 */
 	constructor(
 		renderer: THREE.WebGLRenderer,
 		camera: THREE.PerspectiveCamera,
@@ -48,20 +78,35 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this._renderFn = this._srcRenderFn;
 	}
 
+	/**
+	 * Renders the scene using the current render function.
+	 * Emits `renderbefore` and `renderafter` events.
+	 */
 	render() {
 		this.emit(ev.RenderBefore);
 		this._renderFn();
 		this.emit(ev.RenderAfter);
 	}
 
+	/**
+	 * Overrides the render function with a custom implementation.
+	 * @param fn The new render function.
+	 */
 	overrideRenderFn(fn: () => void) {
 		this._renderFn = fn;
 	}
 
+	/**
+	 * Resets the render function to its default implementation.
+	 */
 	resetRenderFn() {
 		this._renderFn = this._srcRenderFn;
 	}
 
+	/**
+	 * Mounts the renderer to the specified HTML container and initializes event listeners.
+	 * @param root The HTML container element.
+	 */
 	mount(root: HTMLDivElement) {
 		if (this._isMounted) return;
 		this._isMounted = true;
@@ -81,6 +126,9 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.emit(ev.Mount, root);
 	}
 
+	/**
+	 * Unmounts the renderer from the HTML container and removes event listeners.
+	 */
 	unmount() {
 		if (!this._isMounted) return;
 		this._isMounted = false;
@@ -92,6 +140,10 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.emit(ev.Unmount);
 	}
 
+	/**
+	 * Destroys the ThreeContext, releasing resources and preventing further rendering.
+	 * Emits a `destroy` event.
+	 */
 	destroy() {
 		if (this._isDestroyed) return;
 		this._isDestroyed = true;
@@ -109,6 +161,11 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.emit(ev.Destroy);
 	}
 
+	/**
+	 * Removes all objects from the scene.
+	 * Optionally disposes of them to free memory.
+	 * @param dispose Whether to dispose of objects after removal.
+	 */
 	clearScene(dispose?: boolean) {
 		const children = [...this.scene.children];
 		for (let i = 0; i < children.length; i++) {
@@ -135,13 +192,10 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		if (timeout) {
 			window.clearTimeout(timeout);
 		}
-		this._rendererSetSizeTimeout = window.setTimeout(
-			() => {
-				this.renderer.setSize(width, height);
-				this.emit(ev.Resize, width, height);
-			},
-			5
-		);
+		this._rendererSetSizeTimeout = window.setTimeout(() => {
+			this.renderer.setSize(width, height);
+			this.emit(ev.Resize, width, height);
+		}, 5);
 
 		// this.emit(ev.Resize, width, height);
 	};

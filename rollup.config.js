@@ -3,7 +3,7 @@ import path from "path";
 import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs"; // для работы с CommonJS
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import dts from "rollup-plugin-dts";
 import alias from "@rollup/plugin-alias";
 
@@ -45,17 +45,18 @@ const baseConfig = (format, min) => ({
 // esmConfigMin.plugins.push(terser({ keep_classnames: false }));
 // esmConfigMin.output.file = `${_outputDir}/esm/${_fileName}.esm.min.js`
 
-const umd = baseConfig("umd");
-umd.output = { ...umd.output, name: _namespace, globals: _globalVariableMappings };
+// const umd = baseConfig("umd");
+// umd.output = { ...umd.output, name: _namespace, globals: _globalVariableMappings };
 
 const umdMin = baseConfig("umd", true);
-umdMin.output = { ...umdMin.output, name: _namespace, globals: _globalVariableMappings };
+umdMin.output = { ...umdMin.output, name: _namespace, globals: {three: "THREE"} };
+umdMin.external = ["three"];
 
 export default [
 	// ESM Configuration (non-minified)
 	baseConfig("esm"),
 	baseConfig("esm", true),
-	umd,
+	// umd,
 	umdMin,
 	//  // Сборка каждого аддона в отдельный файл
 	//  ...getAddonEntries().map((addonPath) => ({
@@ -74,21 +75,21 @@ export default [
 	// 	external: _externalDeps,
 	//   })),
 	// Bundle all TypeScript types into a single .d.ts file
-	{
-		input: `${_outputDir}/esm/index.d.ts`,
-		output: [
-			{
-				file: `${_outputDir}/umd/${_fileName}.umd.d.ts`,
-				// format: "es",
-				globals: _globalVariableMappings,
-				banner: `declare namespace ${_namespace} {`,
-				footer: `}
-			  declare module "${_npmModule}" { export=${_namespace};}
-			`,
-			},
-		],
-		plugins: [dts({compilerOptions: {declaration: false}})],
-	},
+	// {
+	// 	input: `${_outputDir}/esm/index.d.ts`,
+	// 	output: [
+	// 		{
+	// 			file: `${_outputDir}/umd/${_fileName}.umd.d.ts`,
+	// 			// format: "es",
+	// 			globals: _globalVariableMappings,
+	// 			banner: `declare namespace ${_namespace} {`,
+	// 			footer: `}
+	// 		  declare module "${_npmModule}" { export=${_namespace};}
+	// 		`,
+	// 		},
+	// 	],
+	// 	plugins: [dts({compilerOptions: {declaration: false}})],
+	// },
 	{
 		input: `${_outputDir}/esm/index.d.ts`,
 		output: [
