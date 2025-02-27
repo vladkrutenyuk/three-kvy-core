@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/three-kvy-core",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://linkedin.com/in/vladkrutenyuk)",
   "license": "MIT",
   "description": "The OOP way to work with Three.js. Feature classes are attached to Object3D within a module-customizable shared context. Also provides basic initializations and a game event loop.",

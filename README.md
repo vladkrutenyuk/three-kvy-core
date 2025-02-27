@@ -1,20 +1,17 @@
 # three-kvy-core
 
+[![ERC-20](https://img.shields.io/badge/Donate-ERC--20-blue)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
 [![npm](https://img.shields.io/npm/v/@vladkrutenyuk/three-kvy-core)](https://www.npmjs.com/package/@vladkrutenyuk/three-kvy-core)
 [![GitHub](https://img.shields.io/github/stars/vladkrutenyuk/three-kvy-core?style=social)](https://github.com/vladkrutenyuk/three-kvy-core)
 [![Twitter](https://img.shields.io/twitter/follow/vladkrutenyuk
 )](https://x.com/vladkrutenyuk)
-[![ERC-20](https://img.shields.io/badge/Donate-ERC--20-purple)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
-[![unpkg](https://img.shields.io/badge/UMD-unpkg-black)](https://unpkg.com/@vladkrutenyuk/three-kvy-core/)
-[![unpkg](https://img.shields.io/badge/UMD-jsDelivr-orange)](https://cdn.jsdelivr.net/npm/@vladkrutenyuk/three-kvy-core/)
-
-https://img.shields.io/jsdelivr/npm/:period/:packageName
+[![unpkg](https://img.shields.io/badge/UMD-unpkg-black)](https://unpkg.com/@vladkrutenyuk/three-kvy-core/dist/umd/index.min.js)
 
 The OOP way to work with [Three.js](https://www.npmjs.com/package/three). Feature classes are attached to Object3D within a module-customizable shared context which aggregates basic initializations and provides own game event loop.
 
 Doesn't impose any restrictions on your existing Three.js logic. 
 Fully compatible with any approach you already use. 
-Framework agnostic. Zero boilerplate. Size is ~11 Kb.
+Framework agnostic. Zero boilerplate. Size is ~11 kB.
 
 
 > The lib is designed in way not no include three.js as dependency.
@@ -42,11 +39,11 @@ class ModuleExample extends KVY.GameContextModule {
     // Returns a cleanup function that is called on detach, 
     // similar to `useEffect()` in React.
     useCtx(ctx) {
-        // use ctx on attach;
+        // use attached ctx on its attach;
         ctx.three.renderer;
 
         return () => {
-            // do cleanup
+            // do cleanup on ctx detach
         }
     }
 }
