@@ -114,7 +114,7 @@ ctx.add(obj);
 > Any order of initialization, feature additions, and attach/detach operations is acceptable
 
 ## Tutorials, examples
-#### 1. Context Creation
+### 1. Context Creation
 `GameContext`
 
 Easy shortcut :
@@ -144,8 +144,8 @@ const ctx = new KVY.GameContext(three, root, clock, {
 ```
 It can be usefull if you use some framework or lib which initializes threejs's entities by itself in special way.
 
-#### 2. Mount and run
-##### Vanilla
+### 2. Mount and run
+#### Vanilla
 ```html
 <body>
     <div id="container" style="height:100%"></div>
@@ -156,7 +156,7 @@ const container = document.querySelector("#container");
 ctx.three.mount(container);
 ctx.loop.run();
 ```
-##### React
+#### React
 ```jsx
 const GameCtxRenderingComponent = () => {
     const ref = useRef(null);
@@ -176,7 +176,7 @@ const GameCtxRenderingComponent = () => {
 }
 ```
 
-#### 3. Context Module Example
+### 3. Context Module Example
 `GameContextModule`
 
 ```js
@@ -203,7 +203,7 @@ export class YourKeyInputModule extends KVY.GameContextModule {
 }
 ```
 
-#### 4. Feature Example
+### 4. Feature Example
 `Object3DFeature`
 
 ```js
@@ -232,7 +232,7 @@ export class YourSimpleMovement extends KVY.Object3DFeature {
 }
 ```
 
-#### 5. Feature and module usage example
+### 5. Feature and module usage example
 
 ```js
 import * as THREE from "three";
@@ -255,7 +255,7 @@ const simpleMovement = characterF.addFeature(YourSimpleMovement, { speed: 6 });
 Use *featurability* to manage object's *features* `Object3DFeature`.
 
 
-##### Get features
+#### Get features
 
 ```js
 const simpleMovement = characterF.getFeature(YourSimpleMovement);
@@ -266,7 +266,7 @@ for (const feature of featuresList) {
     console.log(feature);
 }
 ```
-##### Destroy features
+#### Destroy features
 
 `destroy()` detachs *ctx* from *feature* and remove it from object's *featurability*.
 ```js
@@ -274,7 +274,7 @@ simpleMovement.destroy();
 someOtherFeature.destroy();
 ```
 
-#### 6. Featurability, Featurable Object
+### 6. Featurability, Featurable Object
 To be able to add *features* to object you need to make it *featurable*. Do it via factory methods `from()` or `wrap()`. It attachs *featurability* to object and makes it *featurable*. You can continue use such object as usually.
 
 *featurability* is presented as `Object3DFeaturability` instance and stored in `obj.__kvy_ftblty__` field. It is defined as `enumerable: false`.
@@ -305,7 +305,7 @@ KVY.extract(obj3) // -> null
 obj3.isFeaturable // -> undefined
 ```
 
-##### Destroy
+#### Destroy
 Object's *featurability* `destroy()` method invokes detach ctx for each features and remove everything about it from object.
 ```js
 const obj3F = KVY.extract(obj3) // -> KVY.Object3DFeaturability
