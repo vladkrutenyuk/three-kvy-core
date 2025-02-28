@@ -7,7 +7,7 @@
 )](https://x.com/vladkrutenyuk)
 [![unpkg](https://img.shields.io/badge/UMD-unpkg-black)](https://unpkg.com/@vladkrutenyuk/three-kvy-core/dist/umd/index.min.js)
 
-The OOP way to work with [Three.js](https://www.npmjs.com/package/three). Feature classes are attached to Object3D within a module-customizable shared context which aggregates basic initializations and provides own game event loop.
+The OOP-driven way to work with [Three.js](https://www.npmjs.com/package/three). Feature classes are attached to Object3D within a module-customizable shared context which aggregates basic initializations and provides own game event loop.
 
 Doesn't impose any restrictions on your existing Three.js logic. 
 Fully compatible with any approach you already use. 

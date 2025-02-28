@@ -1,9 +1,9 @@
 {
   "name": "@vladkrutenyuk/three-kvy-core",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://linkedin.com/in/vladkrutenyuk)",
   "license": "MIT",
-  "description": "The OOP way to work with Three.js. Feature classes are attached to Object3D within a module-customizable shared context. Also provides basic initializations and a game event loop.",
+  "description": "The OOP-driven way to work with Three.js. Feature classes are attached to Object3D within a module-customizable shared context which aggregates basic initializations and provides own game event loop.",
   "homepage": "https://github.com/vladkrutenyuk/three-kvy-core",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     "LICENSE",
     "README.md"
   ],
+  "keywords": ["threejs", "three", "three.js", "3d", "canvas", "javascript", "renderer", "webgl", "webgl2", "game", "core", "kvy", "vladkrutenyuk", "kvyverse"],
   "devDependencies": {
     "@dimforge/rapier3d-compat": "^0.14.0",
     "@eslint/js": "^9.15.0",
