@@ -103,7 +103,7 @@ export class FeatureExample extends KVY.Object3DFeature {
 ```
 Make object *featurable*, add object to ctx, add *feature* to object.
 ```js
-const [obj, objF] = KVY.from(new THREE.Object3D());
+const [obj, objF] = KVY.from(new THREE.Object3D()).pair;
 
 objF.addFeature(FeatureExample, { speed: 3 });
 objF.addFeature(AnotherFeature, { name: "Vitalik" });
