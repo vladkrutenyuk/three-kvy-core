@@ -182,7 +182,7 @@ const GameCtxRenderingComponent = () => {
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
 export class YourKeyInputModule extends KVY.GameContextModule {
-    keys = new Set<string>();
+    keys = new Set();
     isKeyDown = (key) => this.keys.has(key);
 
     // GameContextModule's built-in method
