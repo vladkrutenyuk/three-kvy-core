@@ -32,7 +32,7 @@ and use like that
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 ```
 ## What does it look like?
-Create some modules.
+Create some *modules*.
 ```js
 class ModuleExample extends KVY.GameContextModule {
     // Called when the feature is attached to ctx.
@@ -49,7 +49,7 @@ class ModuleExample extends KVY.GameContextModule {
 }
 ```
 
-Create context with your modules and use your features easy.
+Create *context* with your *modules*.
 ```js
 const ctx = KVY.GameContext.create(THREE, {
     moduleExample: new ModuleExample(),
@@ -59,7 +59,7 @@ ctx.three.mount(document.querySelector("#some-div-container"));
 ctx.loop.run();
 ```
 
-Create some object's features and use context and its modules inside of it.
+Create some object's *features* and use *context* and its *modules* inside of it.
 ```js
 export class FeatureExample extends KVY.Object3DFeature {
     constructor(object, props) {
@@ -101,17 +101,16 @@ export class FeatureExample extends KVY.Object3DFeature {
     }
 }
 ```
-Make object *featurable*, add object to ctx, add *feature* to object.
+Add *feature* to object via static method.
 ```js
-const [obj, objF] = KVY.from(new THREE.Object3D()).pair;
-
-objF.addFeature(FeatureExample, { speed: 3 });
-objF.addFeature(AnotherFeature, { name: "Vitalik" });
+KVY.addFeature(obj, FeatureExample, { speed: 3 });
 
 ctx.add(obj);
+
+KVY.addFeature(obj, AnotherFeature, { name: "Vitalik" });
 ```
 
-> Any order of initialization, feature additions, and attach/detach operations is acceptable
+> Any order of initialization is acceptable. Add object to *ctx* first or add *feature* to object first - no matter;
 
 ## Tutorials, examples
 ### 1. Context Creation
@@ -244,79 +243,40 @@ const ctx = KVY.GameContext.create(THREE, {
     input: new YourKeyInputModule()
 });
 
-const character = new THREE.Group();
+const obj = new THREE.Group();
+ctx.add(obj);
+
 const camera = ctx.three.camera;
-character.add(camera);
+obj.add(camera);
 
-const characterF = KVY.from(character); // -> Object3DFeaturability
-const simpleMovement = characterF.addFeature(YourSimpleMovement, { speed: 6 });
+const simpleMovement = KVY.addFeature(obj, YourSimpleMovement, { speed: 6 });
 ```
-`KVY.from` creates and attachs `Object3DFeaturability` to providen object and return instance of its *featurability*.
-Use *featurability* to manage object's *features* `Object3DFeature`.
-
 
 #### Get features
 
 ```js
-const simpleMovement = characterF.getFeature(YourSimpleMovement);
-const someOtherFeature = characterF.getFeatureBy((x) => x.isSmth);
+const simpleMovement = KVY.getFeature(obj, YourSimpleMovement);
+const someOtherFeature = KVY.getFeatureBy(obj, (x) => x.isSmth);
 
-const featuresList = characterF.features;
-for (const feature of featuresList) {
+KVY.getFeatures(obj)?.forEach((feature) => {
     console.log(feature);
-}
+})
+
 ```
 #### Destroy features
 
-`destroy()` detachs *ctx* from *feature* and remove it from object's *featurability*.
+`destroy()` detachs *ctx* from *feature* and remove it from object.
 ```js
-simpleMovement.destroy();
-someOtherFeature.destroy();
+KVY.destroyFeature(obj, simpleMovement);
+// or
+KVY.getFeature(obj, YourSimpleMovement)?.destroy();
 ```
 
-### 6. Featurability, Featurable Object
-To be able to add *features* to object you need to make it *featurable*. Do it via factory methods `from()` or `wrap()`. It attachs *featurability* to object and makes it *featurable*. You can continue use such object as usually.
-
-*featurability* is presented as `Object3DFeaturability` instance and stored in `obj.__kvy_ftblty__` field. It is defined as `enumerable: false`.
-
-You are able to get object's *featurability* and to know if object is `featurable` via `extract()` static method. Or via `obj.isFeaturable` flag.
-
-See examples:
+Detachs and destroys all attached to object *features*. Clear its hidden internal things to manage them.
+#### Clear
 ```js
-const obj1 = new THREE.Object3D();
-KVY.extract(obj1); // -> null
-obj1.isFeaturable // -> undefined
-
-const obj2 = new THREE.Object3D();
-const obj2F = KVY.from(obj2); // -> KVY.Object3DFeaturability
-KVY.extract(obj2) // -> KVY.Object3DFeaturability
-KVY.extract(obj2) === obj2F // -> true
-obj2.isFeaturable // -> true
-obj2 === obj2F.object // -> true
-
-const obj3 = new THREE.Object3D();
-const _obj3 = KVY.wrap(obj3) // -> THREE.Object3D, but its IFeaturable<THREE.Object3D> now
-_obj3 === obj3 // -> true
-
-const obj3F = KVY.extract(obj3) // -> KVY.Object3DFeaturability
-obj3.isFeaturable // -> true
-obj3F.destroy();
-KVY.extract(obj3) // -> null
-obj3.isFeaturable // -> undefined
+KVY.clear(obj);
 ```
-
-#### Destroy
-Object's *featurability* `destroy()` method invokes detach ctx for each features and remove everything about it from object.
-```js
-const obj3F = KVY.extract(obj3) // -> KVY.Object3DFeaturability
-obj3.isFeaturable // -> true
-
-obj3F.destroy();
-
-KVY.extract(obj3) // -> null
-obj3.isFeaturable // -> undefined
-```
-
 
 ---
 
@@ -350,14 +310,16 @@ class EasyOrbitControls extends KVY.Object3DFeature {
     }
 }
 ```
-`pair` get-property returns tuple `[THREE.Object3D, KVY.Object3DFeaturability]` of object and its `featurability` to write more compact.
+
 ```js
-// [THREE.Object3D, KVY.Object3DFeaturability]
-const [obj, objF] = KVY.from(new Object3D()).pair;
-ctx.add(obj); // ctx is KVY.GameContext
+const anyHeirarchy = new THREE.Object3D();
+ctx.add(anyHeirarchy); // ctx is KVY.GameContext
+
+const obj = new THREE.Object3D();
+anyHeirarchy.add(obj);
 
 const target = new THREE.Object3D();
-objF.addFeature(EasyOrbitControls, { target, options: {...}})
+KVY.addFeature(obj, EasyOrbitControls, { target, options: {...}});
 
 ```
 ## Donate me 🥺🙏
@@ -370,6 +332,7 @@ objF.addFeature(EasyOrbitControls, { target, options: {...}})
 - [Instagram (@vladkrutenyuk)](https://instagram.com/vladkrutenyuk)
 
 - [Twitter/X (@vladkrutenyuk)](https://x.com/vladkrutenyuk)
+- [Twitter/X (@kvyverse)](https://x.com/kvyverse)
 
 - [Telegram (@vladkrutenyuk)](https://t.me/vladkrutenyuk)
 

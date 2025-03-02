@@ -3,9 +3,8 @@ import type * as THREE from "three";
 import { AnimationFrameLoop } from "./AnimationFrameLoop";
 import { Evnt } from "./Events";
 import { GameContextModule } from "./GameContextModule";
-import { IFeaturable } from "./Object3DFeaturablity";
+import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
-import { extract, from } from "./factory";
 
 export type GameContextModulesRecord = Record<string, GameContextModule>;
 
@@ -62,9 +61,6 @@ export class GameContext<
 	}
 	/** Provides access to feature-based object management. */
 
-	public get featurability() {
-		return extract(this._root) as unknown as IFeaturable<TModules>;
-	}
 	/** Indicates whether the game context has been destroyed. */
 	public get isDestroyed() {
 		return this._isDestroyed;
@@ -107,7 +103,7 @@ export class GameContext<
 		//@ts-expect-error pisda
 		this.modules = {};
 		modules && this.setModules(modules);
-		this._root = from<TModules>(root).setCtx(this).object;
+		this._root = Object3DFeaturability.from<TModules>(root).setCtx(this).object;
 
 		this.setupFrameLoopPausingOnSwitchTab();
 	}

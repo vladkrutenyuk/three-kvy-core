@@ -5,7 +5,6 @@ import { traverseAncestorsInterruptible } from "../utils/traverse-ancestors-inte
 import { Evnt } from "./Events";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 import { Object3DFeature } from "./Object3DFeature";
-import { extract, isIn } from "./factory";
 
 export type Object3DFeaturabilityEventTypes<
 	TModules extends GameContextModulesRecord = {}
@@ -20,6 +19,40 @@ export class Object3DFeaturability<
 	TModules extends GameContextModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
 > extends EventEmitter<Object3DFeaturabilityEventTypes<TModules>> {
+	/**
+	 * Extracts {@link Object3DFeaturability} from the given object if it is featurable.
+	 *
+	 * @param obj - The object to extract {@link Object3DFeaturability} from.
+	 * @returns The {@link Object3DFeaturability} instance if available, otherwise `null`.
+	 */
+	static extract<
+		TModules extends GameContextModulesRecord = {},
+		TObj extends THREE.Object3D = THREE.Object3D
+	>(obj: TObj): Object3DFeaturability<TModules, TObj> | null {
+		const f = (obj as unknown as IFeaturablePrivate<TModules, TObj>).__kvy_ftblty__;
+		return f !== undefined && f.isObjectFeaturability ? f : null;
+	}
+
+	/**
+	 * Creates or retrieves {@link Object3DFeaturability} for the given object.
+	 * If the object already has featurability, it is returned. Otherwise, a new instance is created.
+	 *
+	 * @param obj - The object to make featurable.
+	 * @returns The {@link Object3DFeaturability} instance for the object.
+	 */
+	static from<
+		TModules extends GameContextModulesRecord = {},
+		TObj extends THREE.Object3D = THREE.Object3D
+	>(obj: TObj) {
+		let fblty = Object3DFeaturability.extract<TModules, TObj>(obj);
+		if (fblty) {
+			return fblty;
+		}
+		fblty = new Object3DFeaturability<TModules, typeof obj>(obj);
+		// fblty.inheritCtx();
+		return fblty;
+	}
+
 	/**
 	 * Custom logging function.
 	 */
@@ -73,7 +106,7 @@ export class Object3DFeaturability<
 		});
 
 		if (obj.parent) {
-			this.onObjectAdded({ target: obj.parent });
+			this.onObjectAdded({ target: obj });
 		}
 
 		this.inheritCtx();
@@ -193,7 +226,7 @@ export class Object3DFeaturability<
 	}
 
 	private onObjectAdded({ target }: { target: THREE.Object3D }) {
-		const self = extract(target);
+		const self = Object3DFeaturability.extract(target);
 		if (!self) {
 			console.error("Object3DFeaturability is not in target object.");
 			return;
@@ -207,8 +240,7 @@ export class Object3DFeaturability<
 		const parent = target.parent;
 		if (!parent) return;
 
-		const o3f = Object3DFeaturability;
-		const parentCtx = extract<TModules>(parent)?._ctx;
+		const parentCtx = Object3DFeaturability.extract<TModules>(parent)?._ctx;
 		if (parentCtx) {
 			this._log("onAdded parent has ctx");
 			this.propagateAttachCtxDown(parentCtx);
@@ -218,28 +250,23 @@ export class Object3DFeaturability<
 		// обрабатываем случай когда GameObject был добавлен к обычному Object3D
 
 		// ищем предка который был бы IFeaturable
-		let featurableAncestor: IFeaturable<TModules> | null = null;
+		let ancestorF: Object3DFeaturability<TModules> | null = null;
 		//TODO rewrite via stack (while)
 		traverseAncestorsInterruptible(target, (ancestor: THREE.Object3D) => {
-			const isObjectFeaturable = isIn<TModules>(ancestor);
-			if (isObjectFeaturable) {
-				featurableAncestor = ancestor;
-			}
-			return !isObjectFeaturable;
+			ancestorF = Object3DFeaturability.extract<TModules>(ancestor);
+			return !ancestorF;
 		});
 
-		featurableAncestor = featurableAncestor as IFeaturable<TModules> | null;
-
-		if (featurableAncestor === null) return;
+		if (ancestorF === null) return;
 
 		// если нашли и если у него есть мир то аттачимся к нему
-		const ancestorCtx = extract<TModules>(featurableAncestor)?._ctx;
-		this._log("onAdded found game object ancestor");
+		const ancestorCtx = (ancestorF as Object3DFeaturability<TModules>).ctx;
+		this._log("onAdded found featurable object ancestor");
 		ancestorCtx && this.propagateAttachCtxDown(ancestorCtx);
 	}
 
 	private onObjectRemoved({ target }: { target: THREE.Object3D }) {
-		const self = extract(target);
+		const self = Object3DFeaturability.extract(target);
 		if (!self) {
 			console.error("Object3DFeaturability is not in target object.");
 			return;
@@ -283,7 +310,7 @@ export class Object3DFeaturability<
 	private propagateAttachCtxDown(ctx: GameContext<TModules>) {
 		this._log("attaching ctx recursively...");
 		this.object.traverse((child) => {
-			extract(child)?.attachCtx(ctx);
+			Object3DFeaturability.extract(child)?.attachCtx(ctx);
 		});
 		//? shall I use stack instead of recursive traverse?
 		// const stack: THREE.Object3D[] = [this.object];
@@ -298,7 +325,7 @@ export class Object3DFeaturability<
 	private propagateDetachCtxDown() {
 		this._log("detaching ctx recursively...");
 		this.object.traverse((child) => {
-			extract(child)?.detachCtx();
+			Object3DFeaturability.extract(child)?.detachCtx();
 		});
 		//? shall I use stack instead of recursive traverse?
 		// const stack: THREE.Object3D[] = [this.object];

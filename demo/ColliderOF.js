@@ -20,7 +20,7 @@ export class ColliderOF extends KVY.Object3DFeature {
 		//TODO make it props
 		const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
 
-		const rbF = this.featurabiliy.getFeatureBy((x) => x.isRigidbodyOF);
+		const rbF = KVY.getFeatureBy(this.object, (x) => x.isRigidbodyOF);
 		const rb = rbF?.rb ?? undefined;
 		if (!rb) {
 			const pos = new THREE.Vector3();

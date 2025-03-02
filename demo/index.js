@@ -8,8 +8,7 @@ import { RigidbodyDynamicOF } from "./RigidbodyDynamicOF.js";
 import { ColliderOF } from "./ColliderOF.js";
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
-KVY.Object3DFeaturability.log = (x, ...args) =>
-	console.log(`OF-${x.object.id}`, ...args);
+KVY.Object3DFeaturability.log = (x, ...args) => console.log(`OF-${x.object.id}`, ...args);
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics({ RAPIER: RAPIER });
 const ctx = KVY.GameContext.create(THREE, { rapier }, { antialias: true });
@@ -17,11 +16,12 @@ const { scene, camera } = ctx.three;
 const offsetRoot = new THREE.Group();
 offsetRoot.rotateX(0.2);
 offsetRoot.rotateZ(0.4);
-offsetRoot.position.set(-2,1,-2)
+offsetRoot.position.set(-2, 1, -2);
 scene.add(offsetRoot);
 
-ctx.featurability.addFeature(ExampleO3F);
-ctx.featurability.addFeature(OrbitControlsOF);
+const _root = new THREE.Group();
+KVY.addFeature(ctx.root, ExampleO3F);
+KVY.addFeature(ctx.root, OrbitControlsOF);
 
 const world = ctx.modules.rapier.world;
 
@@ -36,17 +36,21 @@ let rigidBody = world.createRigidBody(rigidBodyDesc);
 let colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
 let collider = world.createCollider(colliderDesc, rigidBody);
 
-const [physicalCube, physicalCubeF] = KVY.from(
-	new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshMatcapMaterial({ color: 0x448888 }))
-).pair;
-const knag = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2), new THREE.MeshMatcapMaterial());
+const physicalCube = new THREE.Mesh(
+	new THREE.BoxGeometry(),
+	new THREE.MeshMatcapMaterial({ color: 0x448888 })
+);
+const knag = new THREE.Mesh(
+	new THREE.BoxGeometry(0.2, 0.2, 0.2),
+	new THREE.MeshMatcapMaterial()
+);
 physicalCube.add(knag);
 knag.position.set(0.5, 0.5, 0.5);
 physicalCube.position.set(-0.6, 3, -0.6);
 
 offsetRoot.add(physicalCube);
-physicalCubeF.addFeature(RigidbodyDynamicOF);
-physicalCubeF.addFeature(ColliderOF);
+KVY.addFeature(physicalCube, RigidbodyDynamicOF);
+KVY.addFeature(physicalCube, ColliderOF);
 
 const container = document.querySelector("#container");
 
@@ -54,22 +58,21 @@ scene.background = new THREE.Color("#202020");
 camera.position.set(5, 5, 5);
 camera.lookAt(new THREE.Vector3());
 
-const [cube, cubeF] = KVY.from(
-	new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshMatcapMaterial())
-).pair;
+const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshMatcapMaterial());
 scene.add(cube);
-cubeF.addFeature(RotateOF, { speed: 1 });
+KVY.addFeature(cube, RotateOF, { speed: 1 });
 
-const [octah, octahF] = KVY.from(
-	new THREE.Mesh(new THREE.OctahedronGeometry(), new THREE.MeshMatcapMaterial())
-).pair;
+const octah = new THREE.Mesh(
+	new THREE.OctahedronGeometry(),
+	new THREE.MeshMatcapMaterial()
+);
 
 // sphereF.object === sphere;
 // sphere.userData.featurability === sphereF;
 
 octah.position.x = 2;
 cube.add(octah);
-octahF.addFeature(RotateOF);
+KVY.addFeature(octah, RotateOF);
 
 const sphere = new THREE.Mesh(
 	new THREE.OctahedronGeometry(undefined, 2),
@@ -86,11 +89,11 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 
 	await delay();
 	// ctx.destroy();
-	cubeF.getFeature(RotateOF)?.destroy();
+	KVY.getFeature(cube, RotateOF)?.destroy();
 	await delay();
-	octahF.destroyFeature(octahF.getFeature(RotateOF));
+	KVY.destroyFeature(octah, KVY.getFeature(octah, RotateOF));
 	await delay();
-	KVY.from(sphere).addFeature(RotateOF);
+	KVY.addFeature(sphere, RotateOF);
 	// Kvy4.Object3DFeaturability.from(sphere).addFeature(RotateOF);
 	await delay();
 	cube.removeFromParent();
@@ -99,13 +102,13 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 	octah.add(cube);
 	cube.position.x = -2;
 	await delay();
-	octahF.addFeature(RotateOF);
+	KVY.addFeature(octah, RotateOF);
 	await delay();
 	scene.add(octah);
 	await delay();
-	cubeF.addFeature(RotateOF, { speed: 1 });
+	KVY.addFeature(cube, RotateOF, { speed: 1 });
 	await delay();
-	octahF.getFeature(RotateOF)?.destroy();
+	KVY.getFeature(octah, RotateOF)?.destroy();
 	await delay();
 
 	await delay();
@@ -113,6 +116,6 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay();
 	ctx.mountAndRun(container);
 	await delay();
-	const physicalCubeFeatures = [...physicalCubeF.features];
-	physicalCubeFeatures.forEach((f) => physicalCubeF.destroyFeature(f));
+	const physicalCubeFeatures = KVY.getFeatures(physicalCube);
+	physicalCubeFeatures.forEach((f) => f.destroy());
 })();

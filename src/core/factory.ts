@@ -1,75 +1,100 @@
 import type * as THREE from "three";
-import { GameContextModulesRecord } from "./GameContext";
 import {
-	IFeaturable,
-	IFeaturablePrivate,
-	Object3DFeaturability,
+    IFeaturable,
+    Object3DFeaturability
 } from "./Object3DFeaturablity";
+import { Object3DFeature } from "./Object3DFeature";
 
 /**
- * Extracts {@link Object3DFeaturability} from the given object if it is featurable.
- *
- * @param obj - The object to extract {@link Object3DFeaturability} from.
- * @returns The {@link Object3DFeaturability} instance if available, otherwise `null`.
+ * Adds a new feature to the object.
+ * @param Feature The feature class.
+ * @param props The properties required for initialization.
+ * @param beforeAttach A callback invoked before attaching the feature.
+ * @returns The created feature instance.
  */
-export function extract<
-	TModules extends GameContextModulesRecord = {},
-	TObj extends THREE.Object3D = THREE.Object3D
->(obj: TObj): Object3DFeaturability<TModules, TObj> | null {
-	const f = (obj as unknown as IFeaturablePrivate<TModules, TObj>).__kvy_ftblty__;
-	return f !== undefined && f.isObjectFeaturability ? f : null;
+export function addFeature<
+	TObj extends THREE.Object3D,
+	TFeature extends Object3DFeature<any, any>,
+	TProps
+>(
+	obj: TObj,
+	Feature: new (object: IFeaturable, props: TProps) => TFeature,
+	props: keyof TProps extends never ? undefined : TProps,
+	beforeAttach?: (feature: TFeature) => void
+): TFeature;
+export function addFeature<
+	TObj extends THREE.Object3D,
+	TFeature extends Object3DFeature<any, any>
+>(
+	obj: TObj,
+	Feature: new (object: IFeaturable) => TFeature
+): // props: keyof TProps extends never ? undefined : TProps
+TFeature;
+export function addFeature<
+	TObj extends THREE.Object3D,
+	TFeature extends Object3DFeature<any, any>,
+	TProps
+>(
+	obj: TObj,
+	Feature: new (object: IFeaturable, props?: TProps) => TFeature,
+	props?: TProps,
+	beforeAttach?: (feature: TFeature) => void
+): TFeature {
+	const f = Object3DFeaturability.from(obj);
+	return f.addFeature(Feature, props as any, beforeAttach);
 }
 
 /**
- * Creates or retrieves {@link Object3DFeaturability} for the given object.
- * If the object already has featurability, it is returned. Otherwise, a new instance is created.
- *
- * @param obj - The object to make featurable.
- * @returns The {@link Object3DFeaturability} instance for the object.
+ * Retrieves a feature of a specific class, if present.
+ * @param FeatureClass The feature class to search for.
+ * @returns The feature instance, or `null` if not found.
  */
-export function from<
-	TModules extends GameContextModulesRecord = {},
-	TObj extends THREE.Object3D = THREE.Object3D
->(obj: TObj) {
-	let fblty = extract<TModules, TObj>(obj);
-	if (fblty) {
-		return fblty;
-	}
-	fblty = new Object3DFeaturability<TModules, typeof obj>(obj);
-	// fblty.inheritCtx();
-	return fblty;
+export function getFeature<
+	TObj extends THREE.Object3D,
+	TFeatureClass extends typeof Object3DFeature
+>(obj: TObj, FeatureClass: TFeatureClass): InstanceType<TFeatureClass> | null {
+	return Object3DFeaturability.extract(obj)?.getFeature(FeatureClass) ?? null;
 }
 
 /**
- * Wraps the object with {@link Object3DFeaturability}, making it featurable.
- * If applied recursively, all child objects will also be made featurable.
- *
- * @param obj - The object to wrap.
- * @param recursively - If `true`, applies featurability recursively to child objects.
- * @returns The object cast as {@link IFeaturable}.
+ * Retrieves a feature of a specific class, if present.
+ * @param FeatureClass The feature class to search for.
+ * @returns The feature instance, or `null` if not found.
  */
-export function wrap<
-	TModules extends GameContextModulesRecord = {},
-	TObj extends THREE.Object3D = THREE.Object3D
->(obj: TObj, recursively: boolean = false): IFeaturable<TModules, TObj> {
-	if (recursively) {
-		obj.traverse(from);
-	} else {
-		from(obj);
-	}
-	return obj as unknown as IFeaturable<TModules, TObj>;
+export function getFeatureBy<TObj extends THREE.Object3D>(
+	obj: TObj,
+	predicate: (feature: Object3DFeature) => boolean
+): Object3DFeature | null {
+	return Object3DFeaturability.extract(obj)?.getFeatureBy(predicate) ?? null;
 }
 
 /**
- * Checks if the object is featurable.
- *
- * @param obj - The object to check.
- * @returns `true` if the object has {@link Object3DFeaturability}, otherwise `false`.
+ * Returns an array of all attached features.
  */
-export function isIn<
-	TModules extends GameContextModulesRecord = {},
-	TObj extends THREE.Object3D = THREE.Object3D
->(obj: TObj): obj is IFeaturable<TModules, TObj> {
-	const f = (obj as unknown as IFeaturablePrivate).__kvy_ftblty__;
-	return f !== undefined && f.isObjectFeaturability;
+export function getFeatures<TObj extends THREE.Object3D>(
+	obj: TObj
+): Object3DFeature[] | null {
+	return Object3DFeaturability.extract(obj)?.features ?? null;
+}
+
+/**
+ * Removes a feature from the object and destroys it.
+ * @param feature The feature instance to remove.
+ */
+export function destroyFeature<
+	TObj extends THREE.Object3D,
+	TFeature extends Object3DFeature<any>
+>(obj: TObj, feature: TFeature) {
+	Object3DFeaturability.extract(obj)?.destroyFeature(feature);
+	return obj;
+}
+
+/**
+ * Destroys and detachs anything about features and all attached to object features itself.
+ * @param obj {THREE.Object3D}
+ * @returns
+ */
+export function clear<TObj extends THREE.Object3D>(obj: TObj) {
+	Object3DFeaturability.extract(obj)?.destroy();
+	return obj;
 }

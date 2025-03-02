@@ -2,7 +2,6 @@ import { EventEmitter } from "eventemitter3";
 import { Evnt } from "./Events";
 import { GameContext, GameContextModulesRecord } from "./GameContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
-import { extract } from "./factory";
 
 export type Object3DFeatureEventTypes<TModules extends GameContextModulesRecord = {}> = {
 	[Evnt.AttCtx]: [ctx: GameContext<TModules>];
@@ -34,8 +33,9 @@ export abstract class Object3DFeature<
 	public uuid: string;
 	/** The object this feature is attached to. */
 	public readonly object: IFeaturable<TModules>;
+
 	/** The featurability instance managing this feature. */
-	public featurabiliy: Object3DFeaturability<TModules>;
+	private _f: Object3DFeaturability<TModules>;
 
 	/** Getter for the current game context, or `null` if not attached. */
 	public get ctx() {
@@ -53,12 +53,12 @@ export abstract class Object3DFeature<
 		super();
 		this.type = this.constructor.name;
 		this.object = object;
-		this.featurabiliy = extract(object) as Object3DFeaturability<TModules>;
+		this._f = Object3DFeaturability.extract(object) as Object3DFeaturability<TModules>;
 		this.id = _featureId++;
 		this.uuid = GameContext.generateUUID();
 
-		this.featurabiliy.on(Evnt.AttCtx, this.objectAttachedToCtxHandler, this);
-		this.featurabiliy.on(Evnt.DetCtx, this.objectDetachedFromCtxHandler, this);
+		this._f.on(Evnt.AttCtx, this.objectAttachedToCtxHandler, this);
+		this._f.on(Evnt.DetCtx, this.objectDetachedFromCtxHandler, this);
 
 		this.on(Evnt.AttCtx, this._onAttach, this);
 		this.on(Evnt.DetCtx, this._onDetach, this);
@@ -71,16 +71,16 @@ export abstract class Object3DFeature<
 	 * @private
 	 */
 	_init_() {
-		this.featurabiliy.ctx && this.attachCtx(this.featurabiliy.ctx);
+		this._f.ctx && this.attachCtx(this._f.ctx);
 	}
 
 	/** Destroys the feature, detaching it from the context and cleaning up listeners. */
 	destroy() {
 		this._log("destroy()");
 		this.detachCtx();
-		this.featurabiliy.off(Evnt.AttCtx, this.objectAttachedToCtxHandler, this);
-		this.featurabiliy.off(Evnt.DetCtx, this.objectDetachedFromCtxHandler, this);
-		this.featurabiliy.destroyFeature(this);
+		this._f.off(Evnt.AttCtx, this.objectAttachedToCtxHandler, this);
+		this._f.off(Evnt.DetCtx, this.objectDetachedFromCtxHandler, this);
+		this._f.destroyFeature(this);
 
 		this.emit(Evnt.Dstr);
 	}
@@ -169,26 +169,29 @@ export abstract class Object3DFeature<
 	private initCtxEventMethods(ctx: GameContext<TModules>) {
 		const p = Object3DFeature.prototype;
 		if (this.onAfterRender !== p.onAfterRender) {
-			this.initEventHandlerMethod(ctx.three, "renderafter", "onAfterRender");
+			this.iehm(ctx.three, "renderafter", "onAfterRender");
 		}
 		if (this.onBeforeRender !== p.onBeforeRender) {
-			this.initEventHandlerMethod(ctx.three, "renderbefore", "onBeforeRender");
+			this.iehm(ctx.three, "renderbefore", "onBeforeRender");
 		}
 		if (this.onMount !== p.onMount) {
-			this.initEventHandlerMethod(ctx.three, "mount", "onMount");
+			this.iehm(ctx.three, "mount", "onMount");
 		}
 		if (this.onResize !== p.onResize) {
-			this.initEventHandlerMethod(ctx.three, "unmount", "onUnmount");
+			this.iehm(ctx.three, "unmount", "onUnmount");
 		}
 		if (this.onLoopRun !== p.onLoopRun) {
-			this.initEventHandlerMethod(ctx.loop, "run", "onLoopRun");
+			this.iehm(ctx.loop, "run", "onLoopRun");
 		}
 		if (this.onLoopStop !== p.onLoopStop) {
-			this.initEventHandlerMethod(ctx.loop, "stop", "onLoopStop");
+			this.iehm(ctx.loop, "stop", "onLoopStop");
 		}
 	}
 
-	initEventHandlerMethod<TTarget extends EventEmitter, TMethod extends keyof this>(
+	/**
+	 * initEventHandlerMethod (iehm)
+	 */
+	private iehm<TTarget extends EventEmitter, TMethod extends keyof this>(
 		target: TTarget,
 		type: Parameters<TTarget["on"]>[0],
 		handlerMethodName: TMethod
