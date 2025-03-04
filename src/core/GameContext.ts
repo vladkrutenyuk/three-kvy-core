@@ -133,21 +133,21 @@ export class GameContext<
 	}
 
 	/**
-	 * Adds an object or feature to the game context root.
+	 * Adds an object or feature to this game context root.
 	 */
 	add: IFeaturable<TModules>["add"] = (...args) => {
 		return this._root.add(...args);
 	};
 
 	/**
-	 * Removes an object or feature from the game context root.
+	 * Removes an object or feature from this game context root.
 	 */
 	remove: IFeaturable<TModules>["remove"] = (...args) => {
 		return this._root.remove(...args);
 	};
 
 	/**
-	 * Destroys the game context, stopping the frame loop and cleaning up resources.
+	 * Destroys this game context, stopping its loop and cleaning up resources.
 	 */
 	destroy() {
 		if (this._isDestroyed) return;

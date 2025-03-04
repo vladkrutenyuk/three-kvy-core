@@ -7,10 +7,11 @@ import { Object3DFeature } from "./Object3DFeature";
 
 /**
  * Adds a new feature to the object.
- * @param Feature The feature class.
- * @param props The properties required for initialization.
- * @param beforeAttach A callback invoked before attaching the feature.
- * @returns The created feature instance.
+ * @param {THREE.Object3D} obj - The Three.js object to add the feature to
+ * @param {new (object: IFeaturable, props?: any) => Object3DFeature} Feature - The feature class constructor
+ * @param {*} [props] - The properties required for feature initialization
+ * @param {(feature: Object3DFeature) => void} [beforeAttach] - Optional callback invoked before attaching the feature
+ * @returns {Object3DFeature} The created feature instance
  */
 export function addFeature<
 	TObj extends THREE.Object3D,
@@ -45,9 +46,10 @@ export function addFeature<
 }
 
 /**
- * Retrieves a feature of a specific class, if present.
- * @param FeatureClass The feature class to search for.
- * @returns The feature instance, or `null` if not found.
+ * Retrieves a feature instance of a specific class from the object.
+ * @param {THREE.Object3D} obj - The Three.js object to search on
+ * @param {typeof Object3DFeature} FeatureClass - The class of the feature to find
+ * @returns {Object3DFeature | null} The feature instance if found, or `null` if not present
  */
 export function getFeature<
 	TObj extends THREE.Object3D,
@@ -57,9 +59,10 @@ export function getFeature<
 }
 
 /**
- * Retrieves a feature of a specific class, if present.
- * @param FeatureClass The feature class to search for.
- * @returns The feature instance, or `null` if not found.
+ * Finds a feature on the object that matches the given predicate.
+ * @param {THREE.Object3D} obj - The Three.js object to search on
+ * @param {(feature: Object3DFeature) => boolean} predicate - Function that tests each feature for a condition
+ * @returns {Object3DFeature | null} The first matching feature if found, or `null` if none match
  */
 export function getFeatureBy<TObj extends THREE.Object3D>(
 	obj: TObj,
@@ -69,7 +72,9 @@ export function getFeatureBy<TObj extends THREE.Object3D>(
 }
 
 /**
- * Returns an array of all attached features.
+ * Returns an array of all features attached to the object.
+ * @param {THREE.Object3D} obj - The Three.js object to get features from
+ * @returns {Object3DFeature[] | null} Array of attached features, or `null` if the object has no featurability
  */
 export function getFeatures<TObj extends THREE.Object3D>(
 	obj: TObj
@@ -78,8 +83,10 @@ export function getFeatures<TObj extends THREE.Object3D>(
 }
 
 /**
- * Removes a feature from the object and destroys it.
- * @param feature The feature instance to remove.
+ * Removes a specific feature from the object and destroys it.
+ * @param {THREE.Object3D} obj - The Three.js object to remove the feature from
+ * @param {Object3DFeature} feature - The feature instance to remove and destroy
+ * @returns {THREE.Object3D} The original object after feature removal
  */
 export function destroyFeature<
 	TObj extends THREE.Object3D,
@@ -90,9 +97,10 @@ export function destroyFeature<
 }
 
 /**
- * Destroys and detachs anything about features and all attached to object features itself.
- * @param obj {THREE.Object3D}
- * @returns
+ * Destroys and detaches all features from the given object, cleaning up any associated resources.
+ * This removes the featurability aspect from the object and cleans up all feature instances.
+ * @param {THREE.Object3D} obj - The Three.js object to clear features from
+ * @returns {THREE.Object3D} The original object after clearing all features
  */
 export function clear<TObj extends THREE.Object3D>(obj: TObj) {
 	Object3DFeaturability.extract(obj)?.destroy();

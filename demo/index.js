@@ -52,7 +52,7 @@ offsetRoot.add(physicalCube);
 KVY.addFeature(physicalCube, RigidbodyDynamicOF);
 KVY.addFeature(physicalCube, ColliderOF);
 
-const container = document.querySelector("#container");
+const container = document.querySelector("#canvasContainer");
 
 scene.background = new THREE.Color("#202020");
 camera.position.set(5, 5, 5);
