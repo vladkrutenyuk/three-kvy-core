@@ -80,14 +80,9 @@ KVY.addFeature(obj, FeatureWithoutProps);
 ```
 
 > [!IMPORTANT]  
-> :warning: **Attention! This is a very important!**
+> :warning: **This is a very important!**
 >
 > **For features to work, their objects must be in the context hierarchy `ctx.root`**.  
->
-> - The `ctx.root` is a `THREE.Object3D` that serves as the entry point for *context* propagation.  
-> - Any object added to `ctx.root` or its descendants will receive the *context*.  
-> 
-> Order doesn't matter. Features can be added before or after including objects in the hierarchy.
 >
 >See [Context Propagation](#5-context-propagation).
 
@@ -293,8 +288,9 @@ It can be usefull if you use some framework or lib which initializes threejs's e
 const renderer = new THREE.WebGLRenderer({ antialias : true });
 const camera = new THREE.PerspectiveCamera();
 const scene = new THREE.Scene();
+const raycaster = new THREE.Raycaster();
 
-const three = new KVY.ThreeContext(renderer, camera, scene);
+const three = new KVY.ThreeContext(renderer, camera, scene, raycaster);
 
 const root = new THREE.Group();
 scene.add(root);
