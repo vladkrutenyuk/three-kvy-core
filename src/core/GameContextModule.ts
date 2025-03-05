@@ -40,13 +40,12 @@ export abstract class GameContextModule<
 	_init_<TModules extends GameContextModulesRecord>(ctx: GameContext<TModules>) {
 		if (this._isInited) return;
 		this._isInited = true;
-		this.onInit(ctx);
-		const reverse = this.useCtx(ctx);
+		const cleanup = this.useCtx(ctx);
 		ctx.once(
 			Evnt.Dstr,
 			() => {
-				reverse && reverse();
-				this.onDestroy(ctx);
+				this._isDestroyed = true;
+				cleanup && cleanup();
 			},
 			ctx
 		);
@@ -65,26 +64,4 @@ export abstract class GameContextModule<
 	): undefined | (() => void) | void {
 		return;
 	}
-
-	/**
-	 * Called when the module is initialized within {@link GameContext}.
-	 * Must be implemented in a subclass.
-	 *
-	 * @template TModules The type of module record in {@link GameContext}.
-	 * @param ctx The game context to which the module is added.
-	 */
-	protected abstract onInit<TModules extends GameContextModulesRecord>(
-		ctx: GameContext<TModules>
-	): void;
-
-	/**
-	 * Called when the module is destroyed as part of {@link GameContext} destruction.
-	 * Must be implemented in a subclass.
-	 *
-	 * @template TModules The type of module record in {@link GameContext}.
-	 * @param ctx The game context to which the module was added.
-	 */
-	protected abstract onDestroy<TModules extends GameContextModulesRecord>(
-		ctx: GameContext<TModules>
-	): void;
 }

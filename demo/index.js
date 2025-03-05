@@ -6,12 +6,15 @@ import { RapierPhysics } from "./RapierPhysics.js";
 import { OrbitControlsOF } from "./OrbitControlsOF.js";
 import { RigidbodyDynamicOF } from "./RigidbodyDynamicOF.js";
 import { ColliderOF } from "./ColliderOF.js";
+import { InputKeyModule } from "./InputKeyModule.js";
+import { SimpleMovement } from "./SimpleMovement.js";
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
-KVY.Object3DFeaturability.log = (x, ...args) => console.log(`OF-${x.object.id}`, ...args);
+KVY.Object3DFeaturability.log = (x, ...args) => console.log(`OBJ-${x.object.id}`, ...args);
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics({ RAPIER: RAPIER });
-const ctx = KVY.GameContext.create(THREE, { rapier }, { antialias: true });
+const input = new InputKeyModule();
+const ctx = KVY.GameContext.create(THREE, { rapier, input }, { antialias: true });
 const { scene, camera } = ctx.three;
 const offsetRoot = new THREE.Group();
 offsetRoot.rotateX(0.2);
@@ -22,7 +25,6 @@ scene.add(offsetRoot);
 const _root = new THREE.Group();
 KVY.addFeature(ctx.root, ExampleO3F);
 KVY.addFeature(ctx.root, OrbitControlsOF);
-
 const world = ctx.modules.rapier.world;
 
 let groundColliderDesc = RAPIER.ColliderDesc.cuboid(5.0, 0.1, 5.0);
@@ -40,6 +42,7 @@ const physicalCube = new THREE.Mesh(
 	new THREE.BoxGeometry(),
 	new THREE.MeshMatcapMaterial({ color: 0x448888 })
 );
+
 const knag = new THREE.Mesh(
 	new THREE.BoxGeometry(0.2, 0.2, 0.2),
 	new THREE.MeshMatcapMaterial()
@@ -66,6 +69,7 @@ const octah = new THREE.Mesh(
 	new THREE.OctahedronGeometry(),
 	new THREE.MeshMatcapMaterial()
 );
+KVY.addFeature(octah,SimpleMovement, { speed: 2 })
 
 // sphereF.object === sphere;
 // sphere.userData.featurability === sphereF;

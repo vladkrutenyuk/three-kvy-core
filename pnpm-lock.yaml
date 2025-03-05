@@ -30,8 +30,8 @@ devDependencies:
     specifier: ^29.5.14
     version: 29.5.14
   '@types/three':
-    specifier: ^0.164.1
-    version: 0.164.1
+    specifier: ^0.174.0
+    version: 0.174.0
   buffer:
     specifier: ^5.5.0||^6.0.0
     version: 6.0.3
@@ -66,8 +66,8 @@ devDependencies:
     specifier: ^6.1.1
     version: 6.1.1(rollup@4.20.0)(typescript@5.7.2)
   three:
-    specifier: ^0.164.1
-    version: 0.164.1
+    specifier: ^0.174.0
+    version: 0.174.0
   ts-jest:
     specifier: ^29.2.5
     version: 29.2.5(@babel/core@7.26.0)(jest@29.7.0)(typescript@5.7.2)
@@ -1086,8 +1086,8 @@ packages:
     engines: {node: '>= 10'}
     dev: true
 
-  /@tweenjs/tween.js@23.1.2:
-    resolution: {integrity: sha512-kMCNaZCJugWI86xiEHaY338CU5JpD0B97p1j1IKNn/Zto8PgACjQx0UxbHjmOcLl/dDOBnItwD07KmCs75pxtQ==}
+  /@tweenjs/tween.js@23.1.3:
+    resolution: {integrity: sha512-vJmvvwFxYuGnF2axRtPYocag6Clbb5YS7kLL+SO/TeVFzHqDIWrNKYtcsPMibjDx9O+bu+psAy9NKfWklassUA==}
     dev: true
 
   /@types/babel__core@7.20.5:
@@ -1186,12 +1186,13 @@ packages:
     resolution: {integrity: sha512-pXNfAD3KHOdif9EQXZ9deK82HVNaXP5ZIF5RP2QG6OQFNTaY2YIetfrE9t528vEreGQvEPRDDc8muaoYeK0SxQ==}
     dev: true
 
-  /@types/three@0.164.1:
-    resolution: {integrity: sha512-dR/trWDhyaNqJV38rl1TonlCA9DpnX7OPYDWD81bmBGn/+uEc3+zNalFxQcV4FlPTeDBhCY3SFWKvK6EJwL88g==}
+  /@types/three@0.174.0:
+    resolution: {integrity: sha512-De/+vZnfg2aVWNiuy1Ldu+n2ydgw1osinmiZTAn0necE++eOfsygL8JpZgFjR2uHmAPo89MkxBj3JJ+2BMe+Uw==}
     dependencies:
-      '@tweenjs/tween.js': 23.1.2
+      '@tweenjs/tween.js': 23.1.3
       '@types/stats.js': 0.17.3
       '@types/webxr': 0.5.10
+      '@webgpu/types': 0.1.55
       fflate: 0.8.2
       meshoptimizer: 0.18.1
     dev: true
@@ -1343,6 +1344,10 @@ packages:
     dependencies:
       '@typescript-eslint/types': 8.16.0
       eslint-visitor-keys: 4.2.0
+    dev: true
+
+  /@webgpu/types@0.1.55:
+    resolution: {integrity: sha512-p97I8XEC1h04esklFqyIH+UhFrUcj8/1/vBWgc6lAK4jMJc+KbhUy8D4dquHYztFj6pHLqGcp/P1xvBBF4r3DA==}
     dev: true
 
   /abab@2.0.6:
@@ -3826,8 +3831,8 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /three@0.164.1:
-    resolution: {integrity: sha512-iC/hUBbl1vzFny7f5GtqzVXYjMJKaTPxiCxXfrvVdBi1Sf+jhd1CAkitiFwC7mIBFCo3MrDLJG97yisoaWig0w==}
+  /three@0.174.0:
+    resolution: {integrity: sha512-p+WG3W6Ov74alh3geCMkGK9NWuT62ee21cV3jEnun201zodVF4tCE5aZa2U122/mkLRmhJJUQmLLW1BH00uQJQ==}
     dev: true
 
   /tmpl@1.0.5:

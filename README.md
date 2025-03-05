@@ -8,20 +8,21 @@
 [![unpkg](https://img.shields.io/badge/UMD_build-unpkg_cdn-black)](https://unpkg.com/@vladkrutenyuk/three-kvy-core/dist/umd/index.min.js)
 ![License: MIT](https://img.shields.io/badge/License-MIT-brown.svg)
 
-**Supercharge for your [Three.js](https://www.npmjs.com/package/three) workflow.**
+**Supercharge for your [Three.js](https://www.npmjs.com/package/three) workflow.**  
 Everything you need to create any-complexity 3D apps with Three.js.
 
 A powerful component-oriented lib, enabling an elegant lifecycle management system and basic initializations. Based on extending Three.js objects with reusable features within seamless context propagation with pluggable modules. The OOP-driven.
 
-[x] Doesn't impose any restrictions on your existing Three.js logic.
-[x] Fully compatible with any approach you already use. 
-[x] Framework agnostic. 
-[x] Zero boilerplate. 
-[x] Bundle size is ~11 kB.
+✅  Doesn't impose any restrictions on your existing Three.js logic.  
+🔄 Fully compatible with any approach you already use.  
+🌐 Framework agnostic.  
+⚡ Zero boilerplate.  
+📘 Written on Typescript.  
+📦 Bundle size is ~12 kB.  
 
 
-> The lib is designed in way not no include three.js as dependency.
-It manipulates three.js entities but does not refer to them.
+> 🧐 The lib is designed in way not no include three.js as dependency.  
+> It manipulates three.js entities but does not refer to them.
 
 ## Installation
 ```sh
@@ -38,16 +39,16 @@ import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
 ---
 
-> [!NOTE]
-> Throughout this documentation, the following terms denote:
-> _context_ → `KVY.GameContext`
-> _module_ → `KVY.GameContextModule`
-> _feature_ → `KVY.Object3DFeature`
-> _object_ → `THREE.Object3D`
+> [!NOTE]  
+> :point_right: Throughout this documentation, the following terms denote:  
+> _context_ → `KVY.GameContext`  
+> _module_ → `KVY.GameContextModule`  
+> _feature_ → `KVY.Object3DFeature`  
+> _object_ → `THREE.Object3D`  
 
-## Quick start guide
+# Quick start guide
 
-#### 1. Create *context* with *modules*
+## 1. Create *context* with *modules*
 
 ```js
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
@@ -55,6 +56,8 @@ import * as THREE from "three";
 
 const ctx = KVY.GameContext.create(THREE, {
     moduleExample: new ModuleExample(),
+}, {
+    antialias : true
 });
 
 // mount ctx's three.js renderer canvas
@@ -63,7 +66,7 @@ ctx.three.mount(document.querySelector("#some-div-container"));
 ctx.loop.run();
 ```
 
-#### 2. Use *features* for three.js objects
+## 2. Use *features* for three.js objects
 Use the static method `addFeature` that adds a feature to a `THREE.Object3D` instance using a feature class (not an instance) extended from `Object3DFeature`, with optional props for its constructor.
 ```js
 const obj = new THREE.Object3D();
@@ -76,16 +79,17 @@ KVY.addFeature(obj, AnotherFeature, { name: "Vitalik" });
 KVY.addFeature(obj, FeatureWithoutProps);
 ```
 
-> [!IMPORTANT] 
+> [!IMPORTANT]  
 > :warning: **Attention! This is a very important!**
 >
-> **For features to work, their objects must be in the context hierarchy `ctx.root`**. 
-    - The `ctx.root` is a `THREE.Object3D` that serves as the entry point for *context* propagation. 
-    - Any object added to `ctx.root` or its descendants will receive the *context*.
+> **For features to work, their objects must be in the context hierarchy `ctx.root`**.  
+>
+> - The `ctx.root` is a `THREE.Object3D` that serves as the entry point for *context* propagation.  
+> - Any object added to `ctx.root` or its descendants will receive the *context*.  
 > 
 > Order doesn't matter. Features can be added before or after including objects in the hierarchy.
 >
->Read [Context Propagation](#ctx-propagation) for more details.
+>See [Context Propagation](#5-context-propagation).
 
 And here is example how to get or destroy features.
 ```js
@@ -100,7 +104,7 @@ simpleMovement.destroy();
 KVY.destroyFeature(someOtherFeature);
 ```
 
-#### 3. Writing `GameContextModule`
+## 3. Writing `GameContextModule`
 ```js
 class ModuleExample extends KVY.GameContextModule {
     // Called when the feature is attached to ctx.
@@ -117,7 +121,7 @@ class ModuleExample extends KVY.GameContextModule {
 }
 ```
 
-#### 4. Writing `Object3DFeature`
+## 4. Writing `Object3DFeature`
 ```js
 export class FeatureExample extends KVY.Object3DFeature {
     constructor(object, props) {
@@ -162,32 +166,32 @@ export class FeatureExample extends KVY.Object3DFeature {
 }
 ```
 
-## Core Concepts {#core-concepts}
+# Core Concepts
 
-> Here, `ctx` denote an instance of `KVY.GameContext`.
+> :point_right: Here, `ctx` denote an instance of `KVY.GameContext`.
 
-### 1. GameContext
+## 1. GameContext
 
 The primary central entity (like "hub") that orchestrates the Three.js environment, animation loop, and module system. It enables an elegant lifecycle management system and handles essential initializations
 
 It is propagated through all features of objects within the hierarchy of its root (`ctx.root`).
 
-General entities:
-`ctx.root` is `THREE.Object3D` that serves as the entry point for context propagation (see [Context Propagation](#ctx-propagation)).
-`ctx.three` is `KVY.ThreeContext` to manage the core three.js rendering setup.
-`ctx.loop` is `KVY.AnimationFrameLoop` to manage the `requestAnimationFrame` loop.
+General entities:  
+`ctx.root` is `THREE.Object3D` that serves as the entry point for context propagation (see [Context Propagation](#5-context-propagation)).  
+`ctx.three` is `KVY.ThreeContext` to manage the core three.js rendering setup.  
+`ctx.loop` is `KVY.AnimationFrameLoop` to manage the `requestAnimationFrame` loop.  
 
-### 2. GameContextModule
+## 2. GameContextModule
 Base class for extending GameContext functionality through pluggable modules. Modules are initialized with context, can provide services to features, and manage their own lifecycle through `useCtx` pattern. Enables clean separation of concerns while maintaining full access to context capabilities.
 
-### 3. Object3DFeature
-Base class for implementing reusable components (features) that can be attached to any Three.js object. Context is automatically propagated to features when their object is added to `ctx.root` hierarchy, and lose it when removed. 
-Provides:
-- Context and its modules access through overridable `useCtx` and `onCtxAttach/onCtxDetach` methods.
-- Built-in overridable lifecycle methods: `onBeforeRender`, `onAfterRender`, `onLoopRun/onLoopStop`, `onResize`, `onMount/onUnmount`.
-- Direct access to object `this.object` the feature is attached to. 
+## 3. Object3DFeature
+Base class for implementing reusable components (features) that can be attached to any Three.js object. Context is automatically propagated to features when their object is added to `ctx.root` hierarchy, and lose it when removed.  
+Provides:  
+    - Context and its modules access through overridable `useCtx` and `onCtxAttach/onCtxDetach` methods.  
+    - Built-in overridable lifecycle methods: `onBeforeRender`, `onAfterRender`, `onLoopRun/onLoopStop`, `onResize`, `onMount/onUnmount`.  
+    - Direct access to object `this.object` the feature is attached to.  
 
-### 4. The `useCtx` Pattern
+## 4. The `useCtx` Pattern
 Both `Object3DFeature` and `GameContextModule` implement the powerful `useCtx` pattern, where you are able to:
 - Automatically sets up resources when context is attached
 - Returns a cleanup function that's automatically called on detachment
@@ -196,19 +200,17 @@ Both `Object3DFeature` and `GameContextModule` implement the powerful `useCtx` p
 Method is overridable and called when the feature is attached to context.
 Returns a cleanup function that is called on detach, similar to `useEffect()` in React.
 
-### 5. Context Propagation {#ctx-propagation}
+## 5. Context Propagation
 
 > :warning: **This is a very important!**
 
-1. For *features* to work, their objects must be in the *context* hierarchy `ctx.root`. 
+1. For *features* to work, their objects must be in the *context* hierarchy `ctx.root`.
     - The `ctx.root` is a `THREE.Object3D` that serves as the entry point for *context* propagation. 
     - Any object added to `ctx.root` or its descendants will receive the *context*.
-    - By default `ctx.root` is `THREE.Scene` (`ctx.root` === `ctx.three.scene`) if `root` was not providen on `ctx` creation. Read [Alternative raw way to create GameContext ](#alternative-raw-way).
-
+    - By default `ctx.root` is `THREE.Scene` (`ctx.root` === `ctx.three.scene`) if `root` was not providen on `ctx` creation. See [Alternative raw way to create GameContext](#1-alternative-raw-way-to-create-gamecontext).
 2. Context attachment to object's features occurs:
     - An object with features (or its parent hierarchy) has added to `ctx.root`
     - A feature has added to an object that's already in the `ctx.root` hierarchy
-
 3. Context detachment from object's features occurs:
     - An object or its parent hierarchy has removed from `ctx.root`.
     - A Feature destroy method has called.
@@ -241,10 +243,8 @@ parent.add(child);
 KVY.addFeature(child, SomeFeature); // ctx has attached to "child" features here!
 ```
 
-### 
-
-### 6. Features management. Factory
-#### Add features
+## 6. Features management. Factory
+### Add features
 Use the static method `addFeature` that adds a feature to a `THREE.Object3D` instance using a feature class (not an instance) extended from `Object3DFeature`, with optional props for its constructor.
 ```js
 const obj = new THREE.Object3D();
@@ -258,7 +258,7 @@ KVY.addFeature(obj, AnotherFeature, { name: "Vitalik" });
 KVY.addFeature(obj, FeatureWithoutProps);
 ```
 
-#### Get features
+### Get features
 Use static methods `getFeature` to find feature by its class, `getFeatureBy` to find by custom predicate, or `getFeatures` to get all features attached to an object.
 
 ```js
@@ -270,7 +270,7 @@ KVY.getFeatures(obj)?.forEach((feature) => {
 })
 
 ```
-#### Destroy features
+### Destroy features
 Use `destroyFeature` static method or feature instance's `destroy` method to detach feature from object and clean up its resources.
 ```js
 const feature = KVY.addFeature(obj, FeatureExample);
@@ -280,17 +280,17 @@ KVY.destroyFeature(obj, feature);
 feature.destroy();
 ```
 
-#### Clear
+### Clear
 Use `clear` static method to destroy and detach all features from the given object, cleaning up any associated resources and removing the featurability aspect from the object.
 ```js
 KVY.clear(obj);
 ```
-## Guides and Examples
-### 1. Alternative raw way to create `GameContext` {#alternative-raw-way}
+# Guides and Examples
+## 1. Alternative raw way to create `GameContext`
 It can be usefull if you use some framework or lib which initializes threejs's entities by itself in special way.
 
 ```ts
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias : true });
 const camera = new THREE.PerspectiveCamera();
 const scene = new THREE.Scene();
 
@@ -306,21 +306,24 @@ const ctx = new KVY.GameContext(three, root, clock, {
 })
 ```
 
-### 2. Work with `ThreeContext`
+## 2. Work with `ThreeContext`
 `KVY.GameContext` has it: `ctx.three`.
 ```js
-const three = new KVY.ThreeContext(renderer, camera, scene);
+const three = new KVY.ThreeContext.create(THREE, { antialias : true });
 ```
 ```js
 // access basic three.js entities
 three.renderer;
 three.camera;
 three.scene;
+three.raycaster;
 
 // mount/unmount renderer canvas
 // Emits `mount` and `unmount` events.
 three.mount(document.querySelector("#three-canvas-container"));
 three.unmount();
+
+three.container;
 
 // Renders the scene using the current render function
 // Emits `renderbefore` and `renderafter` events.
@@ -344,7 +347,7 @@ three.resetRenderFn();
 three.destory();
 ```
 
-### 3. Integration with React
+## 3. Integration with React
 
 ```jsx
 const ThreeKvyCore = ({ ctx }) => {
@@ -382,7 +385,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 ```
 
-### 4. Simple Movement Example
+## 4. Simple Movement Example
 `InputKeyModule.js`
 ```js
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
@@ -453,7 +456,7 @@ character.add(camera);
 KVY.addFeature(character, SimpleMovement, { speed: 6 });
 ```
 
-### 5. EasyOrbitControls. Adaptation example
+## 5. EasyOrbitControls. Adaptation example
 
 Additionally, any code can be easily adapted to the Object3DFeature style, making integration seamless and non-intrusive.
 
@@ -495,7 +498,7 @@ const target = new THREE.Object3D();
 KVY.addFeature(obj, EasyOrbitControls, { target, options: { ... } });
 ```
 
-### 6. Set modules after initialization
+## 6. Set modules after initialization
 This flexibility allows you to dynamically register modules as needed even after initialization.
 ```js
 const ctx = KVY.GameContext.create(THREE, { 
@@ -514,10 +517,10 @@ ctx.modules.moduleD;
 ctx.modules.moduleC;
 ```
 
-## Donate me 🥺🙏
+# Donate me 🥺🙏
 🌐 ERC-20 wallet (USDC / USDT / ETH):
 `0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e`
-## Contact me 💃💅
+# Contact me 💃💅
 
 - [Linkedin (/in/vladkrutenyuk)](https://www.linkedin.com/in/vladkrutenyuk/)
 

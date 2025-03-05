@@ -29,16 +29,14 @@ export class GameContext<
 			Scene: typeof THREE.Scene;
 			WebGLRenderer: typeof THREE.WebGLRenderer;
 			PerspectiveCamera: typeof THREE.PerspectiveCamera;
+			Raycaster: typeof THREE.Raycaster;
 			Clock: typeof THREE.Clock;
 		},
 		modules?: TModules,
 		props?: THREE.WebGLRendererParameters
 	) {
-		const scene = new Three.Scene();
-		const r = new Three.WebGLRenderer(props);
-		const c = new Three.PerspectiveCamera();
-		const three = new ThreeContext(r, c, scene);
-		return new GameContext(three, scene, new Three.Clock(false), modules);
+		const three = ThreeContext.create(Three, props);
+		return new GameContext(three, three.scene, new Three.Clock(false), modules);
 	}
 	/** Identifier to mark this instance as a GameContext. */
 	public readonly isGameContext = true;

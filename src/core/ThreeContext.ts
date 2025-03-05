@@ -8,6 +8,19 @@ import { disposeObject3DFully } from "../utils/dispose-object3d";
  * Also allows overriding and resetting the render function.
  */
 export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContext> {
+	static create(Three: {
+		WebGLRenderer: typeof THREE.WebGLRenderer;
+		PerspectiveCamera: typeof THREE.PerspectiveCamera;
+		Scene: typeof THREE.Scene;
+		Raycaster: typeof THREE.Raycaster;
+	}, props?: THREE.WebGLRendererParameters) {
+		return new ThreeContext(
+			new Three.WebGLRenderer(props),
+			new Three.PerspectiveCamera(),
+			new Three.Scene(),
+			new Three.Raycaster()
+		);
+	}
 	/**
 	 * The WebGL renderer used for rendering the scene.
 	 */
@@ -29,11 +42,14 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this._camera = value;
 		this.cameraChanged();
 	}
+
+	public readonly raycaster: THREE.Raycaster;
+
 	/**
 	 * The root HTML element where the renderer is mounted.
 	 */
-	public get root() {
-		return this._root;
+	public get container() {
+		return this._c;
 	}
 	/**
 	 * Indicates whether the renderer is currently mounted.
@@ -49,7 +65,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	private _camera: THREE.PerspectiveCamera;
-	private _root: HTMLDivElement | null = null;
+	private _c: HTMLDivElement | null = null;
 	private _resizeObserver: ResizeObserver | null = null;
 	private _isMounted = false;
 	private _isDestroyed = false;
@@ -68,13 +84,15 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	constructor(
 		renderer: THREE.WebGLRenderer,
 		camera: THREE.PerspectiveCamera,
-		scene: THREE.Scene
+		scene: THREE.Scene,
+		raycaster: THREE.Raycaster
 	) {
 		super();
 
 		this.renderer = renderer;
 		this.scene = scene;
 		this._camera = camera;
+		this.raycaster = raycaster;
 		this._renderFn = this._srcRenderFn;
 	}
 
@@ -104,26 +122,26 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	/**
-	 * Mounts the renderer to the specified HTML container and initializes event listeners.
-	 * @param root The HTML container element.
+	 * Mounts the renderer canvas to the specified HTML container and initializes event listeners.
+	 * @param container The HTML container element.
 	 */
-	mount(root: HTMLDivElement) {
+	mount(container: HTMLDivElement) {
 		if (this._isMounted) return;
 		this._isMounted = true;
 
 		const canvas = this.renderer.domElement;
 
-		this._root = root;
-		root.append(canvas);
+		this._c = container;
+		container.append(canvas);
 		this._resizeObserver = new ResizeObserver(this.resizeHandler);
-		this._resizeObserver.observe(root);
+		this._resizeObserver.observe(container);
 		this.resizeHandler();
 
 		canvas.tabIndex = 0;
 		canvas.style.touchAction = "none";
 		canvas.focus();
 
-		this.emit(ev.Mount, root);
+		this.emit(ev.Mount, container);
 	}
 
 	/**
@@ -177,7 +195,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 	private _rendererSetSizeTimeout: number | null = null;
 	private resizeHandler = () => {
-		const root = this._root;
+		const root = this._c;
 		if (!root) return;
 
 		const width = root.offsetWidth;
@@ -202,7 +220,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 	private cameraChanged() {
 		const camera = this._camera;
-		const root = this._root;
+		const root = this._c;
 		if (root) {
 			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
