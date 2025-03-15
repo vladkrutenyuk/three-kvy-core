@@ -19,8 +19,4 @@ export class CameraFollow extends KVY.Object3DFeature {
             this.object.remove(camera);
         }
     }
-
-    onDestroy() {
-        this.object.remove(camera);
-    }
 }

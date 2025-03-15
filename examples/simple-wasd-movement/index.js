@@ -31,4 +31,4 @@ KVY.addFeature(player, PlayerGraphics);
 
 // запускаемся
 ctx.three.mount(document.querySelector("#canvas-container"));
-ctx.loop.run();
+ctx.run();

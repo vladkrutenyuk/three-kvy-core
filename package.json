@@ -27,7 +27,8 @@
     "dist",
     "package.json",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "examples"
   ],
   "devDependencies": {
     "three": "^0.174.0",
