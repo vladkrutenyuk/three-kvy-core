@@ -7,6 +7,10 @@ export class RotateOF extends KVY.Object3DFeature {
         this.speed = props.speed ?? 5;
     }
 
+    useCtx() {
+        console.log('ctx attached')
+    }
+
     /** @param {KVY.GameContext} ctx */
     onBeforeRender(ctx) {
         this.object.rotation.y += ctx.deltaTime * this.speed;

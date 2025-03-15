@@ -10,11 +10,60 @@ import { InputKeyModule } from "./InputKeyModule.js";
 import { SimpleMovement } from "./SimpleMovement.js";
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
-KVY.Object3DFeaturability.log = (x, ...args) => console.log(`OBJ-${x.object.id}`, ...args);
+// KVY.Object3DFeaturability.log = (x, ...args) =>
+// 	console.log(`OBJ-${x.object.id}`, ...args);
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics({ RAPIER: RAPIER });
 const input = new InputKeyModule();
 const ctx = KVY.GameContext.create(THREE, { rapier, input }, { antialias: true });
+const container = document.querySelector("#canvasContainer");
+ctx.three.mount(container);
+ctx.run();
+
+class CustomTickModule extends KVY.GameContextModule {
+	useCtx() {
+		const interval = setInterval(() => {
+			this.emit("customtick");
+		}, 2000);
+
+		return () => clearInterval(interval);
+	}
+}
+
+ctx.assignModules({ tick: new CustomTickModule() });
+
+class SpinningToFro extends KVY.Object3DFeature {
+	speed = 1;
+
+	useCtx(ctx) {
+		console.log("SpinningToFro: ctx attached", this.object);
+		const onTick = () => {
+			this.speed *= -1;
+		};
+
+		const tick = ctx.modules.tick;
+		tick.on("customtick", onTick);
+
+		return () => {
+			console.log("SpinningToFro: ctx detached");
+			tick.off("customtick", onTick);
+		};
+	}
+
+	onBeforeRender(ctx) {
+		const angle = this.speed * ctx.deltaTime;
+		this.object.rotateX(angle);
+		this.object.rotateY(angle);
+	}
+}
+
+const scube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshNormalMaterial());
+scube.position.z = 2;
+ctx.root.add(scube);
+
+KVY.addFeature(scube, SpinningToFro);
+
+ctx.run();
 const { scene, camera } = ctx.three;
 const offsetRoot = new THREE.Group();
 offsetRoot.rotateX(0.2);
@@ -55,8 +104,6 @@ offsetRoot.add(physicalCube);
 KVY.addFeature(physicalCube, RigidbodyDynamicOF);
 KVY.addFeature(physicalCube, ColliderOF);
 
-const container = document.querySelector("#canvasContainer");
-
 scene.background = new THREE.Color("#202020");
 camera.position.set(5, 5, 5);
 camera.lookAt(new THREE.Vector3());
@@ -69,7 +116,7 @@ const octah = new THREE.Mesh(
 	new THREE.OctahedronGeometry(),
 	new THREE.MeshMatcapMaterial()
 );
-KVY.addFeature(octah,SimpleMovement, { speed: 2 })
+KVY.addFeature(octah, SimpleMovement, { speed: 2 });
 
 // sphereF.object === sphere;
 // sphere.userData.featurability === sphereF;
@@ -85,9 +132,10 @@ const sphere = new THREE.Mesh(
 sphere.position.x = -2;
 scene.add(sphere);
 
-const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
+const delay = (s = 0.1) => new Promise((res) => setTimeout(res, s * 1000));
 (async function () {
-	ctx.mountAndRun(container);
+	ctx.three.mount(container);
+	ctx.run();
 
 	await delay();
 
@@ -95,7 +143,7 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 	// ctx.destroy();
 	KVY.getFeature(cube, RotateOF)?.destroy();
 	await delay();
-	KVY.destroyFeature(octah, KVY.getFeature(octah, RotateOF));
+	KVY.getFeature(octah, RotateOF)?.destroy();
 	await delay();
 	KVY.addFeature(sphere, RotateOF);
 	// Kvy4.Object3DFeaturability.from(sphere).addFeature(RotateOF);
@@ -118,8 +166,37 @@ const delay = (s = 0.5) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay();
 	ctx.three.unmount();
 	await delay();
-	ctx.mountAndRun(container);
+	ctx.three.mount(container);
+	ctx.run();
 	await delay();
-	const physicalCubeFeatures = KVY.getFeatures(physicalCube);
-	physicalCubeFeatures.forEach((f) => f.destroy());
+	// const physicalCubeFeatures = KVY.getFeatures(physicalCube);
+	// physicalCubeFeatures.forEach((f) => f.destroy());
+	// await delay();
+
+	// ctx.destroy();
+
+	ctx.removeModule("tick");
+	await delay(1);
+	
+
+	await delay(2);
+	ctx.destroy();
+	await delay();
+	KVY.addFeature(cube, RotateOF, { speed: 1 });
+	await delay(1);
+
+	//TODO why eveyrthing from rapier is not destroyed
+	const ctx2 = KVY.GameContext.create(THREE, { input }, { antialias: true });
+	ctx2.three.mount(container);
+	ctx2.run();
+	ctx2.root.add(cube);
+	KVY.addFeature(ctx2.root, OrbitControlsOF);
+	ctx2.three.scene.background = new THREE.Color("#101010");
+	ctx2.three.scene.add(new THREE.GridHelper());
+	ctx2.three.camera.position.set(5, 5, 5);
+	ctx2.three.camera.lookAt(new THREE.Vector3());
+
+	await delay(2);
+
+	KVY.clear(ctx2.root, true);
 })();

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreeKvyCore Example</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.174.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.174.0/examples/jsm/",
+                "eventemitter3": "https://unpkg.com/eventemitter3/dist/eventemitter3.esm.min.js",
+                "@vladkrutenyuk/three-kvy-core": "https://unpkg.com/@vladkrutenyuk/three-kvy-core@2.0.0-beta.8/dist/esm/index.min.js"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+    <div id="state">Loading...</div>
+    <script type="module">
+        const state = document.querySelector("#state");
+
+        const params = new URLSearchParams(window.location.search);
+        const exampleName = params.get("name");
+
+        if (!exampleName) {
+            state.textContent = "Bad request";
+        }
+        
+        const examplePath = `./${exampleName}/index.js`;
+        import(examplePath)
+            .then(() => {
+                state.classList.add("hide")
+            })
+            .catch((error) => {
+                console.error(error);
+                state.textContent = "Error";
+            });
+    </script>
+    </script>
+</body>
+
+</html>

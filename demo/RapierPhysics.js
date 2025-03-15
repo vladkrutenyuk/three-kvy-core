@@ -21,8 +21,6 @@ export class RapierPhysics extends KVY.GameContextModule {
 		}
 	}
 
-	onInit(ctx) {}
-
 	/**
 	 * @param {KVY.GameContext} ctx
 	 */

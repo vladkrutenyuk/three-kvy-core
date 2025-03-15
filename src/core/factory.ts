@@ -1,9 +1,7 @@
 import type * as THREE from "three";
-import {
-    IFeaturable,
-    Object3DFeaturability
-} from "./Object3DFeaturablity";
+import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { Object3DFeature } from "./Object3DFeature";
+import { IFeaturableRoot } from "./GameContext";
 
 /**
  * Adds a new feature to the object.
@@ -42,6 +40,7 @@ export function addFeature<
 	beforeAttach?: (feature: TFeature) => void
 ): TFeature {
 	const f = Object3DFeaturability.from(obj);
+	
 	return f.addFeature(Feature, props as any, beforeAttach);
 }
 
@@ -83,26 +82,14 @@ export function getFeatures<TObj extends THREE.Object3D>(
 }
 
 /**
- * Removes a specific feature from the object and destroys it.
- * @param {THREE.Object3D} obj - The Three.js object to remove the feature from
- * @param {Object3DFeature} feature - The feature instance to remove and destroy
- * @returns {THREE.Object3D} The original object after feature removal
- */
-export function destroyFeature<
-	TObj extends THREE.Object3D,
-	TFeature extends Object3DFeature<any>
->(obj: TObj, feature: TFeature) {
-	Object3DFeaturability.extract(obj)?.destroyFeature(feature);
-	return obj;
-}
-
-/**
  * Destroys and detaches all features from the given object, cleaning up any associated resources.
  * This removes the featurability aspect from the object and cleans up all feature instances.
  * @param {THREE.Object3D} obj - The Three.js object to clear features from
+ * @param {boolean} recursively
  * @returns {THREE.Object3D} The original object after clearing all features
  */
-export function clear<TObj extends THREE.Object3D>(obj: TObj) {
-	Object3DFeaturability.extract(obj)?.destroy();
+export function clear<TObj extends THREE.Object3D>(obj: TObj, recursively?: boolean) {
+	if (recursively) obj.traverse(Object3DFeaturability.destroy);
+	else Object3DFeaturability.destroy(obj);
 	return obj;
 }

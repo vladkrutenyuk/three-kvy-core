@@ -3,8 +3,9 @@ import type * as THREE from "three";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseAncestorsInterruptible } from "../utils/traverse-ancestors-interruptible";
 import { Evnt } from "./Events";
-import { GameContext, GameContextModulesRecord } from "./GameContext";
+import { GameContext, GameContextModulesRecord, IFeaturableRoot } from "./GameContext";
 import { Object3DFeature } from "./Object3DFeature";
+import { defineProps, notEnumer } from "../utils/define-props";
 
 export type Object3DFeaturabilityEventTypes<
 	TModules extends GameContextModulesRecord = {}
@@ -14,6 +15,8 @@ export type Object3DFeaturabilityEventTypes<
 	[Evnt.FtAdd]: [feature: Object3DFeature<TModules>];
 	[Evnt.FtRem]: [feature: Object3DFeature<TModules>];
 };
+
+const key = "__kvy_ftblty__";
 
 export class Object3DFeaturability<
 	TModules extends GameContextModulesRecord = {},
@@ -29,7 +32,7 @@ export class Object3DFeaturability<
 		TModules extends GameContextModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
 	>(obj: TObj): Object3DFeaturability<TModules, TObj> | null {
-		const f = (obj as unknown as IFeaturablePrivate<TModules, TObj>).__kvy_ftblty__;
+		const f = (obj as TObj & IFeaturablePrivate<TModules, TObj>)[key];
 		return f !== undefined && f.isObjectFeaturability ? f : null;
 	}
 
@@ -53,38 +56,34 @@ export class Object3DFeaturability<
 		return fblty;
 	}
 
+	static destroy<TObj extends THREE.Object3D = THREE.Object3D>(obj: TObj, force?: boolean): void {
+		Object3DFeaturability.extract(obj)?.destroy(force);
+	}
+
 	/**
 	 * Custom logging function.
 	 */
 	static log: (target: Object3DFeaturability, msg: string) => void = () => {};
 
 	public readonly isObjectFeaturability = true;
+
 	/**
 	 * The wrapped `Object3D` instance.
 	 */
-	public readonly object: IFeaturable<TModules, TObj>;
+	public readonly object: IFeaturablePrivate<TModules, TObj>;
+
 	/**
 	 * Returns the associated `GameContext`, if any.
 	 */
 	public get ctx() {
 		return this._ctx;
 	}
+
 	/**
-	 * Returns an array of all attached features.
+	 * Returns copied array of all attached features.
 	 */
 	public get features() {
 		return [...this._features];
-	}
-	private _pair?: [object: IFeaturable<TModules, TObj>, featurability: this];
-
-	/**
-	 * Returns a tuple containing the wrapped object and its featurability instance.
-	 */
-	public get pair(): [object: IFeaturable<TModules, TObj>, featurability: this] {
-		if (!this._pair) {
-			this._pair = [this.object, this];
-		}
-		return this._pair;
 	}
 
 	private _ctx: GameContext<TModules> | null = null;
@@ -94,15 +93,15 @@ export class Object3DFeaturability<
 	 * Creates a new `Object3DFeaturability` instance for the given `Object3D`.
 	 * @param obj The `Object3D` instance to wrap.
 	 */
-	constructor(obj: TObj) {
+	private constructor(obj: TObj) {
 		super();
 		this.object = obj as IFeaturable<TModules, TObj>;
 		obj.addEventListener("added", this.onObjectAdded);
 		obj.addEventListener("removed", this.onObjectRemoved);
 
-		Object.defineProperties(obj, {
-			__kvy_ftblty__: propOpts(this),
-			isFeaturable: propOpts(true),
+		defineProps(obj, {
+			[key]: notEnumer(this),
+			isFeaturable: notEnumer(true),
 		});
 
 		if (obj.parent) {
@@ -115,16 +114,29 @@ export class Object3DFeaturability<
 	/**
 	 * Destroys the featurability instance and removes all features.
 	 */
-	destroy() {
+	destroy(force?: boolean) {
+		this.destroyAllFeatures();
+
+		if ((this.object as typeof this.object & IFeaturableRoot).isRoot && !force) {
+			return;
+		}
+
 		this.detachCtx();
 		const obj = this.object;
 		obj.removeEventListener("added", this.onObjectAdded);
 		obj.removeEventListener("removed", this.onObjectRemoved);
 
-		//TODO: destroy all features
+		delete obj[key];
+		delete obj.isFeaturable;
 
-		delete (obj as IFeaturablePrivate).__kvy_ftblty__;
-		delete (obj as IFeaturablePrivate).isFeaturable;
+		//TODO remove all listeners from all
+	}
+
+	destroyAllFeatures() {
+		const features = this.features;
+		for (const feature of features) {
+			feature.destroy();
+		}
 	}
 
 	/**
@@ -155,7 +167,7 @@ export class Object3DFeaturability<
 		beforeAttach?.(instance);
 
 		this._features.push(instance);
-		instance._init_();
+		instance.init();
 
 		this.emit(Evnt.FtAdd, instance as unknown as Object3DFeature<TModules>);
 		return instance;
@@ -189,14 +201,16 @@ export class Object3DFeaturability<
 	 * Removes a feature from the object and destroys it.
 	 * @param feature The feature instance to remove.
 	 */
-	destroyFeature<TFeature extends Object3DFeature<any>>(feature: TFeature) {
+	destroyFeature<TFeature extends Object3DFeature<any, any>>(feature: TFeature) {
 		this._log(`destroying feature...`);
 		const foundAndRemoved = removeArrayItem(this._features, feature);
 		if (foundAndRemoved) {
 			feature.destroy();
 
 			this.emit(Evnt.FtRem, feature);
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -212,16 +226,6 @@ export class Object3DFeaturability<
 		} else {
 			this.detachCtx();
 		}
-		return this;
-	}
-
-	/**
-	 * Renames the object.
-	 * @param name The new name.
-	 * @returns This instance.
-	 */
-	rename(name: string): this {
-		this.object.name = name;
 		return this;
 	}
 
@@ -293,6 +297,8 @@ export class Object3DFeaturability<
 		this._ctx = ctx;
 		this.emit(Evnt.AttCtx, ctx);
 
+		ctx.once(Evnt.Dstr, this.detachCtx, this);
+
 		this._log("attached ctx");
 	}
 
@@ -303,6 +309,8 @@ export class Object3DFeaturability<
 		const ctx = this._ctx;
 		this._ctx = null;
 		this.emit(Evnt.DetCtx, ctx);
+
+		ctx.off(Evnt.Dstr, this.detachCtx, this);
 
 		this._log("detached ctx");
 	}
@@ -344,11 +352,6 @@ export class Object3DFeaturability<
 	}
 }
 
-const propOpts = (value: any) => ({
-	value,
-	enumerable: false,
-	configurable: true,
-});
 
 /**
  * Represents an object that supports features.
@@ -360,13 +363,10 @@ export type IFeaturable<
 	isFeaturable: true;
 };
 
-/**
- * Internal interface for feature-enabled objects.
- */
-export type IFeaturablePrivate<
+type IFeaturablePrivate<
 	TModules extends GameContextModulesRecord = any,
 	TObj extends THREE.Object3D = THREE.Object3D
 > = TObj & {
-	__kvy_ftblty__?: Object3DFeaturability<TModules, TObj>;
+	[key]?: Object3DFeaturability<TModules, TObj>;
 	isFeaturable?: true;
 };

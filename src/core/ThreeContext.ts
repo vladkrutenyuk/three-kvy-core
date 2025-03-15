@@ -1,6 +1,5 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
-import { disposeObject3DFully } from "../utils/dispose-object3d";
 
 /**
  * Manages the Three.js rendering context, including the renderer, scene, and camera.
@@ -49,7 +48,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 * The root HTML element where the renderer is mounted.
 	 */
 	public get container() {
-		return this._c;
+		return this._container;
 	}
 	/**
 	 * Indicates whether the renderer is currently mounted.
@@ -65,7 +64,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	private _camera: THREE.PerspectiveCamera;
-	private _c: HTMLDivElement | null = null;
+	private _container: HTMLDivElement | null = null;
 	private _resizeObserver: ResizeObserver | null = null;
 	private _isMounted = false;
 	private _isDestroyed = false;
@@ -110,14 +109,14 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 * Overrides the render function with a custom implementation.
 	 * @param fn The new render function.
 	 */
-	overrideRenderFn(fn: () => void) {
+	overrideRender(fn: () => void) {
 		this._renderFn = fn;
 	}
 
 	/**
 	 * Resets the render function to its default implementation.
 	 */
-	resetRenderFn() {
+	resetRender() {
 		this._renderFn = this._srcRenderFn;
 	}
 
@@ -131,7 +130,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		const canvas = this.renderer.domElement;
 
-		this._c = container;
+		this._container = container;
 		container.append(canvas);
 		this._resizeObserver = new ResizeObserver(this.resizeHandler);
 		this._resizeObserver.observe(container);
@@ -139,7 +138,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		canvas.tabIndex = 0;
 		canvas.style.touchAction = "none";
-		canvas.focus();
+		// canvas.focus();
 
 		this.emit(ev.Mount, container);
 	}
@@ -177,50 +176,37 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.renderer.dispose();
 
 		this.emit(ev.Destroy);
+
+		Object.values(ev).forEach(x => this.removeAllListeners(x))
 	}
 
-	/**
-	 * Removes all objects from the scene.
-	 * Optionally disposes of them to free memory.
-	 * @param dispose Whether to dispose of objects after removal.
-	 */
-	clearScene(dispose?: boolean) {
-		const children = [...this.scene.children];
-		for (let i = 0; i < children.length; i++) {
-			const child = children[i];
-			this.scene.remove(child);
-			dispose && disposeObject3DFully(child, true);
-		}
-	}
-
-	private _rendererSetSizeTimeout: number | null = null;
+	// private _rendererSetSizeTimeout: number | null = null;
 	private resizeHandler = () => {
-		const root = this._c;
-		if (!root) return;
+		const container = this._container;
+		if (!container) return;
 
-		const width = root.offsetWidth;
-		const height = root.offsetHeight;
+		const width = container.offsetWidth;
+		const height = container.offsetHeight;
 
 		const camera = this._camera;
 
 		camera.aspect = width / height;
 		camera.updateProjectionMatrix();
 
-		const timeout = this._rendererSetSizeTimeout;
-		if (timeout) {
-			window.clearTimeout(timeout);
-		}
-		this._rendererSetSizeTimeout = window.setTimeout(() => {
-			this.renderer.setSize(width, height);
-			this.emit(ev.Resize, width, height);
-		}, 5);
-
-		// this.emit(ev.Resize, width, height);
+		// const timeout = this._rendererSetSizeTimeout;
+		// if (timeout) {
+		// 	window.clearTimeout(timeout);
+		// }
+		// this._rendererSetSizeTimeout = window.setTimeout(() => {
+		// }, 5);
+		this.renderer.setSize(width, height);
+		this.emit(ev.Resize, width, height);
+		this.render();
 	};
 
 	private cameraChanged() {
 		const camera = this._camera;
-		const root = this._c;
+		const root = this._container;
 		if (root) {
 			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
@@ -238,6 +224,7 @@ const ev = Object.freeze({
 	CameraChanged: "camerachanged",
 	Resize: "resize",
 });
+
 export type ThreeContextEventMap = {
 	[ev.RenderBefore]: [];
 	[ev.RenderAfter]: [];
