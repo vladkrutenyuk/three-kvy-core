@@ -44,6 +44,8 @@ export function addFeature<
 	return f.addFeature(Feature, props as any, beforeAttach);
 }
 
+//TODO addFeatures(obj, [class MyFeature, { value: 2}], [class AnotherFeature], ... ): [MyFeature, AnotherFeature]
+
 /**
  * Retrieves a feature instance of a specific class from the object.
  * @param {THREE.Object3D} obj - The Three.js object to search on

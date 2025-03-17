@@ -1,6 +1,6 @@
 export * from "./utils/remove-array-item.js";
 // export * from "./utils/dispose-object3d.js";
-export * from "./utils/traverse-ancestors-interruptible.js";
+export * from "./utils/traverse-up.js";
 export * from "./core/ThreeContext.js";
 export * from "./core/Object3DFeature.js";
 export * from "./core/GameContext.js";
@@ -8,7 +8,7 @@ export * from "./core/GameContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
 export * from "./core/factory.js";
 
-export const REVISION = '2.0.0-beta.7';
+export const REVISION = '2.0.0-gamma.2';
 
 declare global {
 	interface Window {

@@ -111,6 +111,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 */
 	overrideRender(fn: () => void) {
 		this._renderFn = fn;
+		return this;
 	}
 
 	/**
@@ -118,6 +119,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 */
 	resetRender() {
 		this._renderFn = this._srcRenderFn;
+		return this;
 	}
 
 	/**
@@ -141,6 +143,8 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		// canvas.focus();
 
 		this.emit(ev.Mount, container);
+
+		return this;
 	}
 
 	/**
@@ -155,6 +159,8 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.renderer.domElement.remove();
 
 		this.emit(ev.Unmount);
+
+		return this;
 	}
 
 	/**
@@ -177,7 +183,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		this.emit(ev.Destroy);
 
-		Object.values(ev).forEach(x => this.removeAllListeners(x))
+		Object.values(ev).forEach(x => this.removeAllListeners(x));
 	}
 
 	// private _rendererSetSizeTimeout: number | null = null;

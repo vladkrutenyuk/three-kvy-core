@@ -19,9 +19,9 @@ export type GameContextModulesRecord = Record<string, GameContextModule>;
 export class GameContext<
 	TModules extends GameContextModulesRecord = GameContextModulesRecord
 > extends EventEmitter<{
-	[Evnt.Dstr]: [];
-	["runloop"]: [];
-	["stoploop"]: [];
+	["destroy"]: [];
+	["looprun"]: [];
+	["loopstop"]: [];
 }> {
 	/**
 	 * Creates a new `GameContext` instance with a Three.js scene, renderer, camera, and optional modules.
@@ -122,13 +122,13 @@ export class GameContext<
 		_root.isRoot = true;
 		this._root = _root;
 
-		// this.setupFrameLoopPausingOnSwitchTab();
+		this.autoPauseOnBlur();
 
 		modules && this.assignModules(modules);
 	}
 
 	run() {
-		if (this._isRunning) return;
+		if (this._isRunning || this._isDestroyed) return;
 		this._isRunning = true;
 		this._clock.start();
 		this.three.renderer.setAnimationLoop((time) => {
@@ -137,17 +137,17 @@ export class GameContext<
 			this._time = this._clock.getElapsedTime();
 			this.three.render();
 		});
-		this.emit("runloop");
+		this.emit("looprun");
 	}
 
 	stop() {
 		this._isRunning = false;
 		this._clock.stop();
 		this.three.renderer.setAnimationLoop(null);
-		this.emit("stoploop");
+		this.emit("loopstop");
 	}
 
-	private _cleanups: Partial<Record<keyof TModules, ReturnOfUseCtx>> = {};
+	private _cleanups: Partial<Record<keyof TModules | string, ReturnOfUseCtx>> = {};
 
 	/**
 	 * Registers and initializes new or partial game context modules.
@@ -168,7 +168,9 @@ export class GameContext<
 			return;
 		}
 		this.modules[key] = module;
-		const cleanup = (module as unknown as IGameContextModuleProtected).useCtx(this);
+		const cleanup = (module as typeof module & IGameContextModuleProtected).useCtx(
+			this
+		);
 		this._cleanups[key] = cleanup;
 	}
 
@@ -189,37 +191,39 @@ export class GameContext<
 		this._isDestroyed = true;
 		this.stop();
 		this.three.destroy();
-		this.emit(Evnt.Dstr);
+		this.emit("destroy");
 
 		Object3DFeaturability.destroy(this._root, true);
 
-		([Evnt.Dstr, "runloop", "stoploop"] as const).forEach((x) =>
+		Object.values(this._cleanups).forEach(fn => fn && fn());
+
+		(["destroy", "looprun", "loopstop"] as const).forEach((x) =>
 			this.removeAllListeners(x)
 		);
 
 		return this;
 	}
 
-	private setupFrameLoopPausingOnSwitchTab() {
-		//!FIX получается посл маунту если свитчнуть вкладку туда сюда то запуститься цикл
+	private _paused = false;
+	private autoPauseOnBlur() {
 		const three = this.three;
-		const onWindowFocus = () => {
-			// console.log("onWindowFocus");
-			this.run();
-		};
 		const onWindowBlur = () => {
-			// console.log("onWindowBlur");
+			if (!this._isRunning) return;
+			this._paused = true;
 			this.stop();
+		};
+		const onWindowFocus = () => {
+			if (!this._paused) return;
+			this.run();
 		};
 		const w = window;
 		three.on("mount", () => {
-			w.addEventListener("focus", onWindowFocus);
 			w.addEventListener("blur", onWindowBlur);
+			w.addEventListener("focus", onWindowFocus);
 		});
 		three.on("unmount", () => {
-			w.removeEventListener("focus", onWindowFocus);
 			w.removeEventListener("blur", onWindowBlur);
-			this.stop();
+			w.removeEventListener("focus", onWindowFocus);
 		});
 	}
 

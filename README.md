@@ -10,11 +10,11 @@
 
 
 > **README was truncated because of new reworked verison `gamma.1`, temporaly.
-> Let me actualize eveywrhint bcs a lot of things were changed.**
+> Let me actualize everything bcs a lot of things were changed.**
 
 > **Webpage with detailed docs and examples is coming soon.**
 
-### **A powerful [Three.js](https://threejs.org/) extension to create 3D apps of any-complexity.**
+## **A powerful [Three.js](https://threejs.org/) extension to create 3D apps of any-complexity.**
 
 This is lightweight component-oriented **library**, enabling an elegant lifecycle management system and basic initializations.
 Empower Three.js objects by reusable features within seamless context propagation with pluggable modules.
@@ -38,12 +38,12 @@ Doesn't impose any restrictions on your existing Three.js logic. Compatible with
 
 
 
-### **Installation.**  
+## **Installation.**  
 ```sh
 npm i three eventemitter3 @vladkrutenyuk/three-kvy-core 
 ```
 
-### What does it look like?
+## What does it look like?
 
 ```js
 import * as THREE from "three";

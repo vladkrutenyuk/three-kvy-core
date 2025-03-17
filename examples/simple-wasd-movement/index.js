@@ -22,12 +22,11 @@ scene.add(grid);
 
 // player
 const player = new THREE.Group();
-ctx.root.add(player);
-
-// добавляем фичи
 KVY.addFeature(player, SimpleMovement, { speed: 6 });
 KVY.addFeature(player, CameraFollow, { offset: new THREE.Vector3(0, 4, 5), lookAtHeight: 1.5 });
 KVY.addFeature(player, PlayerGraphics);
+
+ctx.root.add(player);
 
 // запускаемся
 ctx.three.mount(document.querySelector("#canvas-container"));

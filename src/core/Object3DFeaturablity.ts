@@ -1,7 +1,7 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
 import { removeArrayItem } from "../utils/remove-array-item";
-import { traverseAncestorsInterruptible } from "../utils/traverse-ancestors-interruptible";
+import { traverseUp } from "../utils/traverse-up";
 import { Evnt } from "./Events";
 import { GameContext, GameContextModulesRecord, IFeaturableRoot } from "./GameContext";
 import { Object3DFeature } from "./Object3DFeature";
@@ -256,7 +256,7 @@ export class Object3DFeaturability<
 		// ищем предка который был бы IFeaturable
 		let ancestorF: Object3DFeaturability<TModules> | null = null;
 		//TODO rewrite via stack (while)
-		traverseAncestorsInterruptible(target, (ancestor: THREE.Object3D) => {
+		traverseUp(target, (ancestor: THREE.Object3D) => {
 			ancestorF = Object3DFeaturability.extract<TModules>(ancestor);
 			return !ancestorF;
 		});

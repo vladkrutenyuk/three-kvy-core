@@ -215,10 +215,10 @@ export abstract class Object3DFeature<
 			this.iehm(ctx.three, "unmount", "onUnmount");
 		}
 		if (this.onLoopRun !== p.onLoopRun) {
-			this.iehm(ctx, "runloop", "onLoopRun");
+			this.iehm(ctx, "looprun", "onLoopRun");
 		}
 		if (this.onLoopStop !== p.onLoopStop) {
-			this.iehm(ctx, "stoploop", "onLoopStop");
+			this.iehm(ctx, "loopstop", "onLoopStop");
 		}
 	}
 

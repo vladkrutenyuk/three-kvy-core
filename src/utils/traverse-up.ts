@@ -7,7 +7,7 @@ import type * as THREE from "three";
  * @param {THREE.Object3D} target - The starting THREE.Object3D whose ancestors will be traversed.
  * @param {(ancestor: THREE.Object3D) => boolean} callback - A function that is called with each ancestor. If the callback returns true, the traversal continues; if false, the traversal stops.
  */
-export function traverseAncestorsInterruptible(
+export function traverseUp(
 	target: THREE.Object3D,
 	callback: (ancestor: THREE.Object3D) => boolean
 ) {
@@ -15,7 +15,7 @@ export function traverseAncestorsInterruptible(
 
 	if (parent !== null) {
 		if (callback(parent)) {
-			traverseAncestorsInterruptible(parent, callback);
+			traverseUp(parent, callback);
 		}
 	}
 }
