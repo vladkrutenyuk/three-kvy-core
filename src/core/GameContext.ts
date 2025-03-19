@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
-import { Evnt } from "./Events";
+import { defineProps, readOnly } from "../utils/define-props";
 import {
 	GameContextModule,
 	IGameContextModuleProtected,
@@ -8,7 +8,6 @@ import {
 } from "./GameContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
-import { defineProps, readOnly } from "../utils/define-props";
 
 export type ModulesRecord = Record<string, GameContextModule>;
 export type ModulesRecordDefault = Record<
@@ -198,7 +197,7 @@ export class GameContext<
 		this.emit("destroy");
 
 		Object3DFeaturability.destroy(this._root, true);
-
+-
 		Object.values(this._cleanups).forEach((fn) => fn && fn());
 
 		(["destroy", "looprun", "loopstop"] as const).forEach((x) =>
@@ -231,22 +230,6 @@ export class GameContext<
 			w.removeEventListener("focus", onWindowFocus);
 		});
 	}
-
-	/**
-	 * Generates a unique identifier for `Object3DFeature` instances.
-	 * By default, it uses `crypto.randomUUID()`, but falls back to a custom method if unavailable.
-	 * @example
-	 * ```js
-	 * GameContext.generateUUID = yourCustomUuidGenerationFn;
-	 * ```
-	 */
-	static generateUUID = () => {
-		try {
-			return crypto.randomUUID();
-		} catch {
-			return `${Math.random()}-${Date.now()}`;
-		}
-	};
 }
 
 export interface IFeaturableRoot<TModules extends ModulesRecord = any>

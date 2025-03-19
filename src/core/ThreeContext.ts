@@ -128,7 +128,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 * @param container The HTML container element.
 	 */
 	mount(container: HTMLDivElement) {
-		if (this._isMounted) return;
+		if (this._isMounted || this._isDestroyed) return;
 		this._isMounted = true;
 
 		const canvas = this.renderer.domElement;

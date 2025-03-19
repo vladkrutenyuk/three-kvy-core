@@ -4,7 +4,6 @@ import { GameContext, ModulesRecord } from "./GameContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
 
-
 /**
  * Base class for features that can be attached to an {@link IFeaturable} object.
  * Features extend {@link EventEmitter} and interact with {@link GameContext}.
@@ -55,7 +54,7 @@ export abstract class Object3DFeature<
 			isObject3DFeature: readOnly(true),
 			object: readOnly(object),
 		});
-		this.uuid = GameContext.generateUUID();
+		this.uuid = Object3DFeature.generateUUID();
 
 		this._ftblty.on(Evnt.AttCtx, this.ftbltyAttachedToCtxHandler, this);
 		this._ftblty.on(Evnt.DetCtx, this.ftbltyDetachedFromCtxHandler, this);
@@ -249,6 +248,14 @@ export abstract class Object3DFeature<
 
 		this._ctx && subscribe(this._ctx);
 	}
+
+	static generateUUID = () => {
+		try {
+			return crypto.randomUUID();
+		} catch {
+			return `${Math.random()}-${Date.now()}`;
+		}
+	};
 }
 
 let _featureId = 0;

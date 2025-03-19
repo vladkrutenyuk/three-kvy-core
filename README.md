@@ -1,25 +1,16 @@
 
 # three-kvy-core
 
-[![ERC-20](https://img.shields.io/badge/Donate-ERC--20-black)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
+[![ETH](https://img.shields.io/badge/Donate-ETH-black)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
 [![minzip](https://badgen.net/bundlephobia/minzip/@vladkrutenyuk/three-kvy-core)](https://bundlephobia.com/package/@vladkrutenyuk/three-kvy-core)
 [![npm](https://img.shields.io/npm/v/@vladkrutenyuk/three-kvy-core)](https://www.npmjs.com/package/@vladkrutenyuk/three-kvy-core)
 [![GitHub](https://img.shields.io/github/stars/vladkrutenyuk/three-kvy-core?style=social)](https://github.com/vladkrutenyuk/three-kvy-core)
 [![Twitter](https://img.shields.io/twitter/follow/vladkrutenyuk
 )](https://x.com/vladkrutenyuk)
 
+## **A powerful [Three.js](https://threejs.org/) extension to create scalable 3D apps of any-complexity.**
 
-> **README was truncated because of new reworked verison `gamma.1`, temporaly.
-> Let me actualize everything bcs a lot of things were changed.**
-
-> **Webpage with detailed docs and examples is coming soon.**
-
-## **A powerful [Three.js](https://threejs.org/) extension to create 3D apps of any-complexity.**
-
-This is lightweight component-oriented **library**, enabling an elegant lifecycle management system and basic initializations.
-Empower Three.js objects by reusable features within seamless context propagation with pluggable modules.
-The OOP-driven.
-
+This is lightweight component-oriented **library**, enabling an elegant lifecycle management system and basic initializations. Empower Three.js objects by reusable features within seamless context propagation with pluggable modules. The OOP-driven.
 
 > This library is designed in way not no include three.js as dependency.  
 > It manipulates three.js entities but does not refer to them.
@@ -35,21 +26,22 @@ Doesn't impose any restrictions on your existing Three.js logic. Compatible with
 - Typescript support.
 - Lightweight. Tiny size. (4kb minzipped)
 
+### Installation
 
-
-
-## **Installation.**  
 ```sh
 npm i three eventemitter3 @vladkrutenyuk/three-kvy-core 
 ```
 
-## What does it look like?
+### What does it look like?
 
 ```js
 import * as THREE from "three";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
 const ctx = KVY.GameContext.create(THREE, {}, { antialias : true });
+
+ctx.three.mount(document.querySelector("#canvas-container"));
+ctx.run();
 
 class CustomTickModule extends KVY.GameContextModule {
     useCtx(ctx) {
@@ -89,9 +81,8 @@ ctx.root.add(cube);
 KVY.addFeature(cube, SpinningToFro);
 
 ctx.three.camera.position.z = 5;
-
-ctx.three.mount(document.queryElement("#canvas-container"));
-ctx.loop.run();
 ```
 
+## Documentation, tutorials, examples
 
+Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)
