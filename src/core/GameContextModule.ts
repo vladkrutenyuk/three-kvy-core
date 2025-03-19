@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import { GameContext, GameContextModulesRecord } from "./GameContext";
+import { GameContext, ModulesRecord } from "./GameContext";
 
 /**
  * Base class for modules used in {@link GameContext}.
@@ -20,7 +20,7 @@ export abstract class GameContextModule<
 	 * @param ctx The game context to which the module is added.
 	 * @returns A function to detach the module or nothing if no cleanup is needed.
 	 */
-	protected useCtx<TModules extends GameContextModulesRecord>(
+	protected useCtx<TModules extends ModulesRecord>(
 		ctx: GameContext<TModules>
 	): ReturnOfUseCtx {
 		return;
@@ -30,7 +30,7 @@ export abstract class GameContextModule<
 export type ReturnOfUseCtx = undefined | (() => void) | void;
 
 export interface IGameContextModuleProtected {
-	useCtx<TModules extends GameContextModulesRecord>(
+	useCtx<TModules extends ModulesRecord>(
 		ctx: GameContext<TModules>
 	): ReturnOfUseCtx
 }

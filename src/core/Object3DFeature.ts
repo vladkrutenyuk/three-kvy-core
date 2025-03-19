@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { Evnt } from "./Events";
-import { GameContext, GameContextModulesRecord } from "./GameContext";
+import { GameContext, ModulesRecord } from "./GameContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
 
@@ -13,7 +13,7 @@ import { defineProps, readOnly } from "../utils/define-props";
  * @template TEventTypes - Type of events this feature emits.
  */
 export abstract class Object3DFeature<
-	TModules extends GameContextModulesRecord = {},
+	TModules extends ModulesRecord = {},
 	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol
 > extends EventEmitter<TEventTypes> {
 	/**

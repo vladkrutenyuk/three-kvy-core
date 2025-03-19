@@ -10,14 +10,18 @@ import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
 import { defineProps, readOnly } from "../utils/define-props";
 
-export type GameContextModulesRecord = Record<string, GameContextModule>;
+export type ModulesRecord = Record<string, GameContextModule>;
+export type ModulesRecordDefault = Record<
+	string,
+	GameContextModule & Record<string, any>
+>;
 
 /**
  * Represents the core game context, managing the rendering loop, scene, camera, and game modules.
  * It provides a structured environment for feature-based object management and game logic execution.
  */
 export class GameContext<
-	TModules extends GameContextModulesRecord = GameContextModulesRecord
+	TModules extends ModulesRecord = ModulesRecordDefault
 > extends EventEmitter<{
 	["destroy"]: [];
 	["looprun"]: [];
@@ -30,7 +34,7 @@ export class GameContext<
 	 * @param props - Optional parameters for the WebGL renderer.
 	 * @returns A new `GameContext` instance.
 	 */
-	static create<TModules extends GameContextModulesRecord = {}>(
+	static create<TModules extends ModulesRecord = ModulesRecordDefault>(
 		Three: {
 			Scene: typeof THREE.Scene;
 			WebGLRenderer: typeof THREE.WebGLRenderer;
@@ -38,7 +42,7 @@ export class GameContext<
 			Raycaster: typeof THREE.Raycaster;
 			Clock: typeof THREE.Clock;
 		},
-		modules?: TModules,
+		modules?: Partial<TModules>,
 		props?: THREE.WebGLRendererParameters
 	) {
 		const three = ThreeContext.create(Three, props);
@@ -107,7 +111,7 @@ export class GameContext<
 		three: ThreeContext,
 		root: THREE.Object3D,
 		clock: THREE.Clock,
-		modules?: TModules
+		modules?: Partial<TModules>
 	) {
 		super();
 		this._clock = clock;
@@ -195,7 +199,7 @@ export class GameContext<
 
 		Object3DFeaturability.destroy(this._root, true);
 
-		Object.values(this._cleanups).forEach(fn => fn && fn());
+		Object.values(this._cleanups).forEach((fn) => fn && fn());
 
 		(["destroy", "looprun", "loopstop"] as const).forEach((x) =>
 			this.removeAllListeners(x)
@@ -208,8 +212,9 @@ export class GameContext<
 	private autoPauseOnBlur() {
 		const three = this.three;
 		const onWindowBlur = () => {
-			if (!this._isRunning) return;
-			this._paused = true;
+			if (!this._isRunning) {
+				this._paused = true;
+			}
 			this.stop();
 		};
 		const onWindowFocus = () => {
@@ -244,7 +249,7 @@ export class GameContext<
 	};
 }
 
-export interface IFeaturableRoot<TModules extends GameContextModulesRecord = any>
+export interface IFeaturableRoot<TModules extends ModulesRecord = any>
 	extends IFeaturable<TModules> {
 	isRoot: true;
 }

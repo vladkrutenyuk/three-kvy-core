@@ -38,8 +38,9 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 * Sets the active camera and triggers a camera change event.
 	 */
 	public set camera(value: THREE.PerspectiveCamera) {
+		const prevCamera = this._camera;
 		this._camera = value;
-		this.cameraChanged();
+		this.cameraChanged(value, prevCamera);
 	}
 
 	public readonly raycaster: THREE.Raycaster;
@@ -134,15 +135,15 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		this._container = container;
 		container.append(canvas);
-		this._resizeObserver = new ResizeObserver(this.resizeHandler);
-		this._resizeObserver.observe(container);
-		this.resizeHandler();
-
 		canvas.tabIndex = 0;
 		canvas.style.touchAction = "none";
 		// canvas.focus();
 
 		this.emit(ev.Mount, container);
+		
+		this._resizeObserver = new ResizeObserver(this.resizeHandler);
+		this._resizeObserver.observe(container);
+		this.resizeHandler();
 
 		return this;
 	}
@@ -210,14 +211,14 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.render();
 	};
 
-	private cameraChanged() {
+	private cameraChanged(newCamera: THREE.PerspectiveCamera, prevCamera: THREE.PerspectiveCamera) {
 		const camera = this._camera;
 		const root = this._container;
 		if (root) {
 			camera.aspect = root.offsetWidth / root.offsetHeight;
 		}
 		camera.updateProjectionMatrix();
-		this.emit(ev.CameraChanged, camera);
+		this.emit(ev.CameraChanged, newCamera, prevCamera);
 	}
 }
 
@@ -238,5 +239,5 @@ export type ThreeContextEventMap = {
 	[ev.Unmount]: [];
 	[ev.Destroy]: [];
 	[ev.Resize]: [width: number, height: number];
-	[ev.CameraChanged]: [camera: THREE.PerspectiveCamera];
+	[ev.CameraChanged]: [newCamera: THREE.PerspectiveCamera, prevCamera: THREE.PerspectiveCamera];
 };

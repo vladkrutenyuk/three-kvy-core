@@ -3,12 +3,12 @@ import type * as THREE from "three";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseUp } from "../utils/traverse-up";
 import { Evnt } from "./Events";
-import { GameContext, GameContextModulesRecord, IFeaturableRoot } from "./GameContext";
+import { GameContext, ModulesRecord, IFeaturableRoot } from "./GameContext";
 import { Object3DFeature } from "./Object3DFeature";
 import { defineProps, notEnumer } from "../utils/define-props";
 
 export type Object3DFeaturabilityEventTypes<
-	TModules extends GameContextModulesRecord = {}
+	TModules extends ModulesRecord = {}
 > = {
 	[Evnt.AttCtx]: [ctx: GameContext<TModules>];
 	[Evnt.DetCtx]: [ctx: GameContext<TModules>];
@@ -19,7 +19,7 @@ export type Object3DFeaturabilityEventTypes<
 const key = "__kvy_ftblty__";
 
 export class Object3DFeaturability<
-	TModules extends GameContextModulesRecord = {},
+	TModules extends ModulesRecord = {},
 	TObj extends THREE.Object3D = THREE.Object3D
 > extends EventEmitter<Object3DFeaturabilityEventTypes<TModules>> {
 	/**
@@ -29,7 +29,7 @@ export class Object3DFeaturability<
 	 * @returns The {@link Object3DFeaturability} instance if available, otherwise `null`.
 	 */
 	static extract<
-		TModules extends GameContextModulesRecord = {},
+		TModules extends ModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
 	>(obj: TObj): Object3DFeaturability<TModules, TObj> | null {
 		const f = (obj as TObj & IFeaturablePrivate<TModules, TObj>)[key];
@@ -44,7 +44,7 @@ export class Object3DFeaturability<
 	 * @returns The {@link Object3DFeaturability} instance for the object.
 	 */
 	static from<
-		TModules extends GameContextModulesRecord = {},
+		TModules extends ModulesRecord = {},
 		TObj extends THREE.Object3D = THREE.Object3D
 	>(obj: TObj) {
 		let fblty = Object3DFeaturability.extract<TModules, TObj>(obj);
@@ -185,16 +185,15 @@ export class Object3DFeaturability<
 			null) as InstanceType<TFeatureClass> | null;
 	}
 
-	//TODO придумать что-то с типами
 	/**
 	 * Retrieves a feature of a specific class, if present.
 	 * @param FeatureClass The feature class to search for.
 	 * @returns The feature instance, or `null` if not found.
 	 */
-	getFeatureBy(
-		predicate: (feature: Object3DFeature) => boolean
-	): Object3DFeature | null {
-		return this._features.find(predicate) ?? null;
+	getFeatureBy<TFeature extends Object3DFeature = Object3DFeature>(
+		predicate: (feature: TFeature) => boolean
+	): TFeature | null {
+		return (this._features as TFeature[]).find(predicate) ?? null;
 	}
 
 	/**
@@ -357,14 +356,14 @@ export class Object3DFeaturability<
  * Represents an object that supports features.
  */
 export type IFeaturable<
-	TModules extends GameContextModulesRecord = any,
+	TModules extends ModulesRecord = any,
 	TObj extends THREE.Object3D = THREE.Object3D
 > = TObj & {
 	isFeaturable: true;
 };
 
 type IFeaturablePrivate<
-	TModules extends GameContextModulesRecord = any,
+	TModules extends ModulesRecord = any,
 	TObj extends THREE.Object3D = THREE.Object3D
 > = TObj & {
 	[key]?: Object3DFeaturability<TModules, TObj>;

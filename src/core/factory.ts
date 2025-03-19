@@ -1,7 +1,6 @@
 import type * as THREE from "three";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { Object3DFeature } from "./Object3DFeature";
-import { IFeaturableRoot } from "./GameContext";
 
 /**
  * Adds a new feature to the object.
@@ -65,11 +64,11 @@ export function getFeature<
  * @param {(feature: Object3DFeature) => boolean} predicate - Function that tests each feature for a condition
  * @returns {Object3DFeature | null} The first matching feature if found, or `null` if none match
  */
-export function getFeatureBy<TObj extends THREE.Object3D>(
+export function getFeatureBy<TObj extends THREE.Object3D, TFeature extends Object3DFeature>(
 	obj: TObj,
-	predicate: (feature: Object3DFeature) => boolean
-): Object3DFeature | null {
-	return Object3DFeaturability.extract(obj)?.getFeatureBy(predicate) ?? null;
+	predicate: (feature: TFeature) => boolean
+): TFeature | null {
+	return Object3DFeaturability.extract(obj)?.getFeatureBy<TFeature>(predicate) ?? null;
 }
 
 /**
