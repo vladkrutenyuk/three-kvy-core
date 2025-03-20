@@ -1,13 +1,13 @@
 import { addFeature } from "../src";
-import { GameContextModulesRecord, GameContext } from "../src/core/GameContext";
-import { GameContextModule, ReturnOfUseCtx } from "../src/core/GameContextModule";
+import { ModulesRecord, CoreContext } from "../src/core/CoreContext";
+import { CoreContextModule, ReturnOfUseCtx } from "../src/core/CoreContextModule";
 import { IFeaturable, Object3DFeaturability } from "../src/core/Object3DFeaturablity";
 import { Object3DFeature } from "../src/core/Object3DFeature";
 import * as THREE from "three";
 
-class GameM extends GameContextModule {
-	protected useCtx<TModules extends GameContextModulesRecord>(
-		ctx: GameContext<TModules>
+class GameM extends CoreContextModule {
+	protected useCtx<TModules extends ModulesRecord>(
+		ctx: CoreContext<TModules>
 	): ReturnOfUseCtx {}
 }
 

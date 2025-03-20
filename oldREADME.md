@@ -40,8 +40,8 @@ import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
 > [!NOTE]  
 > :point_right: Throughout this documentation, the following terms denote:  
-> _context_ → `KVY.GameContext`  
-> _module_ → `KVY.GameContextModule`  
+> _context_ → `KVY.CoreContext`  
+> _module_ → `KVY.CoreContextModule`  
 > _feature_ → `KVY.Object3DFeature`  
 > _object_ → `THREE.Object3D`  
 
@@ -53,7 +53,7 @@ import * as KVY from "@vladkrutenyuk/three-kvy-core";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 import * as THREE from "three";
 
-const ctx = KVY.GameContext.create(THREE, {
+const ctx = KVY.CoreContext.create(THREE, {
     moduleExample: new ModuleExample(),
 }, {
     antialias : true
@@ -98,9 +98,9 @@ featureExample.destroy();
 KVY.destroyFeature(someOtherFeature);
 ```
 
-## 3. Writing `GameContextModule`
+## 3. Writing `CoreContextModule`
 ```js
-class ModuleExample extends KVY.GameContextModule {
+class ModuleExample extends KVY.CoreContextModule {
     // Called when the feature is attached to ctx.
     // Returns a cleanup function that is called on detach, 
     // similar to `useEffect()` in React.
@@ -162,9 +162,9 @@ export class FeatureExample extends KVY.Object3DFeature {
 
 # Core Concepts
 
-> :point_right: Here, `ctx` denote an instance of `KVY.GameContext`.
+> :point_right: Here, `ctx` denote an instance of `KVY.CoreContext`.
 
-## 1. GameContext
+## 1. CoreContext
 
 The primary central entity (like "hub") that orchestrates the Three.js environment, animation loop, and module system. It enables an elegant lifecycle management system and handles essential initializations
 
@@ -175,8 +175,8 @@ General entities:
 `ctx.three` is `KVY.ThreeContext` to manage the core three.js rendering setup.  
 `ctx.loop` is `KVY.AnimationFrameLoop` to manage the `requestAnimationFrame` loop.  
 
-## 2. GameContextModule
-Base class for extending GameContext functionality through pluggable modules. Modules are initialized with context, can provide services to features, and manage their own lifecycle through `useCtx` pattern. Enables clean separation of concerns while maintaining full access to context capabilities.
+## 2. CoreContextModule
+Base class for extending CoreContext functionality through pluggable modules. Modules are initialized with context, can provide services to features, and manage their own lifecycle through `useCtx` pattern. Enables clean separation of concerns while maintaining full access to context capabilities.
 
 ## 3. Object3DFeature
 Base class for implementing reusable components (features) that can be attached to any Three.js object. Context is automatically propagated to features when their object is added to `ctx.root` hierarchy, and lose it when removed.  
@@ -186,7 +186,7 @@ Provides:
     - Direct access to object `this.object` the feature is attached to.  
 
 ## 4. The `useCtx` Pattern
-Both `Object3DFeature` and `GameContextModule` implement the powerful `useCtx` pattern, where you are able to:
+Both `Object3DFeature` and `CoreContextModule` implement the powerful `useCtx` pattern, where you are able to:
 - Automatically sets up resources when context is attached
 - Returns a cleanup function that's automatically called on detachment
 - Ensures proper resource management with minimal boilerplate.
@@ -201,7 +201,7 @@ Returns a cleanup function that is called on detach, similar to `useEffect()` in
 1. For *features* to work, their objects must be in the *context* hierarchy `ctx.root`.
     - The `ctx.root` is a `THREE.Object3D` that serves as the entry point for *context* propagation. 
     - Any object added to `ctx.root` or its descendants will receive the *context*.
-    - By default `ctx.root` is `THREE.Scene` (`ctx.root` === `ctx.three.scene`) if `root` was not providen on `ctx` creation. See [Alternative raw way to create GameContext](#1-alternative-raw-way-to-create-gamecontext).
+    - By default `ctx.root` is `THREE.Scene` (`ctx.root` === `ctx.three.scene`) if `root` was not providen on `ctx` creation. See [Alternative raw way to create CoreContext](#1-alternative-raw-way-to-create-CoreContext).
 2. Context attachment to object's features occurs:
     - An object with features (or its parent hierarchy) has added to `ctx.root`
     - A feature has added to an object that's already in the `ctx.root` hierarchy
@@ -280,7 +280,7 @@ Use `clear` static method to destroy and detach all features from the given obje
 KVY.clear(obj);
 ```
 # Guides and Examples
-## 1. Alternative raw way to create `GameContext`
+## 1. Alternative raw way to create `CoreContext`
 It can be usefull if you use some framework or lib which initializes threejs's entities by itself in special way.
 
 ```ts
@@ -295,14 +295,14 @@ const root = new THREE.Group();
 scene.add(root);
 const clock = new THREE.Clock(false);
 
-const ctx = new KVY.GameContext(three, root, clock, {
+const ctx = new KVY.CoreContext(three, root, clock, {
     moduleA: new MyModuleA(),
     moduleB: new MyModuleB(),
 })
 ```
 
 ## 2. Work with `ThreeContext`
-`KVY.GameContext` has it: `ctx.three`.
+`KVY.CoreContext` has it: `ctx.three`.
 ```js
 const three = new KVY.ThreeContext.create(THREE, { antialias : true });
 ```
@@ -365,7 +365,7 @@ const ThreeKvyCore = ({ ctx }) => {
 }
 ```
 ```jsx
-const ctx = KVY.GameContext.create(THREE, { ... })
+const ctx = KVY.CoreContext.create(THREE, { ... })
 
 const App = () => {
     return (
@@ -385,7 +385,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 ```js
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-export class InputKeyModule extends KVY.GameContextModule {
+export class InputKeyModule extends KVY.CoreContextModule {
     keys = new Set();
     isKeyDown = (key) => this.keys.has(key);
 
@@ -438,7 +438,7 @@ import * as KVY from "@vladkrutenyuk/three-kvy-core";
 import { InputKeyModule } from "./InputKeyModule.js"
 import { SimpleMovement } from "./SimpleMovement.js"
 
-const ctx = KVY.GameContext.create(THREE, { 
+const ctx = KVY.CoreContext.create(THREE, { 
     input: new InputKeyModule()
 });
 
@@ -496,7 +496,7 @@ KVY.addFeature(obj, EasyOrbitControls, { target, options: { ... } });
 ## 6. Set modules after initialization
 This flexibility allows you to dynamically register modules as needed even after initialization.
 ```js
-const ctx = KVY.GameContext.create(THREE, { 
+const ctx = KVY.CoreContext.create(THREE, { 
     moduleA: new ModuleA(),
     moduleB: new ModuleB()
 });

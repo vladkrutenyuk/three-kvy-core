@@ -5,7 +5,7 @@ import { InputKeyModule } from "./InputKeyModule.js";
 import { CameraFollow } from "./CameraFollow.js";
 import { SimpleMovement } from "./SimpleMovement.js";
 
-const ctx = KVY.GameContext.create(THREE, {
+const ctx = KVY.CoreContext.create(THREE, {
     input: new InputKeyModule()
 }, {
     antialias: true

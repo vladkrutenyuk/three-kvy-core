@@ -3,12 +3,12 @@ export * from "./utils/remove-array-item.js";
 export * from "./utils/traverse-up.js";
 export * from "./core/ThreeContext.js";
 export * from "./core/Object3DFeature.js";
-export * from "./core/GameContext.js";
-export * from "./core/GameContextModule.js";
+export * from "./core/CoreContext.js";
+export * from "./core/CoreContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
 export * from "./core/factory.js";
 
-export const REVISION = '2.0.0-gamma.4';
+export const REVISION = '2.0.0-gamma.5';
 
 declare global {
 	interface Window {

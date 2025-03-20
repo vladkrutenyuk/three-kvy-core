@@ -38,12 +38,12 @@ npm i three eventemitter3 @vladkrutenyuk/three-kvy-core
 import * as THREE from "three";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-const ctx = KVY.GameContext.create(THREE, {}, { antialias : true });
+const ctx = KVY.CoreContext.create(THREE, {}, { antialias : true });
 
 ctx.three.mount(document.querySelector("#canvas-container"));
 ctx.run();
 
-class CustomTickModule extends KVY.GameContextModule {
+class CustomTickModule extends KVY.CoreContextModule {
     useCtx(ctx) {
         const interval = setInterval(() => {
             this.emit("customtick");

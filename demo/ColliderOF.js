@@ -6,7 +6,7 @@ export class ColliderOF extends KVY.Object3DFeature {
 	/** @type {RapierPhysics["RAPIER_API"]} */
 	desc;
 
-	/** @param {KVY.GameContext} ctx */
+	/** @param {KVY.CoreContext} ctx */
 	useCtx(ctx) {
 		/** @type {RapierPhysics} */
 		const rapier = ctx.modules.rapier;

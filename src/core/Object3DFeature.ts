@@ -1,12 +1,12 @@
 import { EventEmitter } from "eventemitter3";
 import { Evnt } from "./Events";
-import { GameContext, ModulesRecord } from "./GameContext";
+import { CoreContext, ModulesRecord } from "./CoreContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
 
 /**
  * Base class for features that can be attached to an {@link IFeaturable} object.
- * Features extend {@link EventEmitter} and interact with {@link GameContext}.
+ * Features extend {@link EventEmitter} and interact with {@link CoreContext}.
  *
  * @template TModules - Type of the game context modules.
  * @template TEventTypes - Type of events this feature emits.
@@ -39,7 +39,7 @@ export abstract class Object3DFeature<
 	}
 
 	private _ftblty: Object3DFeaturability<TModules>;
-	private _ctx: GameContext<TModules> | null = null;
+	private _ctx: CoreContext<TModules> | null = null;
 
 	/**
 	 * @param {IFeaturable<TModules>} object - The object that this feature is attached to.
@@ -86,18 +86,18 @@ export abstract class Object3DFeature<
 		}
 	}
 
-	private ftbltyAttachedToCtxHandler(ctx: GameContext<TModules>) {
+	private ftbltyAttachedToCtxHandler(ctx: CoreContext<TModules>) {
 		this._log("obj attached to ctx");
 		this.attachCtx(ctx);
 	}
-	private ftbltyDetachedFromCtxHandler(_ctx: GameContext<TModules>) {
+	private ftbltyDetachedFromCtxHandler(_ctx: CoreContext<TModules>) {
 		this._log("obj detached from ctx");
 		this.detachCtx();
 	}
 
 	private _useCtxReturn: ReturnType<typeof this.useCtx>;
 
-	private attachCtx = (ctx: GameContext<TModules>) => {
+	private attachCtx = (ctx: CoreContext<TModules>) => {
 		// this._log("attachCtx()");
 		if (this._ctx) {
 			if (this._ctx === ctx) return;
@@ -132,14 +132,14 @@ export abstract class Object3DFeature<
 	};
 
 	/**
-	 * Called when the feature is attached to a {@link GameContext}.
+	 * Called when the feature is attached to a {@link CoreContext}.
 	 * Returns a cleanup function that is called on detach, similar to `useEffect()` in React.
 	 *
-	 * @param {GameContext<TModules>} ctx - The game context the feature is attached to.
+	 * @param {CoreContext<TModules>} ctx - The game context the feature is attached to.
 	 * @returns {undefined | (() => void) | void} A cleanup function, or `undefined` if no cleanup is needed.
 	 * @override
 	 */
-	protected useCtx(ctx: GameContext<TModules>): undefined | (() => void) | void {
+	protected useCtx(ctx: CoreContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
 
@@ -151,46 +151,46 @@ export abstract class Object3DFeature<
 
 	/**
 	 * Called before rendering.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onBeforeRender(ctx: GameContext<TModules>) {}
+	onBeforeRender(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called after rendering.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onAfterRender(ctx: GameContext<TModules>) {}
+	onAfterRender(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called when the game context renderer resizes.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onResize(ctx: GameContext<TModules>) {}
+	onResize(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called when the feature is mounted.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onMount(ctx: GameContext<TModules>) {}
+	onMount(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called when the game loop starts.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onUnmount(ctx: GameContext<TModules>) {}
+	onUnmount(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called when the game loop starts.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onLoopRun(ctx: GameContext<TModules>) {}
+	onLoopRun(ctx: CoreContext<TModules>) {}
 	/**
 	 * Called when the game loop stops.
-	 * @param {GameContext<TModules>} ctx - The game context.
+	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
-	onLoopStop(ctx: GameContext<TModules>) {}
+	onLoopStop(ctx: CoreContext<TModules>) {}
 
 	// Debug Logs
 
@@ -199,7 +199,7 @@ export abstract class Object3DFeature<
 		// console.log(`F-${this.object.id} ${this.constructor.name}-${this.id}`, ...args);
 	}
 
-	private initCtxEventMethods(ctx: GameContext<TModules>) {
+	private initCtxEventMethods(ctx: CoreContext<TModules>) {
 		const p = Object3DFeature.prototype;
 		if (this.onAfterRender !== p.onAfterRender) {
 			this.iehm(ctx.three, "renderafter", "onAfterRender");
@@ -231,7 +231,7 @@ export abstract class Object3DFeature<
 	) {
 		let listener: (() => void) | null = null;
 
-		const subscribe = (ctx: GameContext) => {
+		const subscribe = (ctx: CoreContext) => {
 			listener = function () {
 				this[handlerMethodName](ctx);
 			};
@@ -262,7 +262,7 @@ let _featureId = 0;
 
 interface IPrivateEvent
 	extends EventEmitter<{
-		[Evnt.AttCtx]: [ctx: GameContext];
-		[Evnt.DetCtx]: [ctx: GameContext];
+		[Evnt.AttCtx]: [ctx: CoreContext];
+		[Evnt.DetCtx]: [ctx: CoreContext];
 		[Evnt.Dstr]: [];
 	}> {}

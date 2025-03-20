@@ -3,15 +3,15 @@ import type * as THREE from "three";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseUp } from "../utils/traverse-up";
 import { Evnt } from "./Events";
-import { GameContext, ModulesRecord, IFeaturableRoot } from "./GameContext";
+import { CoreContext, ModulesRecord, IFeaturableRoot } from "./CoreContext";
 import { Object3DFeature } from "./Object3DFeature";
 import { defineProps, notEnumer } from "../utils/define-props";
 
 export type Object3DFeaturabilityEventTypes<
 	TModules extends ModulesRecord = {}
 > = {
-	[Evnt.AttCtx]: [ctx: GameContext<TModules>];
-	[Evnt.DetCtx]: [ctx: GameContext<TModules>];
+	[Evnt.AttCtx]: [ctx: CoreContext<TModules>];
+	[Evnt.DetCtx]: [ctx: CoreContext<TModules>];
 	[Evnt.FtAdd]: [feature: Object3DFeature<TModules>];
 	[Evnt.FtRem]: [feature: Object3DFeature<TModules>];
 };
@@ -73,7 +73,7 @@ export class Object3DFeaturability<
 	public readonly object: IFeaturablePrivate<TModules, TObj>;
 
 	/**
-	 * Returns the associated `GameContext`, if any.
+	 * Returns the associated `CoreContext`, if any.
 	 */
 	public get ctx() {
 		return this._ctx;
@@ -86,7 +86,7 @@ export class Object3DFeaturability<
 		return [...this._features];
 	}
 
-	private _ctx: GameContext<TModules> | null = null;
+	private _ctx: CoreContext<TModules> | null = null;
 	private readonly _features: Object3DFeature<any>[] = [];
 
 	/**
@@ -213,13 +213,13 @@ export class Object3DFeaturability<
 	}
 
 	/**
-	 * Attaches or detaches the object from a `GameContext`.
+	 * Attaches or detaches the object from a `CoreContext`.
 	 * @warning You should be careful to use this method manually
-	 * @param ctx The `GameContext` instance, or `null` to detach.
+	 * @param ctx The `CoreContext` instance, or `null` to detach.
 	 * @returns This instance.
 	 * @warning Use with caution.
 	 */
-	setCtx(ctx: GameContext<TModules> | null) {
+	setCtx(ctx: CoreContext<TModules> | null) {
 		if (ctx) {
 			this.attachCtx(ctx);
 		} else {
@@ -279,7 +279,7 @@ export class Object3DFeaturability<
 		self.propagateDetachCtxDown();
 	}
 
-	private attachCtx(ctx: GameContext<TModules>) {
+	private attachCtx(ctx: CoreContext<TModules>) {
 		this._log("attaching ctx...");
 		if (this._ctx !== null) {
 			this._log("there is some ctx here");
@@ -314,7 +314,7 @@ export class Object3DFeaturability<
 		this._log("detached ctx");
 	}
 
-	private propagateAttachCtxDown(ctx: GameContext<TModules>) {
+	private propagateAttachCtxDown(ctx: CoreContext<TModules>) {
 		this._log("attaching ctx recursively...");
 		this.object.traverse((child) => {
 			Object3DFeaturability.extract(child)?.attachCtx(ctx);

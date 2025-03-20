@@ -2,7 +2,7 @@ import * as THREE from "three";
 import KVY from "./lib.js";
 
 const g = { x: 0.0, y: -9.81, z: 0.0 };
-export class RapierPhysics extends KVY.GameContextModule {
+export class RapierPhysics extends KVY.CoreContextModule {
 	debugRenderer;
 
 	/** @type {typeof import("@dimforge/rapier3d-compat") | null} */
@@ -22,7 +22,7 @@ export class RapierPhysics extends KVY.GameContextModule {
 	}
 
 	/**
-	 * @param {KVY.GameContext} ctx
+	 * @param {KVY.CoreContext} ctx
 	 */
 	useCtx(ctx) {
 		const world = this.world;

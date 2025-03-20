@@ -15,12 +15,12 @@ KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics({ RAPIER: RAPIER });
 const input = new InputKeyModule();
-const ctx = KVY.GameContext.create(THREE, { rapier, input }, { antialias: true });
+const ctx = KVY.CoreContext.create(THREE, { rapier, input }, { antialias: true });
 const container = document.querySelector("#canvasContainer");
 ctx.three.mount(container);
 ctx.run();
 
-class CustomTickModule extends KVY.GameContextModule {
+class CustomTickModule extends KVY.CoreContextModule {
 	useCtx() {
 		const interval = setInterval(() => {
 			this.emit("customtick");
@@ -186,7 +186,7 @@ const delay = (s = 0.1) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay(1);
 
 	//TODO why eveyrthing from rapier is not destroyed
-	const ctx2 = KVY.GameContext.create(THREE, { input }, { antialias: true });
+	const ctx2 = KVY.CoreContext.create(THREE, { input }, { antialias: true });
 	ctx2.three.mount(container);
 	ctx2.run();
 	ctx2.root.add(cube);

@@ -1,6 +1,6 @@
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-export class InputKeyModule extends KVY.GameContextModule {
+export class InputKeyModule extends KVY.CoreContextModule {
     keys = new Set();
     isKeyDown = (key) => this.keys.has(key);
 

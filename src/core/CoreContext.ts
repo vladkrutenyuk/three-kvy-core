@@ -2,24 +2,24 @@ import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
 import { defineProps, readOnly } from "../utils/define-props";
 import {
-	GameContextModule,
-	IGameContextModuleProtected,
+	CoreContextModule,
+	ICoreContextModuleProtected,
 	ReturnOfUseCtx,
-} from "./GameContextModule";
+} from "./CoreContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { ThreeContext } from "./ThreeContext";
 
-export type ModulesRecord = Record<string, GameContextModule>;
+export type ModulesRecord = Record<string, CoreContextModule>;
 export type ModulesRecordDefault = Record<
 	string,
-	GameContextModule & Record<string, any>
+	CoreContextModule & Record<string, any>
 >;
 
 /**
  * Represents the core game context, managing the rendering loop, scene, camera, and game modules.
  * It provides a structured environment for feature-based object management and game logic execution.
  */
-export class GameContext<
+export class CoreContext<
 	TModules extends ModulesRecord = ModulesRecordDefault
 > extends EventEmitter<{
 	["destroy"]: [];
@@ -27,11 +27,11 @@ export class GameContext<
 	["loopstop"]: [];
 }> {
 	/**
-	 * Creates a new `GameContext` instance with a Three.js scene, renderer, camera, and optional modules.
+	 * Creates a new `CoreContext` instance with a Three.js scene, renderer, camera, and optional modules.
 	 * @param Three - The Three.js constructors needed for scene, renderer, camera, and clock.
 	 * @param modules - Optional set of game context modules.
 	 * @param props - Optional parameters for the WebGL renderer.
-	 * @returns A new `GameContext` instance.
+	 * @returns A new `CoreContext` instance.
 	 */
 	static create<TModules extends ModulesRecord = ModulesRecordDefault>(
 		Three: {
@@ -45,10 +45,10 @@ export class GameContext<
 		props?: THREE.WebGLRendererParameters
 	) {
 		const three = ThreeContext.create(Three, props);
-		return new GameContext(three, three.scene, new Three.Clock(false), modules);
+		return new CoreContext(three, three.scene, new Three.Clock(false), modules);
 	}
-	/** Identifier to mark this instance as a GameContext. */
-	public readonly isGameContext: true;
+	/** Identifier to mark this instance as a CoreContext. */
+	public readonly isCoreContext: true;
 
 	/**
 	 * Instance of {@link ThreeContext}, handling Three.js rendering and scene management.\
@@ -115,7 +115,7 @@ export class GameContext<
 		super();
 		this._clock = clock;
 		defineProps(this, {
-			isGameContext: readOnly(true),
+			isCoreContext: readOnly(true),
 			modules: readOnly({}),
 			three: readOnly(three),
 		});
@@ -155,7 +155,7 @@ export class GameContext<
 	/**
 	 * Registers and initializes new or partial game context modules.
 	 * @param modules - Partial set of game modules to add.
-	 * @returns The current `GameContext` instance.
+	 * @returns The current `CoreContext` instance.
 	 */
 	assignModules(modules: Partial<TModules>) {
 		for (const key in modules) {
@@ -171,7 +171,7 @@ export class GameContext<
 			return;
 		}
 		this.modules[key] = module;
-		const cleanup = (module as typeof module & IGameContextModuleProtected).useCtx(
+		const cleanup = (module as typeof module & ICoreContextModuleProtected).useCtx(
 			this
 		);
 		this._cleanups[key] = cleanup;
