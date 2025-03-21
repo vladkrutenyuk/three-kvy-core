@@ -1,12 +1,13 @@
 
 # three-kvy-core
 
-[![ETH](https://img.shields.io/badge/Donate-ETH-black)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
-[![minzip](https://badgen.net/bundlephobia/minzip/@vladkrutenyuk/three-kvy-core)](https://bundlephobia.com/package/@vladkrutenyuk/three-kvy-core)
 [![npm](https://img.shields.io/npm/v/@vladkrutenyuk/three-kvy-core)](https://www.npmjs.com/package/@vladkrutenyuk/three-kvy-core)
+[![minzip](https://badgen.net/bundlephobia/minzip/@vladkrutenyuk/three-kvy-core)](https://bundlephobia.com/package/@vladkrutenyuk/three-kvy-core)
 [![GitHub](https://img.shields.io/github/stars/vladkrutenyuk/three-kvy-core?style=social)](https://github.com/vladkrutenyuk/three-kvy-core)
 [![Twitter](https://img.shields.io/twitter/follow/vladkrutenyuk
 )](https://x.com/vladkrutenyuk)
+[![ETH](https://img.shields.io/badge/ETH-black)](https://etherscan.io/address/0xF348AB28dB048CbFF18095b428ac9Da4f1A7a90e)
+[![TRON](https://img.shields.io/badge/TRX-black)](https://tronscan.org/#/address/TPKRxSrpwPhwfVrrR8qpjZ2knpB4zWopFo)
 
 ## **A powerful [Three.js](https://threejs.org/) extension to create scalable 3D apps of any-complexity.**
 
@@ -24,7 +25,7 @@ Doesn't impose any restrictions on your existing Three.js logic. Compatible with
 - OOP-driven
 - Events based.
 - Typescript support.
-- Lightweight. Tiny size. (4kb minzipped)
+- Lightweight. Tiny size. (3.5kb minzipped)
 
 ### Installation
 

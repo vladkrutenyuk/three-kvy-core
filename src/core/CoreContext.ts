@@ -47,26 +47,37 @@ export class CoreContext<
 		const three = ThreeContext.create(Three, props);
 		return new CoreContext(three, three.scene, new Three.Clock(false), modules);
 	}
-	/** Identifier to mark this instance as a CoreContext. */
+	/** 
+	 * (readonly) flag to mark that it is an instance of CoreContext.
+	 * @type {true}
+	*/
 	public readonly isCoreContext: true;
 
 	/**
-	 * Instance of {@link ThreeContext}, handling Three.js rendering and scene management.\
+	 * (readonly) Instance of {@link ThreeContext}. Utility to manage Three.js setup.
 	 * @type {ThreeContext}
 	 */
 	public readonly three: ThreeContext;
 
-	/** Stores registered game context modules. */
+	/** Dictionary of added modules to this.
+	 * @type {Record<string,CoreContextModule>}
+	 */
 	public readonly modules: TModules;
 
-	/** Root object in the game scene hierarchy. */
+	/** (readonly) Instance of Three.js [`Object3D`](https://threejs.org/docs/index.html?q=Objec#api/en/core/Object3D)
+	 *  instance that plays the role of entry point for a given context propagation.
+	 * By default, it's Three.js [`Scene`](https://threejs.org/docs/index.html?q=Scene#api/en/scenes/Scene)
+	 * instance from `ThreeContext` (`.root === .three.scene`). You can specify any other `.root`
+	 * if you initialize the context through constructor.
+	 * @type {THREE.Object3D}
+	 * */
 	public get root() {
 		return this._root;
 	}
 
 	/**
-	 * Shortcut for `loop.uniforms.deltaTime.value`\
-	 * The delta time value from the last frame.
+	 * (readonly) The seconds passed since the last frame.
+	 * @type {number}
 	 */
 	public get deltaTime() {
 		return this._deltaTime;
@@ -197,8 +208,7 @@ export class CoreContext<
 		this.emit("destroy");
 
 		Object3DFeaturability.destroy(this._root, true);
--
-		Object.values(this._cleanups).forEach((fn) => fn && fn());
+		-Object.values(this._cleanups).forEach((fn) => fn && fn());
 
 		(["destroy", "looprun", "loopstop"] as const).forEach((x) =>
 			this.removeAllListeners(x)

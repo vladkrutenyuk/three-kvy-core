@@ -87,10 +87,8 @@ export function getFeatures<TObj extends THREE.Object3D>(
  * This removes the featurability aspect from the object and cleans up all feature instances.
  * @param {THREE.Object3D} obj - The Three.js object to clear features from
  * @param {boolean} recursively
- * @returns {THREE.Object3D} The original object after clearing all features
  */
 export function clear<TObj extends THREE.Object3D>(obj: TObj, recursively?: boolean) {
 	if (recursively) obj.traverse(Object3DFeaturability.destroy);
 	else Object3DFeaturability.destroy(obj);
-	return obj;
 }

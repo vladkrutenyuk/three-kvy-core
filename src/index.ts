@@ -8,7 +8,7 @@ export * from "./core/CoreContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
 export * from "./core/factory.js";
 
-export const REVISION = '2.0.0-gamma.5';
+export const REVISION = '2.0.0-rc.1';
 
 declare global {
 	interface Window {
