@@ -2,20 +2,21 @@ import * as THREE from "three";
 import KVY from "./lib.js";
 import { RotateOF } from "./RotateOF.js";
 import { ExampleO3F } from "./ExampleO3F.js";
-import { RapierPhysics } from "./RapierPhysics.js";
+import { RapierPhysics } from "./rapier-physics/RapierPhysics.js";
 import { OrbitControlsOF } from "./OrbitControlsOF.js";
-import { RigidbodyDynamicOF } from "./RigidbodyDynamicOF.js";
-import { ColliderOF } from "./ColliderOF.js";
+import { RigidbodyDynamic } from "./rapier-physics/RigidbodyDynamic.js";
+import { Collider } from "./rapier-physics/Collider.js";
 import { InputKeyModule } from "./InputKeyModule.js";
 import { SimpleMovement } from "./SimpleMovement.js";
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
 // KVY.Object3DFeaturability.log = (x, ...args) =>
 // 	console.log(`OBJ-${x.object.id}`, ...args);
+/** @type {typeof import("@dimforge/rapier3d-compat")} */
 var RAPIER = window.RAPIER;
-const rapier = new RapierPhysics({ RAPIER: RAPIER });
+const rapier = new RapierPhysics(RAPIER);
 const input = new InputKeyModule();
-const ctx = KVY.CoreContext.create(THREE, { rapier, input }, { antialias: true });
+const ctx = KVY.CoreContext.create(THREE, { rapier, input }, { renderer: { antialias: true } });
 const container = document.querySelector("#canvasContainer");
 ctx.three.mount(container);
 ctx.run();
@@ -101,8 +102,8 @@ knag.position.set(0.5, 0.5, 0.5);
 physicalCube.position.set(-0.6, 3, -0.6);
 
 offsetRoot.add(physicalCube);
-KVY.addFeature(physicalCube, RigidbodyDynamicOF);
-KVY.addFeature(physicalCube, ColliderOF);
+KVY.addFeature(physicalCube, RigidbodyDynamic);
+KVY.addFeature(physicalCube, Collider, ["cuboid", 0.5, 0.5, 0.5]);
 
 scene.background = new THREE.Color("#202020");
 camera.position.set(5, 5, 5);
@@ -132,7 +133,7 @@ const sphere = new THREE.Mesh(
 sphere.position.x = -2;
 scene.add(sphere);
 
-const delay = (s = 0.1) => new Promise((res) => setTimeout(res, s * 1000));
+const delay = (s = 0.05) => new Promise((res) => setTimeout(res, s * 1000));
 (async function () {
 	ctx.three.mount(container);
 	ctx.run();
@@ -177,7 +178,6 @@ const delay = (s = 0.1) => new Promise((res) => setTimeout(res, s * 1000));
 
 	ctx.removeModule("tick");
 	await delay(1);
-	
 
 	await delay(2);
 	ctx.destroy();
@@ -186,7 +186,7 @@ const delay = (s = 0.1) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay(1);
 
 	//TODO why eveyrthing from rapier is not destroyed
-	const ctx2 = KVY.CoreContext.create(THREE, { input }, { antialias: true });
+	const ctx2 = KVY.CoreContext.create(THREE, { input }, { renderer: { antialias: true } });
 	ctx2.three.mount(container);
 	ctx2.run();
 	ctx2.root.add(cube);

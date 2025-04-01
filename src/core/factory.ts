@@ -3,12 +3,14 @@ import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { Object3DFeature } from "./Object3DFeature";
 
 /**
- * Adds a new feature to the object.
- * @param {THREE.Object3D} obj - The Three.js object to add the feature to
- * @param {new (object: IFeaturable, props?: any) => Object3DFeature} Feature - The feature class constructor
- * @param {*} [props] - The properties required for feature initialization
- * @param {(feature: Object3DFeature) => void} [beforeAttach] - Optional callback invoked before attaching the feature
- * @returns {Object3DFeature} The created feature instance
+ * A static factory method that creates {@link Object3DFeature} and adds it to a given Three.js `Object3D` instance.
+ * It uses a given feature class (not an instance) that extends {@link Object3DFeature}
+ * with optional constructor parameters. Returns an instance of the provided feature class.
+ * @param {THREE.Object3D} obj  - The target Three.js `Object3D` instance to which the feature is added.
+ * @param {typeof Object3DFeature} Feature - The feature class to add, which extends {@link Object3DFeature}.
+ * @param {object | undefined} props - An object containing parameters for the feature's constructor. Optional of feature implementation has no custom props in constructor.
+ * @param {(feature: Object3DFeature) => void} [beforeAttach] - (optional) A callback invoked before attaching the feature
+ * @returns {Object3DFeature} The created feature instance.
  */
 export function addFeature<
 	TObj extends THREE.Object3D,
@@ -43,13 +45,11 @@ export function addFeature<
 	return f.addFeature(Feature, props as any, beforeAttach);
 }
 
-//TODO addFeatures(obj, [class MyFeature, { value: 2}], [class AnotherFeature], ... ): [MyFeature, AnotherFeature]
-
 /**
- * Retrieves a feature instance of a specific class from the object.
- * @param {THREE.Object3D} obj - The Three.js object to search on
- * @param {typeof Object3DFeature} FeatureClass - The class of the feature to find
- * @returns {Object3DFeature | null} The feature instance if found, or `null` if not present
+ * A static method that retrieves a feature instance from the given object by its class (constructor). Returns first found such feature instance, or `null` if not.
+ * @param {THREE.Object3D} obj - The target Three.js Object3D instance to search for the feature.
+ * @param {typeof Object3DFeature} FeatureClass - The feature class (constructor) whose instance is being searched for. It must extends Object3DFeature.
+ * @returns {Object3DFeature | null}
  */
 export function getFeature<
 	TObj extends THREE.Object3D,
@@ -59,10 +59,10 @@ export function getFeature<
 }
 
 /**
- * Finds a feature on the object that matches the given predicate.
- * @param {THREE.Object3D} obj - The Three.js object to search on
- * @param {(feature: Object3DFeature) => boolean} predicate - Function that tests each feature for a condition
- * @returns {Object3DFeature | null} The first matching feature if found, or `null` if none match
+ * Finds a feature in the given object using a predicate function. Returns the first matching instance of `Object3DFeature` if found, otherwise `null`.
+ * @param {THREE.Object3D} obj - The target Three.js `Object3D` instance to search within.
+ * @param {(feature: Object3DFeature) => boolean} predicate - A predicate function that receives a feature instance as an argument and returns a boolean indicating whether the feature matches.
+ * @returns {Object3DFeature | null}
  */
 export function getFeatureBy<TObj extends THREE.Object3D, TFeature extends Object3DFeature>(
 	obj: TObj,
@@ -72,9 +72,10 @@ export function getFeatureBy<TObj extends THREE.Object3D, TFeature extends Objec
 }
 
 /**
- * Returns an array of all features attached to the object.
- * @param {THREE.Object3D} obj - The Three.js object to get features from
- * @returns {Object3DFeature[] | null} Array of attached features, or `null` if the object has no featurability
+ * Retrieves all features attached to a given object. Returns a copy of the feature list—an array of `Object3DFeature[]` instances—or `null` if no features were added.
+ * @remarks Note that changing returned array won't affect anything. It returns a **COPY** of this object features list.
+ * @param {THREE.Object3D} obj - The target Three.js `Object3D` instance.
+ * @returns {Object3DFeature[] | null}
  */
 export function getFeatures<TObj extends THREE.Object3D>(
 	obj: TObj
@@ -83,12 +84,14 @@ export function getFeatures<TObj extends THREE.Object3D>(
 }
 
 /**
- * Destroys and detaches all features from the given object, cleaning up any associated resources.
- * This removes the featurability aspect from the object and cleans up all feature instances.
- * @param {THREE.Object3D} obj - The Three.js object to clear features from
- * @param {boolean} recursively
+ * Destroys and detaches all features from the given object, freeing associated resources. 
+ * If `recursively` is set to `true`, this method will apply cleanup recursively to the entire object hierarchy.
+ * @param {THREE.Object3D} obj - The target Three.js `Object3D` instance.
+ * @param {boolean} recursively  - (Optional) Default is `false`. A boolean flag indicating whether to apply this method recursively to the object's hierarchy.
  */
 export function clear<TObj extends THREE.Object3D>(obj: TObj, recursively?: boolean) {
 	if (recursively) obj.traverse(Object3DFeaturability.destroy);
 	else Object3DFeaturability.destroy(obj);
 }
+
+//TODO addFeatures(obj, [class MyFeature, { value: 2}], [class AnotherFeature], ... ): [MyFeature, AnotherFeature]

@@ -7,7 +7,7 @@ import {
 	ReturnOfUseCtx,
 } from "./CoreContextModule";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
-import { ThreeContext } from "./ThreeContext";
+import { ThreeContext, ThreeContextParams } from "./ThreeContext";
 
 export type ModulesRecord = Record<string, CoreContextModule>;
 export type ModulesRecordDefault = Record<
@@ -16,22 +16,36 @@ export type ModulesRecordDefault = Record<
 >;
 
 /**
- * Represents the core game context, managing the rendering loop, scene, camera, and game modules.
- * It provides a structured environment for feature-based object management and game logic execution.
+ * The primary central entity, acting as a main hub, that orchestrates the Three.js environment, animation loop, and module system.\
+ * Propagates through features `Object3DFeature` which are added to Three.js `Object3D`.\
+ * Provides an elegant lifecycle management system and handles fundametal initializations.
+ * @see {@link https://three-kvy-core.vladkrutenyuk.ru/docs/api/core-context | Official Documentation}
+ * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/CoreContext.ts | Source}
  */
 export class CoreContext<
 	TModules extends ModulesRecord = ModulesRecordDefault
 > extends EventEmitter<{
-	["destroy"]: [];
-	["looprun"]: [];
-	["loopstop"]: [];
+	destroy: [];
+	looprun: [];
+	loopstop: [];
 }> {
 	/**
-	 * Creates a new `CoreContext` instance with a Three.js scene, renderer, camera, and optional modules.
-	 * @param Three - The Three.js constructors needed for scene, renderer, camera, and clock.
-	 * @param modules - Optional set of game context modules.
-	 * @param props - Optional parameters for the WebGL renderer.
-	 * @returns A new `CoreContext` instance.
+	 * Initialization shortcut. Creates and returns a new {@link CoreContext} instance.
+	 * @param {typeof import("three")} Three - Object containing Three.js class constructors `WebGLRenderer`, `Scene`, `PerspectiveCamera`, `Clock`, `Raycaster`. In short, just use imported [`THREE`](https://threejs.org/docs/manual/en/introduction/Installation.html) Three.js module.
+	 * @param {TModules} modules - (optional) Custom dictionary of any your modules {@link CoreContextModules}.
+	 * @param {ThreeContextParams} params - (optional) Object paramateres
+	 * @example
+	 * ```js
+	 *	import * as THREE from "three";
+	 *	import * as KVY from "@vladkrutenyuk/three-kvy-core";
+	 *
+	 *	const modules = {
+	 *		moduleA: new MyModuleA(),
+	 *		moduleB: new MyModuleB(),
+	 *	};
+	 *	const ctx = KVY.CoreContext.create(THREE, modules, { renderer: { antialias: true } });
+	 *	```
+	 * @returns {CoreContext}
 	 */
 	static create<TModules extends ModulesRecord = ModulesRecordDefault>(
 		Three: {
@@ -42,63 +56,48 @@ export class CoreContext<
 			Clock: typeof THREE.Clock;
 		},
 		modules?: Partial<TModules>,
-		props?: THREE.WebGLRendererParameters
+		params?: ThreeContextParams
 	) {
-		const three = ThreeContext.create(Three, props);
-		return new CoreContext(three, three.scene, new Three.Clock(false), modules);
+		const three = ThreeContext.create(Three, params);
+		return new CoreContext(three, three.scene, modules);
 	}
-	/** 
-	 * (readonly) flag to mark that it is an instance of CoreContext.
-	 * @type {true}
-	*/
+	/** (readonly) Flag to mark that it is an instance of {@link CoreContext}. */
 	public readonly isCoreContext: true;
 
-	/**
-	 * (readonly) Instance of {@link ThreeContext}. Utility to manage Three.js setup.
-	 * @type {ThreeContext}
-	 */
+	/** (readonly) Instance of {@link ThreeContext}. Utility to manage Three.js setup. */
 	public readonly three: ThreeContext;
 
-	/** Dictionary of added modules to this.
-	 * @type {Record<string,CoreContextModule>}
+	/** (readonly) Dictionary of assinged modules.
+	 * @type { { [key:string]: CoreContextModule } }
 	 */
 	public readonly modules: TModules;
 
-	/** (readonly) Instance of Three.js [`Object3D`](https://threejs.org/docs/index.html?q=Objec#api/en/core/Object3D)
-	 *  instance that plays the role of entry point for a given context propagation.
-	 * By default, it's Three.js [`Scene`](https://threejs.org/docs/index.html?q=Scene#api/en/scenes/Scene)
-	 * instance from `ThreeContext` (`.root === .three.scene`). You can specify any other `.root`
-	 * if you initialize the context through constructor.
+	/**
+	 * (readonly) Instance of Three.js `Object3D` that plays the role of entry point for a given context propagation.\
+	 * By default, it's Three.js `Scene` instance given in `ThreeContext` of this (`this.root === this.three.scene`).\
+	 * You can specify any other `root` if you initialize the context through constructor.
 	 * @type {THREE.Object3D}
 	 * */
 	public get root() {
 		return this._root;
 	}
 
-	/**
-	 * (readonly) The seconds passed since the last frame.
-	 * @type {number}
-	 */
+	/** (readonly) The seconds passed since the last frame. */
 	public get deltaTime() {
 		return this._deltaTime;
 	}
 
-	/**
-	 * Shortcut for `loop.uniforms.time.value`\
-	 * The total elapsed time since the loop started.
-	 */
+	/** (readonly) The seconds passed since the context loop started - by {@link run run()}. */
 	public get time() {
 		return this._time;
 	}
 
-	/** Indicates whether the game context has been destroyed. */
+	/** (readonly) Flag to check if this instance is destroyed.  */
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
 
-	/**
-	 * Indicates whether the loop is currently running.
-	 */
+	/** (readonly) Flag to check if this instance loop is running. */
 	public get isRunning() {
 		return this._isRunning;
 	}
@@ -111,41 +110,38 @@ export class CoreContext<
 	private _isRunning = false;
 
 	/**
-	 * Initializes a new game context with a Three.js environment and optional modules.
-	 * @param three - The Three.js context wrapper.
-	 * @param root - The root object of the scene.
-	 * @param clock - The clock used for frame timing.
-	 * @param modules - Optional game modules.
+	 * This creates a new {@link CoreContext} instance.
+	 * @param three - An instance of {@link ThreeContext}. Utility to manage Three.js setup.
+	 * @param {THREE.Object3D} root - (optional) An instance of Three.js `Object3D`. The entry point for context propagation. If root is not providen then Three.js `Scene` from the given {@link ThreeContext} will be taken as root.
+	 * @param {TModules} modules - (optional) Custom dictionary of any your modules {@link CoreContextModules}.
 	 */
 	constructor(
 		three: ThreeContext,
-		root: THREE.Object3D,
-		clock: THREE.Clock,
+		root?: THREE.Object3D,
 		modules?: Partial<TModules>
 	) {
 		super();
-		this._clock = clock;
+		this._clock = three.clock;
 		defineProps(this, {
 			isCoreContext: readOnly(true),
 			modules: readOnly({}),
 			three: readOnly(three),
 		});
 
-		const _root = Object3DFeaturability.from<TModules>(root).setCtx(this)
+		const _root = Object3DFeaturability.from<TModules>(root ?? three.scene).setCtx(this)
 			.object as IFeaturableRoot;
 		_root.isRoot = true;
 		this._root = _root;
 
-		this.autoPauseOnBlur();
-
 		modules && this.assignModules(modules);
 	}
 
+	/** Run animation loop and Three.js rendering. Stoppable as many times as you need by `stop()`. */
 	run() {
 		if (this._isRunning || this._isDestroyed) return;
 		this._isRunning = true;
 		this._clock.start();
-		this.three.renderer.setAnimationLoop((time) => {
+		this.three.renderer.setAnimationLoop(() => {
 			//! its very important to getDelta() before getElapsedTime()
 			this._deltaTime = this._clock.getDelta();
 			this._time = this._clock.getElapsedTime();
@@ -154,6 +150,7 @@ export class CoreContext<
 		this.emit("looprun");
 	}
 
+	/** Stop animation loop and Three.js rendering. Resumable as many times as you need by `run()`. */
 	stop() {
 		this._isRunning = false;
 		this._clock.stop();
@@ -164,9 +161,13 @@ export class CoreContext<
 	private _cleanups: Partial<Record<keyof TModules | string, ReturnOfUseCtx>> = {};
 
 	/**
-	 * Registers and initializes new or partial game context modules.
-	 * @param modules - Partial set of game modules to add.
-	 * @returns The current `CoreContext` instance.
+	 * Assigns the given dictionary of modules to this instance.  
+	 * It will be merged with the existing dictionary of modules.
+	 *  
+	 * @remarks Note that if the given dictionary contains a key for which a module is already assigned,  
+	 * it will be skipped, and a warning message will be fired.
+	 * 
+	 * @param {{ [key: string]: CoreContextModule }} modules - Dictionary of module instances to assign to this context.
 	 */
 	assignModules(modules: Partial<TModules>) {
 		for (const key in modules) {
@@ -176,29 +177,51 @@ export class CoreContext<
 		return this;
 	}
 
+	/**
+	 * Assign module by key to this instance.
+	 * It will be added to the existing dictionary of modules by the given key.
+	 * 
+	 * @remarks Note that if the given key is already assigned, it will be skipped, and a warning message will be fired.
+	 * @param {string} key - The key by which to assign the module to the context in the dictionary.
+	 * @param {CoreContextModule} module - An instance of `CoreContextModule` implementation.
+	 * @returns 
+	 */
 	assignModule<TKey extends keyof TModules>(key: TKey, module: TModules[TKey]) {
 		if (this.modules[key]) {
 			console.warn(`Key [${key.toString()}] is already assinged in modules.`);
 			return;
 		}
 		this.modules[key] = module;
-		const cleanup = (module as typeof module & ICoreContextModuleProtected).useCtx(
-			this
-		);
+		const m = module as unknown as ICoreContextModuleProtected;
+		m._ctx = this;
+		const cleanup = m.useCtx<TModules>(this);
 		this._cleanups[key] = cleanup;
 	}
 
+	/**
+	 * Remove a module by key that was specified when it was assigned.
+	 * @param {string} key - key by which a module was assigned.
+	 */
 	removeModule(key: keyof TModules) {
 		const cleanup = this._cleanups[key];
 		delete this._cleanups[key];
 		if (cleanup && typeof cleanup === "function") {
 			cleanup();
 		}
+		const m = this.modules[key] as unknown as ICoreContextModuleProtected;
+		m._ctx = undefined;
 		delete this.modules[key];
 	}
 
 	/**
-	 * Destroys this game context, stopping its loop and cleaning up resources.
+	 * Destroy this instance.
+	 * - Sets {@link isDestroyed} to `true` permanently.
+	 * - Stops its animation loop permanently.
+	 * - Destroys its {@link three three}: {@link ThreeContext} permanently.
+	 * - Fires the `"destroy"` event.
+	 * - Cleans up {@link root} from the assigned logic when it was designated as `root` in the given CoreContext.
+	 * - Removes all assigned {@link modules}.
+	 * - Removes all listeners from its events.
 	 */
 	destroy(): this {
 		if (this._isDestroyed) return this;
@@ -208,37 +231,13 @@ export class CoreContext<
 		this.emit("destroy");
 
 		Object3DFeaturability.destroy(this._root, true);
-		-Object.values(this._cleanups).forEach((fn) => fn && fn());
+		Object.values(this._cleanups).forEach((fn) => fn && fn());
 
 		(["destroy", "looprun", "loopstop"] as const).forEach((x) =>
 			this.removeAllListeners(x)
 		);
 
 		return this;
-	}
-
-	private _paused = false;
-	private autoPauseOnBlur() {
-		const three = this.three;
-		const onWindowBlur = () => {
-			if (!this._isRunning) {
-				this._paused = true;
-			}
-			this.stop();
-		};
-		const onWindowFocus = () => {
-			if (!this._paused) return;
-			this.run();
-		};
-		const w = window;
-		three.on("mount", () => {
-			w.addEventListener("blur", onWindowBlur);
-			w.addEventListener("focus", onWindowFocus);
-		});
-		three.on("unmount", () => {
-			w.removeEventListener("blur", onWindowBlur);
-			w.removeEventListener("focus", onWindowFocus);
-		});
 	}
 }
 

@@ -1,15 +1,13 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
+import { defineProps, notEnumer } from "../utils/define-props";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseUp } from "../utils/traverse-up";
+import { CoreContext, IFeaturableRoot, ModulesRecord } from "./CoreContext";
 import { Evnt } from "./Events";
-import { CoreContext, ModulesRecord, IFeaturableRoot } from "./CoreContext";
 import { Object3DFeature } from "./Object3DFeature";
-import { defineProps, notEnumer } from "../utils/define-props";
 
-export type Object3DFeaturabilityEventTypes<
-	TModules extends ModulesRecord = {}
-> = {
+export type Object3DFeaturabilityEventTypes<TModules extends ModulesRecord = {}> = {
 	[Evnt.AttCtx]: [ctx: CoreContext<TModules>];
 	[Evnt.DetCtx]: [ctx: CoreContext<TModules>];
 	[Evnt.FtAdd]: [feature: Object3DFeature<TModules>];
@@ -56,32 +54,23 @@ export class Object3DFeaturability<
 		return fblty;
 	}
 
-	static destroy<TObj extends THREE.Object3D = THREE.Object3D>(obj: TObj, force?: boolean): void {
+	static destroy<TObj extends THREE.Object3D = THREE.Object3D>(
+		obj: TObj,
+		force?: boolean
+	): void {
 		Object3DFeaturability.extract(obj)?.destroy(force);
 	}
 
-	/**
-	 * Custom logging function.
-	 */
 	static log: (target: Object3DFeaturability, msg: string) => void = () => {};
 
 	public readonly isObjectFeaturability = true;
 
-	/**
-	 * The wrapped `Object3D` instance.
-	 */
 	public readonly object: IFeaturablePrivate<TModules, TObj>;
 
-	/**
-	 * Returns the associated `CoreContext`, if any.
-	 */
 	public get ctx() {
 		return this._ctx;
 	}
 
-	/**
-	 * Returns copied array of all attached features.
-	 */
 	public get features() {
 		return [...this._features];
 	}
@@ -89,10 +78,6 @@ export class Object3DFeaturability<
 	private _ctx: CoreContext<TModules> | null = null;
 	private readonly _features: Object3DFeature<any>[] = [];
 
-	/**
-	 * Creates a new `Object3DFeaturability` instance for the given `Object3D`.
-	 * @param obj The `Object3D` instance to wrap.
-	 */
 	private constructor(obj: TObj) {
 		super();
 		this.object = obj as IFeaturable<TModules, TObj>;
@@ -351,10 +336,6 @@ export class Object3DFeaturability<
 	}
 }
 
-
-/**
- * Represents an object that supports features.
- */
 export type IFeaturable<
 	TModules extends ModulesRecord = any,
 	TObj extends THREE.Object3D = THREE.Object3D

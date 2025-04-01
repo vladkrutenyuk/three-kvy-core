@@ -3,46 +3,54 @@ import { Evnt } from "./Events";
 import { CoreContext, ModulesRecord } from "./CoreContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
+import { assertDefined } from "../utils/assert-defined";
 
 /**
- * Base class for features that can be attached to an {@link IFeaturable} object.
- * Features extend {@link EventEmitter} and interact with {@link CoreContext}.
- *
- * @template TModules - Type of the game context modules.
- * @template TEventTypes - Type of events this feature emits.
+ * Base class for implementing reusable components (features) that can be added to any Three.js Object3D.\
+ * Features get the context {@link CoreContext} when their object is added to ctx.root hierarchy, and lose it when removed, or forcibly on call.\
+ * Handle the context attach and detach can be through overridable lyfecycle method {@link useCtx useCtx(ctx)} where context is providen as arguement.\
+ * Built-in overridable lifecycle event methods like {@link onBeforeRender onBeforeRender(ctx)} etc.
+ * Direct access to object {@link object this.object} the feature is attached to.
+ * @see {@link https://three-kvy-core.vladkrutenyuk.ru/docs/api/object-3d-feature | Official Documentation}
+ * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/Object3DFeature.ts | Source}
  */
 export abstract class Object3DFeature<
 	TModules extends ModulesRecord = {},
 	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol
 > extends EventEmitter<TEventTypes> {
-	/**
-	 * Logging function for debugging purposes.
-	 * @param {Object3DFeature} target - The feature instance.
-	 * @param {string} msg - The log message.
-	 */
-	static log: (target: Object3DFeature, msg: string) => void = () => {};
-
+	/** (readonly) Flag to mark that it is an instance of `isObject3DFeature`. */
 	public readonly isObject3DFeature: true;
 
-	/** Unique numerical ID of the feature instance. */
+	/** (readonly) Unique increment number for this feature instance. */
 	public readonly id: number;
 
-	/** The object this feature is attached to. */
-	public readonly object: IFeaturable<TModules>;
-
-	/** Unique identifier (UUID) of the feature instance. */
+	/** UUID of feature instance. This gets automatically assigned, so this shouldn't be edited. 
+	 * Its generation way can be changed via overriding `Object3DFeature.generateUUID` static method.
+	 */
 	public uuid: string;
 
-	/** Getter for the current game context, or `null` if not attached. */
-	public get ctx() {
-		return this._ctx;
+	/** (readonly) An instance of Three.js Object3D which this feature was added to. */
+	public readonly object: IFeaturable<TModules>;
+
+	/**
+	 * (readonly) Getter for the current attached `CoreContext`.
+	 * @warning **Throws exception** if try to access before it is attached.
+	 */
+	public get ctx(): CoreContext<TModules> {
+		return assertDefined(this._ctx, "ctx");
+	}
+
+	/** (readonly) Flag to check if this feature has attached `CoreContext`. */
+	public get hasCtx(): boolean {
+		return !!this._ctx
 	}
 
 	private _ftblty: Object3DFeaturability<TModules>;
 	private _ctx: CoreContext<TModules> | null = null;
 
 	/**
-	 * @param {IFeaturable<TModules>} object - The object that this feature is attached to.
+	 * @private Must be initiallized through the `addFeature` static factory method.
+	 * @param {IFeaturable<TModules>} object - The object that this feature is going to be attached to.
 	 */
 	constructor(object: IFeaturable) {
 		super();
@@ -59,9 +67,6 @@ export abstract class Object3DFeature<
 		this._ftblty.on(Evnt.AttCtx, this.ftbltyAttachedToCtxHandler, this);
 		this._ftblty.on(Evnt.DetCtx, this.ftbltyDetachedFromCtxHandler, this);
 
-		// this.on(Evnt.AttCtx, this._onAttach, this);
-		// this.on(Evnt.DetCtx, this._onDetach, this);
-		// this.on(Evnt.Dstr, this._onDestroy, this);
 		this._log("init");
 	}
 
@@ -73,7 +78,7 @@ export abstract class Object3DFeature<
 		this._ftblty.ctx && this.attachCtx(this._ftblty.ctx);
 	}
 
-	/** Destroys the feature, detaching it from the context and cleaning up listeners. */
+	/** Destroys this feature instance. */
 	destroy() {
 		this.detachCtx();
 		this._ftblty.off(Evnt.AttCtx, this.ftbltyAttachedToCtxHandler, this);
@@ -132,61 +137,90 @@ export abstract class Object3DFeature<
 	};
 
 	/**
-	 * Called when the feature is attached to a {@link CoreContext}.
-	 * Returns a cleanup function that is called on detach, similar to `useEffect()` in React.
+	 * Overridable Lifecycle Method. Called when some `CoreContext` is attached to this feature. 
+	 * The defined returned cleanup function (optional) is called when the context is detached from the feature.
+	 * It is prohibitted to be called manually.
 	 *
-	 * @param {CoreContext<TModules>} ctx - The game context the feature is attached to.
+	 * @param {CoreContext<TModules>} ctx - An instance of `CoreContext` which is attached to this feature.
 	 * @returns {undefined | (() => void) | void} A cleanup function, or `undefined` if no cleanup is needed.
 	 * @override
+	 * 
+	 * @example
+	 * ```
+	 * useCtx(ctx) {
+	 * 	const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+	 * 	this.object.add(mesh);
+	 * 
+	 * 	const listener = () => {
+	 * 		// ...
+	 * 	}
+	 * 	const customTicker = ctx.modules.customTicker;
+	 * 	customTicker.on("tick", listener);
+	 * 
+	 * 	return () => {
+	 * 		this.object.remove(mesh);
+	 * 		mesh.geometry.dispose();
+	 * 		mesh.material.dispose();
+	 * 
+	 * 		customTicker.off("tick", listener);
+	 * 	}
+	 * }
+	 * ```
 	 */
 	protected useCtx(ctx: CoreContext<TModules>): undefined | (() => void) | void {
 		return;
 	}
 
 	/**
-	 * Called when the feature is destroyed.
+	 * When this feature `destroy()` is called.
 	 * @override
 	 */
 	protected onDestroy() {}
 
 	/**
-	 * Called before rendering.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * Before render is called. On each frame after loop run `ctx.run()` or `ctx.three.render()` is called manually.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onBeforeRender(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called after rendering.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * After render is called. On each frame after loop run `ctx.run()` or `ctx.three.render()` is called manually.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onAfterRender(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called when the game context renderer resizes.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * When container (where mounted) is resized.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onResize(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called when the feature is mounted.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * When `ctx.three.mount(container)` is called.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onMount(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called when the game loop starts.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * When `ctx.three.unmount()` is called.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onUnmount(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called when the game loop starts.
-	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * When `ctx.run()` is called.
+	 * @param {CoreContext<TModules>} ctx - The current attached instance of `CoreContext`.
 	 * @override
 	 */
 	onLoopRun(ctx: CoreContext<TModules>) {}
+
 	/**
-	 * Called when the game loop stops.
+	 * When `ctx.stop()` is called.
 	 * @param {CoreContext<TModules>} ctx - The game context.
 	 * @override
 	 */
@@ -249,6 +283,14 @@ export abstract class Object3DFeature<
 		this._ctx && subscribe(this._ctx);
 	}
 
+	/**
+	 * @returns Generates a unique identifier for [`Object3DFeature`](/docs/) instances.\
+	 * By default, it uses [`crypto.randomUUID()`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID), but in case of fall back, it returns `${Math.random()}-${Date.now()}`. 
+	 * You can freely override this static method to any of your own generation, e.g:
+	 * ```js
+	 * CoreContext.generateUUID = () => nanoid(10)
+	 * ```
+	 */
 	static generateUUID = () => {
 		try {
 			return crypto.randomUUID();
@@ -256,6 +298,13 @@ export abstract class Object3DFeature<
 			return `${Math.random()}-${Date.now()}`;
 		}
 	};
+
+	/**
+	 * Static method for overriding to handle logs.
+	 * @param {Object3DFeature} target - The feature instance.
+	 * @param {string} msg - The log message.
+	 */
+	static log: (target: Object3DFeature, msg: string) => void = () => {};
 }
 
 let _featureId = 0;

@@ -1,66 +1,93 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
+import { defineProps, readOnly } from "../utils/define-props";
 
+export type ThreeContextParams = { renderer?: THREE.WebGLRendererParameters };
 /**
- * Manages the Three.js rendering context, including the renderer, scene, and camera.
- * Provides lifecycle methods for mounting, unmounting, and destroying the rendering context.
- * Also allows overriding and resetting the render function.
+ * A utility for initializing core [Three.js](https://threejs.org) entities, managing their setup, and handling rendering.
+ * @see {@link https://three-kvy-core.vladkrutenyuk.ru/docs/api/three-context | Official Documentation}
+ * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/ThreeContext.ts | Source}
  */
 export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContext> {
-	static create(Three: {
-		WebGLRenderer: typeof THREE.WebGLRenderer;
-		PerspectiveCamera: typeof THREE.PerspectiveCamera;
-		Scene: typeof THREE.Scene;
-		Raycaster: typeof THREE.Raycaster;
-	}, props?: THREE.WebGLRendererParameters) {
+	/**
+	 * Shortcut to create an instance of ThreeContext.
+	 * @param {typeof import("three")} Three - Three.js `THREE` imported module, object containing class constructors `WebGLRenderer`, `PerspectiveCamera`, `Scene`, `Clock`, `Raycaster`.
+	 * @param {{renderer: THREE.WebGLRendererParameters}} params - (optional) Object parameters
+	 * @returns {ThreeContext} An instance of ThreeContext
+	 * @example
+	 * ```js
+		import * as THREE from "three";
+		import * as KVY from "@vladkrutenyuk/three-kvy-core";
+
+		const three = new KVY.ThreeContext.create(THREE, { renderer: { antialias: true } });
+		```
+	 */
+	static create(
+		Three: {
+			WebGLRenderer: typeof THREE.WebGLRenderer;
+			PerspectiveCamera: typeof THREE.PerspectiveCamera;
+			Scene: typeof THREE.Scene;
+			Clock: typeof THREE.Clock;
+			Raycaster: typeof THREE.Raycaster;
+		},
+		params?: ThreeContextParams
+	) {
 		return new ThreeContext(
-			new Three.WebGLRenderer(props),
+			new Three.WebGLRenderer(params?.renderer),
 			new Three.PerspectiveCamera(),
 			new Three.Scene(),
-			new Three.Raycaster()
+			new Three.Clock(),
+			new Three.Raycaster(),
 		);
 	}
+
 	/**
-	 * The WebGL renderer used for rendering the scene.
+	 * (readonly) flag to mark that it is an instance of ThreeContext.
+	 * @type {true}
+	 */
+	public readonly isThreeContext: true;
+	/**
+	 * (readonly) instance of Three.js `WebGLRenderer` used for rendering your awesome scene.
+	 * @type {THREE.WebGLRenderer}
 	 */
 	public readonly renderer: THREE.WebGLRenderer;
+
 	/**
-	 * The scene that contains all objects to be rendered.
-	 */
-	public readonly scene: THREE.Scene;
-	/**
-	 * The active camera used for rendering.
+	 * An instance of Three.js `PerspectiveCamera` camera which is used in rendering. Fires event `camerachanged` on set.
 	 */
 	public get camera() {
 		return this._camera;
 	}
-	/**
-	 * Sets the active camera and triggers a camera change event.
-	 */
 	public set camera(value: THREE.PerspectiveCamera) {
 		const prevCamera = this._camera;
 		this._camera = value;
 		this.cameraChanged(value, prevCamera);
 	}
 
+	/** (readonly) instance of Three.js `Scene` that contains all objects to be rendered. */
+	public readonly scene: THREE.Scene;
+
+	/** (readonly) instance of Three.js `Clock` */
+	public readonly clock: THREE.Clock;
+
+	/** (readonly) instance of Three.js `Raycaster`. */
 	public readonly raycaster: THREE.Raycaster;
 
-	/**
-	 * The root HTML element where the renderer is mounted.
-	 */
-	public get container() {
+	/** (readonly) HTML element where the renderer canvas is appended on mount. */
+	public get container(): HTMLDivElement | null {
 		return this._container;
 	}
 	/**
-	 * Indicates whether the renderer is currently mounted.
+	 * (readonly) flag to check if the renderer canvas is currently mounted.
+	 * @type {boolean}
 	 */
-	public get isMounted() {
+	public get isMounted(): boolean {
 		return this._isMounted;
 	}
 	/**
-	 * Indicates whether the context has been destroyed.
+	 * (readonly) flag to check whether this instance has been destroyed.
 	 */
-	public get isDestroyed() {
+	public get isDestroyed(): boolean {
 		return this._isDestroyed;
 	}
 
@@ -76,29 +103,32 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	private _renderFn = this._srcRenderFn;
 
 	/**
-	 * Creates a new ThreeContext instance.
-	 * @param renderer The WebGL renderer.
-	 * @param camera The perspective camera.
-	 * @param scene The Three.js scene.
+	 * This creates a new {@link ThreeContext} instance.
+	 * @param {THREE.WebGLRenderer} renderer - An instance of Three.js `WebGLRenderer`
+	 * @param {THREE.PerspectiveCamera} camera - An instance of Three.js `PerspectiveCamera`
+	 * @param {THREE.Scene} scene - An instance of Three.js `Scene`
+	 * @param {THREE.Clock} clock - An instance of Three.js `Clock`
+	 * @param {THREE.Raycaster} raycaster - An instance of Three.js `Raycaster`
 	 */
 	constructor(
 		renderer: THREE.WebGLRenderer,
 		camera: THREE.PerspectiveCamera,
 		scene: THREE.Scene,
+		clock: THREE.Clock,
 		raycaster: THREE.Raycaster
 	) {
 		super();
-
+		defineProps(this, { isThreeContext: readOnly(true) });
 		this.renderer = renderer;
 		this.scene = scene;
 		this._camera = camera;
+		this.clock = clock;
 		this.raycaster = raycaster;
 		this._renderFn = this._srcRenderFn;
 	}
 
 	/**
-	 * Renders the scene using the current render function.
-	 * Emits `renderbefore` and `renderafter` events.
+	 * Renders the scene using the current render function. Fires `renderbefore` and `renderafter` events.
 	 */
 	render() {
 		this.emit(ev.RenderBefore);
@@ -108,7 +138,8 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 	/**
 	 * Overrides the render function with a custom implementation.
-	 * @param fn The new render function.
+	 * @param {Function} fn
+	 * @returns
 	 */
 	overrideRender(fn: () => void) {
 		this._renderFn = fn;
@@ -124,8 +155,9 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	/**
-	 * Mounts the renderer canvas to the specified HTML container and initializes event listeners.
-	 * @param container The HTML container element.
+	 * Append the renderer canvas to the given HTML container, initializes event listeners and resize observer.
+	 * Fires `mount` event.
+	 * @param {HTMLDivElement} container -  The HTML container element where to mount (append) renderer canvas.
 	 */
 	mount(container: HTMLDivElement) {
 		if (this._isMounted || this._isDestroyed) return;
@@ -140,7 +172,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		// canvas.focus();
 
 		this.emit(ev.Mount, container);
-		
+
 		this._resizeObserver = new ResizeObserver(this.resizeHandler);
 		this._resizeObserver.observe(container);
 		this.resizeHandler();
@@ -149,7 +181,8 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	/**
-	 * Unmounts the renderer from the HTML container and removes event listeners.
+	 * Remove the renderer canvas from DOM it was mounted, removes event listeners, disconnect resize observer.
+	 * Fires `"unmount"` event.
 	 */
 	unmount() {
 		if (!this._isMounted) return;
@@ -165,8 +198,8 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	}
 
 	/**
-	 * Destroys the ThreeContext, releasing resources and preventing further rendering.
-	 * Emits a `destroy` event.
+	 * Destroys this instance, releasing resources and preventing further rendering.
+	 * Fires `"destroy"` event.
 	 */
 	destroy() {
 		if (this._isDestroyed) return;
@@ -184,10 +217,9 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		this.emit(ev.Destroy);
 
-		Object.values(ev).forEach(x => this.removeAllListeners(x));
+		Object.values(ev).forEach((x) => this.removeAllListeners(x));
 	}
 
-	// private _rendererSetSizeTimeout: number | null = null;
 	private resizeHandler = () => {
 		const container = this._container;
 		if (!container) return;
@@ -200,18 +232,15 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		camera.aspect = width / height;
 		camera.updateProjectionMatrix();
 
-		// const timeout = this._rendererSetSizeTimeout;
-		// if (timeout) {
-		// 	window.clearTimeout(timeout);
-		// }
-		// this._rendererSetSizeTimeout = window.setTimeout(() => {
-		// }, 5);
 		this.renderer.setSize(width, height);
 		this.emit(ev.Resize, width, height);
 		this.render();
 	};
 
-	private cameraChanged(newCamera: THREE.PerspectiveCamera, prevCamera: THREE.PerspectiveCamera) {
+	private cameraChanged(
+		newCamera: THREE.PerspectiveCamera,
+		prevCamera: THREE.PerspectiveCamera
+	) {
 		const camera = this._camera;
 		const root = this._container;
 		if (root) {
@@ -239,5 +268,8 @@ export type ThreeContextEventMap = {
 	[ev.Unmount]: [];
 	[ev.Destroy]: [];
 	[ev.Resize]: [width: number, height: number];
-	[ev.CameraChanged]: [newCamera: THREE.PerspectiveCamera, prevCamera: THREE.PerspectiveCamera];
+	[ev.CameraChanged]: [
+		newCamera: THREE.PerspectiveCamera,
+		prevCamera: THREE.PerspectiveCamera
+	];
 };

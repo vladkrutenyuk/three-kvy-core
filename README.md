@@ -11,35 +11,37 @@
 
 ## **A powerful [Three.js](https://threejs.org/) extension to create scalable 3D apps of any-complexity.**
 
-This is lightweight component-oriented **library**, enabling an elegant lifecycle management system and basic initializations. Empower Three.js objects by reusable features within seamless context propagation with pluggable modules. The OOP-driven.
+This is lightweight component-oriented library, enabling an elegant lifecycle management system and basic initializations. Empower Three.js objects by reusable features within seamless context propagation with pluggable modules. The OOP-driven.
 
 > This library is designed in way not no include three.js as dependency.  
 > It manipulates three.js entities but does not refer to them.
 
 Doesn't impose any restrictions on your existing Three.js logic. Compatible with any approach you already use.
 
-- Framework agnostic design
-- Extensibility and plugin architecture
-- Provides scalable developemnt.
-- Modular architecture.
-- OOP-driven
-- Events based.
-- Typescript support.
-- Lightweight. Tiny size. (3.5kb minzipped)
+- Framework agnostic
+- Extensible & plugin architecture
+- Provides scalable development
+- Events based
+- Typescript support
+- Lightweight. (3.5kb minzipped)
 
-### Installation
+## Installation
 
 ```sh
 npm i three eventemitter3 @vladkrutenyuk/three-kvy-core 
 ```
 
-### What does it look like?
+## Documentation, tutorials, examples
+
+Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)
+
+## What does it look like?
 
 ```js
 import * as THREE from "three";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-const ctx = KVY.CoreContext.create(THREE, {}, { antialias : true });
+const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } });
 
 ctx.three.mount(document.querySelector("#canvas-container"));
 ctx.run();
@@ -83,7 +85,3 @@ KVY.addFeature(cube, SpinningToFro);
 
 ctx.three.camera.position.z = 5;
 ```
-
-## Documentation, tutorials, examples
-
-Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)

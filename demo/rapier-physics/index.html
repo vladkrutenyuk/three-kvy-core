@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@three-kvy-core/rapier</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.min.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.174.0/examples/jsm/",
+			"eventemitter3": "https://unpkg.com/eventemitter3@5.0.1/dist/eventemitter3.esm.min.js"
+          }
+        }
+    </script>
+    <style>
+        *:not(button):not(input) {
+            margin: 0;
+            padding: 0;
+            outline: none;
+            border: none;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container" style="width:100vw;height:100vh;"></div>
+    <script type="module">
+        import("./index.js").then(m => {
+            console.log("ready")
+        })
+    </script>
+</body>
+
+</html>
