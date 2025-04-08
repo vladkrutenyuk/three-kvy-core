@@ -1,17 +1,21 @@
+import * as RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import * as TWEEN from "three/addons/libs/tween.module.js";
 import { SimplexNoise } from "three/addons/math/SimplexNoise.js";
+import {
+	Collider,
+	KeysInput,
+	RapierPhysics,
+	RigidbodyDynamic,
+	RigidbodyKinematic,
+	SyncMode,
+} from "../../addons/index.js";
 import { CameraFollow } from "../CameraFollow.js";
-import { InputKeyModule } from "../InputKeyModule.js";
-import KVY from "../lib.js";
+import KVY from "../KVY.js";
 import { TweenModule } from "../TweenModule.js";
-import { Collider } from "./Collider.js";
 import { KinematicController } from "./KinematicController.js";
-import { RapierPhysics } from "./RapierPhysics.js";
-import { RigidbodyDynamic } from "./RigidbodyDynamic.js";
-import { RigidbodyKinematic, SyncMode } from "./RigidbodyKinematic.js";
 
-const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } } );
+const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } });
 ctx.three.mount(document.querySelector("#canvas-container"));
 ctx.run();
 const renderer = ctx.three.renderer;
@@ -19,56 +23,20 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 async function main() {
-	/** @type {typeof import("@dimforge/rapier3d-compat")} */
-	const RAPIER = await import("https://cdn.skypack.dev/@dimforge/rapier3d-compat");
-	window.RAPIER = RAPIER;
 	await RAPIER.init();
 
-	ctx.assignModule("input", new InputKeyModule());
-	ctx.assignModule("rapier", new RapierPhysics(RAPIER));
-	ctx.assignModule("tween", new TweenModule(TWEEN));
+	const rapier = new RapierPhysics(RAPIER);
+	rapier.debugEnabled = true;
+	ctx.assignModules({ keys: new KeysInput(), tween: new TweenModule(TWEEN), rapier });
 
-	const heights = [];
-	const nsubdivs = 100;
-	const size = 50;
-	const geometry = new THREE.PlaneGeometry(size, size, nsubdivs, nsubdivs);
-	const noise = new SimplexNoise();
-	const positions = geometry.getAttribute("position").array;
-	const noiseSize = 0.02;
-	for (let x = 0; x <= nsubdivs; x++) {
-		for (let y = 0; y <= nsubdivs; y++) {
-			const height = noise.noise(x * noiseSize, y * noiseSize) * 4;
-			const vertIndex = (x + (nsubdivs + 1) * y) * 3;
-			positions[vertIndex + 2] = height;
-			const heightIndex = y + (nsubdivs + 1) * x;
-			heights[heightIndex] = height;
-		}
-	}
-	// needed for lighting
-	geometry.computeVertexNormals();
-	const scale = new RAPIER.Vector3(size, 1, size);
-
-	const terrain = new THREE.Group();
-	const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial())
-		.translateY(0.05)
-		.rotateX(-Math.PI / 2);
-	mesh.receiveShadow = true;
-	terrain.add(mesh);
-
-	KVY.addFeature(terrain, Collider, [
-		"heightfield",
-		nsubdivs,
-		nsubdivs,
-		heights,
-		scale,
-	]);
+	const terrain = createTerrain();
 	ctx.root.add(terrain);
 
 	const player = new THREE.Group().translateY(10);
 	const scl = 0.95;
 	const capsule = new THREE.Mesh(
 		new THREE.CapsuleGeometry(0.5 * scl, 1.7 * scl),
-		new THREE.MeshStandardMaterial()
+		new THREE.MeshStandardMaterial({ color: 0x5060ff })
 	);
 	capsule.castShadow = true;
 	player.add(capsule);
@@ -79,29 +47,35 @@ async function main() {
 		lookAt: [0, 1.5, 0],
 	});
 
-	camera(ctx);
 	scene(ctx);
 	for (let i = 0; i < 10; i++) {
 		ctx.root.add(dynamicBox(i));
 	}
-	const platform = prim("Box", [], 0x9090ff).translateY(3.5);
-	platform.receiveShadow = true;
-	platform.castShadow = true;
-	platform.scale.set(4, 0.5, 4);
-	ctx.root.add(platform);
-	KVY.addFeature(platform, MoveablePaltform);
-	KVY.addFeature(platform, RigidbodyKinematic).setSyncMode(SyncMode.Body2Obj);
-	KVY.addFeature(platform, Collider, ["roundCuboid", 2, 0.25, 2, 0.1]);
+	platform([4, 0.5, 4], [-3, 1, 3], [2, 1, 3]);
+	platform([3, 0.5, 3], [3, 8, 0], [3, 0, 0]);
+	platform([4, 0.4, 4], [-1, 4.5, -3], [4, 4.5, -3]);
 }
 
 class MoveablePaltform extends KVY.Object3DFeature {
+	constructor(object, props) {
+		super(object);
+		this.from = new THREE.Vector3().fromArray(props?.from || [-1, 0, 0]);
+		this.to = new THREE.Vector3().fromArray(props?.to || [1, 0, 0]);
+	}
+
 	useCtx(ctx) {
 		/** @type {typeof import("three/addons/libs/tween.module.js")} Tween */
 		const TWEEN = ctx.modules.tween.api;
+
 		const pos = this.object.position;
-		pos.x = -2;
-		const tween = new TWEEN.Tween(pos)
-			.to({ x: 2 }, 1500)
+		pos.copy(this.from);
+
+		const _obj = new THREE.Vector3().copy(this.from);
+		const tween = new TWEEN.Tween(_obj)
+			.to(this.to, 1500)
+			.onUpdate((obj) => {
+				pos.copy(obj);
+			})
 			.repeat(Infinity)
 			.yoyo(true)
 			.repeatDelay(100) // 10 мс паузы перед началом нового цикла
@@ -113,19 +87,57 @@ class MoveablePaltform extends KVY.Object3DFeature {
 	}
 }
 
-/**
- * @param {KVY.CoreContext} ctx
- */
-function camera(ctx) {
-	const camera = ctx.three.camera;
-	// const orbitControls = new OrbitControls(
-	// 	ctx.three.camera,
-	// 	ctx.three.renderer.domElement
-	// );
-	// camera.position.set(15, 15, 15);
-	// camera.lookAt(new THREE.Vector3());
-	// orbitControls.update();
+function platform(scale, from, to) {
+	const box = prim("Box", [], 0xff3030);
+	box.position.fromArray(from);
+	box.receiveShadow = true;
+	box.castShadow = true;
+	box.scale.fromArray(scale);
+	ctx.root.add(box);
+	KVY.addFeature(box, MoveablePaltform, { from, to });
+	KVY.addFeature(box, RigidbodyKinematic).setSyncMode(SyncMode.Body2Obj);
+	KVY.addFeature(box, Collider, ["roundCuboid", ...scale.map((x) => x * 0.5), 0.1]);
+	return box;
 }
+
+function createTerrain() {
+	const heights = [];
+	const nsubdivs = 100;
+	const size = 50;
+	const geometry = new THREE.PlaneGeometry(size, size, nsubdivs, nsubdivs);
+	const noise = new SimplexNoise();
+	const positions = geometry.getAttribute("position").array;
+	const noiseSize = 0.02;
+	for (let x = 0; x <= nsubdivs; x++) {
+		for (let y = 0; y <= nsubdivs; y++) {
+			const height = noise.noise(x * noiseSize, y * noiseSize) * 2;
+			const vertIndex = (x + (nsubdivs + 1) * y) * 3;
+			positions[vertIndex + 2] = height;
+			const heightIndex = y + (nsubdivs + 1) * x;
+			heights[heightIndex] = height;
+		}
+	}
+	// needed for lighting
+	geometry.computeVertexNormals();
+	const scale = new RAPIER.Vector3(size, 1, size);
+
+	const terrain = new THREE.Group();
+	const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial()).rotateX(
+		-Math.PI / 2
+	);
+	mesh.receiveShadow = true;
+	terrain.add(mesh);
+
+	KVY.addFeature(terrain, Collider, [
+		"heightfield",
+		nsubdivs,
+		nsubdivs,
+		heights,
+		scale,
+	]);
+	return terrain;
+}
+
 
 /**
  * @param {KVY.CoreContext} ctx
@@ -161,9 +173,9 @@ const rnds = THREE.MathUtils.randFloatSpread;
 function dynamicBox() {
 	/** @type {typeof import("@dimforge/rapier3d-compat")} */
 	const RAPIER = window.RAPIER;
-	const box = prim("Box", [], 0xaaaaaa);
+	const box = prim("Box", [], 0x808080);
 	box.castShadow = true;
-	box.position.set(rnds(10), rnd(1, 6), rnds(10));
+	box.position.set(rnds(10), rnd(1, 15), rnds(10));
 	box.rotation.set(rnds(Math.PI), rnds(Math.PI), rnds(Math.PI));
 
 	KVY.addFeature(box, RigidbodyDynamic);

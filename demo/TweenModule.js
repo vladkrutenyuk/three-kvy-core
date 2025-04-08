@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 
 export class TweenModule extends KVY.CoreContextModule {
     /** @type {typeof import("three/addons/libs/tween.module.js")} */

@@ -45,7 +45,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 	 * (readonly) flag to mark that it is an instance of ThreeContext.
 	 * @type {true}
 	 */
-	public readonly isThreeContext: true;
+	public readonly isThreeContext!: true;
 	/**
 	 * (readonly) instance of Three.js `WebGLRenderer` used for rendering your awesome scene.
 	 * @type {THREE.WebGLRenderer}

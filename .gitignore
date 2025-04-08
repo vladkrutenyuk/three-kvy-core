@@ -24,7 +24,10 @@ dist-ssr
 *.sw?
 
 .parcel-cache
-build
-dist
+/build
+/dist
+/addons
 .demo-cache
 .vscode
+
+_ignore

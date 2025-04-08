@@ -16,7 +16,7 @@ export abstract class CoreContextModule<
 	TModules extends ModulesRecord = ModulesRecordDefault
 > extends EventEmitter<TEventTypes> {
 	/** Read-only flag to mark that it is an instance of {@link CoreContextModule}.*/
-	readonly isCoreContextModule: true
+	readonly isCoreContextModule!: true
 
 	/** 
 	 * (readonly) Getter for the instance of {@link CoreContext} this is assigned to.

@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 import * as THREE from "three";
 
 export class CameraFollow extends KVY.Object3DFeature {

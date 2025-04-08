@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/three-kvy-core",
-  "version": "2.0.0",
+  "version": "2.1.0-alpha.1",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://linkedin.com/in/vladkrutenyuk)",
   "license": "MIT",
   "description": "Everything you need to create any-complexity 3D apps with Three.js. Empower Three.js with a modular, lifecycle-managed context that seamlessly propagates through objects via reusable features providing structured logic.",
@@ -10,25 +10,29 @@
     "url": "https://github.com/vladkrutenyuk/three-kvy-core"
   },
   "scripts": {
-    "rbuild": "rimraf ./dist && rollup -c",
+    "build:core": "rimraf ./build && rollup -c",
+    "build:addons": "rimraf ./addons && rollup -c rollup.config.addons.js",
+    "build": "npm run build:core && npm run build:addons",
     "test": "jest"
   },
   "type": "module",
-  "main": "./dist/esm/index.min.js",
-  "module": "./dist/esm/index.min.js",
-  "types": "./dist/esm/index.d.ts",
+  "main": "./build/kvy.js",
+  "module": "./build/kvy.js",
+  "types": "./build/kvy.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.min.js",
-      "types": "./dist/esm/index.d.ts"
-    }
+      "import": "./build/kvy.js",
+      "types": "./build/kvy.d.ts"
+    },
+    "./addons": "./addons/index.js",
+    "./addons/*": "./addons/*"
   },
   "files": [
-    "dist",
+    "build",
+    "addons",
     "package.json",
     "LICENSE",
-    "README.md",
-    "examples"
+    "README.md"
   ],
   "devDependencies": {
     "@dimforge/rapier3d-compat": "^0.14.0",

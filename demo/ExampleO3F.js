@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 
 export class ExampleO3F extends KVY.Object3DFeature {
     onLoopRun(ctx) {

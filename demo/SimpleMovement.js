@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 
 export class SimpleMovement extends KVY.Object3DFeature {
     speed = 2;
@@ -12,11 +12,11 @@ export class SimpleMovement extends KVY.Object3DFeature {
         const dp = this.speed * ctx.deltaTime;
         const pos = this.object.position;
 
-        const key = ctx.modules.input.isKeyDown;
+        const has = ctx.modules.keys.has;
 
-        if (key('KeyW')) pos.z -= dp;
-        if (key('KeyS')) pos.z += dp;
-        if (key('KeyD')) pos.x += dp;
-        if (key('KeyA')) pos.x -= dp;
+        if (has('KeyW')) pos.z -= dp;
+        if (has('KeyS')) pos.z += dp;
+        if (has('KeyD')) pos.x += dp;
+        if (has('KeyA')) pos.x -= dp;
     }
 }

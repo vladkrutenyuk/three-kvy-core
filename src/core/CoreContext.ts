@@ -1,6 +1,7 @@
 import { EventEmitter } from "eventemitter3";
 import type * as THREE from "three";
 import { defineProps, readOnly } from "../utils/define-props";
+import { removeArrayItem } from "../utils/remove-array-item";
 import {
 	CoreContextModule,
 	ICoreContextModuleProtected,
@@ -62,15 +63,15 @@ export class CoreContext<
 		return new CoreContext(three, three.scene, modules);
 	}
 	/** (readonly) Flag to mark that it is an instance of {@link CoreContext}. */
-	public readonly isCoreContext: true;
+	public readonly isCoreContext!: true;
 
 	/** (readonly) Instance of {@link ThreeContext}. Utility to manage Three.js setup. */
-	public readonly three: ThreeContext;
+	public readonly three!: ThreeContext;
 
 	/** (readonly) Dictionary of assinged modules.
 	 * @type { { [key:string]: CoreContextModule } }
 	 */
-	public readonly modules: TModules;
+	public readonly modules!: TModules;
 
 	/**
 	 * (readonly) Instance of Three.js `Object3D` that plays the role of entry point for a given context propagation.\
@@ -115,11 +116,7 @@ export class CoreContext<
 	 * @param {THREE.Object3D} root - (optional) An instance of Three.js `Object3D`. The entry point for context propagation. If root is not providen then Three.js `Scene` from the given {@link ThreeContext} will be taken as root.
 	 * @param {TModules} modules - (optional) Custom dictionary of any your modules {@link CoreContextModules}.
 	 */
-	constructor(
-		three: ThreeContext,
-		root?: THREE.Object3D,
-		modules?: Partial<TModules>
-	) {
+	constructor(three: ThreeContext, root?: THREE.Object3D, modules?: Partial<TModules>) {
 		super();
 		this._clock = three.clock;
 		defineProps(this, {
@@ -128,8 +125,9 @@ export class CoreContext<
 			three: readOnly(three),
 		});
 
-		const _root = Object3DFeaturability.from<TModules>(root ?? three.scene).setCtx(this)
-			.object as IFeaturableRoot;
+		const _root = Object3DFeaturability.from<TModules>(root ?? three.scene).setCtx(
+			this
+		).object as IFeaturableRoot;
 		_root.isRoot = true;
 		this._root = _root;
 
@@ -142,7 +140,7 @@ export class CoreContext<
 		this._isRunning = true;
 		this._clock.start();
 		this.three.renderer.setAnimationLoop(() => {
-			//! its very important to getDelta() before getElapsedTime()
+			// its very important to getDelta() before getElapsedTime()
 			this._deltaTime = this._clock.getDelta();
 			this._time = this._clock.getElapsedTime();
 			this.three.render();
@@ -161,12 +159,12 @@ export class CoreContext<
 	private _cleanups: Partial<Record<keyof TModules | string, ReturnOfUseCtx>> = {};
 
 	/**
-	 * Assigns the given dictionary of modules to this instance.  
+	 * Assigns the given dictionary of modules to this instance.
 	 * It will be merged with the existing dictionary of modules.
-	 *  
-	 * @remarks Note that if the given dictionary contains a key for which a module is already assigned,  
+	 *
+	 * @remarks Note that if the given dictionary contains a key for which a module is already assigned,
 	 * it will be skipped, and a warning message will be fired.
-	 * 
+	 *
 	 * @param {{ [key: string]: CoreContextModule }} modules - Dictionary of module instances to assign to this context.
 	 */
 	assignModules(modules: Partial<TModules>) {
@@ -180,29 +178,31 @@ export class CoreContext<
 	/**
 	 * Assign module by key to this instance.
 	 * It will be added to the existing dictionary of modules by the given key.
-	 * 
+	 *
 	 * @remarks Note that if the given key is already assigned, it will be skipped, and a warning message will be fired.
 	 * @param {string} key - The key by which to assign the module to the context in the dictionary.
 	 * @param {CoreContextModule} module - An instance of `CoreContextModule` implementation.
-	 * @returns 
 	 */
-	assignModule<TKey extends keyof TModules>(key: TKey, module: TModules[TKey]) {
+	assignModule<TKey extends keyof TModules>(key: TKey, module: TModules[TKey]): this {
 		if (this.modules[key]) {
 			console.warn(`Key [${key.toString()}] is already assinged in modules.`);
-			return;
+			return this;
 		}
 		this.modules[key] = module;
 		const m = module as unknown as ICoreContextModuleProtected;
 		m._ctx = this;
 		const cleanup = m.useCtx<TModules>(this);
 		this._cleanups[key] = cleanup;
+
+		this._modulesArray.push(module);
+		return this;
 	}
 
 	/**
 	 * Remove a module by key that was specified when it was assigned.
 	 * @param {string} key - key by which a module was assigned.
 	 */
-	removeModule(key: keyof TModules) {
+	removeModule(key: keyof TModules): this {
 		const cleanup = this._cleanups[key];
 		delete this._cleanups[key];
 		if (cleanup && typeof cleanup === "function") {
@@ -211,6 +211,38 @@ export class CoreContext<
 		const m = this.modules[key] as unknown as ICoreContextModuleProtected;
 		m._ctx = undefined;
 		delete this.modules[key];
+
+		removeArrayItem(this._modulesArray, this.modules[key]);
+
+		return this;
+	}
+
+	private _modulesArray: CoreContextModule[] = [];
+
+	/**
+	 * Finds a module in this context using a predicate function. Returns the first matching instance of `CoreContextModule` if found, otherwise `undefined`.
+	 * @param {(m: CoreContextModule) => boolean} predicate - A predicate function that receives a module instance as an argument and returns a boolean indicating whether the module matches.
+	 * @returns {CoreContextModule | undefined}
+	 */
+	findModule<TModule extends CoreContextModule = CoreContextModule>(
+		predicate: (m: TModule) => boolean
+	): TModule | undefined {
+		return (this._modulesArray as TModule[]).find(predicate);
+	}
+
+	/**
+	 * Finds the key of a module in this context using a predicate function.
+	 * Returns the key of the first matching instance of `CoreContextModule` if found, otherwise `undefined`.
+	 * @param {(m: TModule) => boolean} predicate - A predicate function that receives a module instance and returns `true` if it matches the search criteria.
+	 * @returns {string | undefined}
+	 */
+	findModuleKey<TModule extends CoreContextModule = CoreContextModule>(
+		predicate: (m: TModule) => boolean
+	): string | undefined {
+		for (const key in this.modules) {
+			const m = this.modules[key];
+			if (predicate(m as unknown as TModule)) return key;
+		}
 	}
 
 	/**

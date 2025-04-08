@@ -59,7 +59,8 @@
           "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.js",
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.174.0/examples/jsm/",
-			"eventemitter3": "https://unpkg.com/eventemitter3@5.0.1/dist/eventemitter3.esm.min.js"
+			"eventemitter3": "https://unpkg.com/eventemitter3@5.0.1/dist/eventemitter3.esm.min.js",
+			"@vladkrutenyuk/three-kvy-core": "/build/kvy.js"
           }
         }
     </script>
@@ -94,7 +95,7 @@
 	<!-- <div id="container"></div> -->
 	<script type="module">
 		import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
-		console.log(RAPIER);
+		console.log("hi");
 		const init = async () => {
 			await RAPIER.init();
 			window.RAPIER = RAPIER;

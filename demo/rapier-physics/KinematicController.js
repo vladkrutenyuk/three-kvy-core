@@ -1,9 +1,6 @@
 import * as THREE from "three";
-import KVY from "../lib.js";
-import { RapierPhysics } from "./RapierPhysics.js";
-import { InputKeyModule } from "../InputKeyModule.js";
-import { RigidbodyKinematic } from "./RigidbodyKinematic.js";
-import { Collider } from "./Collider.js";
+import KVY from "../KVY.js";
+import { Collider, RigidbodyKinematic, RapierPhysics, KeysInput } from "../../addons/index.js";
 
 export class KinematicController extends KVY.Object3DFeature {
 	/** @type {import("@dimforge/rapier3d-compat").KinematicCharacterController} */
@@ -24,6 +21,9 @@ export class KinematicController extends KVY.Object3DFeature {
 	radius;
 	offset;
 
+	/** @type {RapierPhysics} */
+	_rapier;
+
 	constructor(object, props) {
 		super(object);
 		this.halfHeight = props?.halfHeight || 0.85;
@@ -34,8 +34,10 @@ export class KinematicController extends KVY.Object3DFeature {
 	/** @param {KVY.CoreContext} ctx */
 	useCtx(ctx) {
 		console.log(`-> KinematicController useCtx`);
-		const error = RapierPhysics.validateCtx(ctx);
-		if (error) throw new Error(error);
+		const rapier = RapierPhysics.findInCtx(ctx);
+		if (!rapier) throw new Error("'RapierPhysics' is not found in context");
+		this._rapier = rapier;
+
 		const obj = this.object;
 
 		// /** @type {RigidbodyKinematic} */
@@ -57,15 +59,12 @@ export class KinematicController extends KVY.Object3DFeature {
 		const rbF = KVY.addFeature(obj, RigidbodyKinematic);
 		const colliderF = KVY.addFeature(obj, Collider, colliderProps);
 		this.rb = rbF.rb;
-		this.collider = colliderF.collider;
+		this.collider = colliderF.col;
 
 		// /** @type {Collider|null} */
 		// const colliderF = KVY.getFeature(this.object, Collider);
 		// if (!colliderF) throw "collider feature is required";
 		// this.collider = colliderF.collider;
-
-		/** @type {RapierPhysics} */
-		const rapier = ctx.modules.rapier;
 
 		const world = rapier.world;
 		const RAPIER = rapier.api;
@@ -87,21 +86,22 @@ export class KinematicController extends KVY.Object3DFeature {
 
 		return () => {
 			world.removeCharacterController(kcc);
+			this._rapier = undefined;
 		};
 	}
 
 	_velY = 0;
-	/** @param {KVY.CoreContext<{input: InputKeyModule, rapier: RapierPhysics}>} ctx */
+	/** @param {KVY.CoreContext<{keys: KeyModule, rapier: RapierPhysics}>} ctx */
 	onBeforeRender(ctx) {
 		const dt = ctx.deltaTime;
 		const kcc = this.kcc;
 		const rb = this.rb;
-		const rapierModule = ctx.modules.rapier;
+		const rapier = this._rapier;
 		// 1️⃣ Движение по XZ (горизонтальное)
 		// - movement direction
 		const dir = _vt.setScalar(0);
 
-		const key = ctx.modules.input.isKeyDown;
+		const key = ctx.modules.keys.has;
 		if (key("KeyW")) dir.z -= 1;
 		if (key("KeyS")) dir.z += 1;
 		if (key("KeyD")) dir.x += 1;
@@ -125,7 +125,7 @@ export class KinematicController extends KVY.Object3DFeature {
 			console.log("grnd");
 		} else {
 			console.log("not grounded");
-			const g = ctx.modules.rapier.world.gravity.y * 2;
+			const g = rapier.world.gravity.y * 2;
 			this._velY += g * dt;
 		}
 		movement.y += this._velY * dt;
@@ -163,19 +163,19 @@ export class KinematicController extends KVY.Object3DFeature {
 			obj.position.copy(_vt);
 		}
 
-		const RAPIER = rapierModule.api;
-		const world = rapierModule.world;
+		const RAPIER = rapier.api;
+		const world = rapier.world;
 	}
 
 	_hitGround;
 	/** @param {KVY.CoreContext<{input: InputKeyModule, rapier: RapierPhysics}>} ctx */
 	hitGround(ctx) {
-		const rapierModule = ctx.modules.rapier;
+		const rapier = this._rapier;
 
 		const rayOrigin = this.collider.translation();
 		rayOrigin.y -= this.radius + this.halfHeight + this.offset + 0.01;
-		let ray = new rapierModule.api.Ray(rayOrigin, down);
-		const hitGround = rapierModule.world.castRay(ray, 0.4, true);
+		let ray = new rapier.api.Ray(rayOrigin, down);
+		const hitGround = rapier.world.castRay(ray, 0.4, true);
 
 		// const hitRb = hitGround?.collider.parent();
 		this._hitGround = hitGround;
@@ -186,7 +186,7 @@ export class KinematicController extends KVY.Object3DFeature {
 	/** @param {KVY.CoreContext<{input: InputKeyModule, rapier: RapierPhysics}>} ctx */
 	takeIntoAccountPlatform(ctx) {
 		const rb = this.rb;
-		const rapierModule = ctx.modules.rapier;
+		const rapierModule = this._rapier;
 		const platform = this._platform;
 
 		const hitGround = this._hitGround;

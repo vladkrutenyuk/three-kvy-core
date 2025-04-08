@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 
 export class InputKeyModule extends KVY.CoreContextModule {
     keys = new Set();

@@ -41,7 +41,7 @@ export function addFeature<
 	beforeAttach?: (feature: TFeature) => void
 ): TFeature {
 	const f = Object3DFeaturability.from(obj);
-	
+
 	return f.addFeature(Feature, props as any, beforeAttach);
 }
 
@@ -52,8 +52,8 @@ export function addFeature<
  * @returns {Object3DFeature | null}
  */
 export function getFeature<
-	TObj extends THREE.Object3D,
-	TFeatureClass extends typeof Object3DFeature
+	TFeatureClass extends typeof Object3DFeature,
+	TObj extends THREE.Object3D
 >(obj: TObj, FeatureClass: TFeatureClass): InstanceType<TFeatureClass> | null {
 	return Object3DFeaturability.extract(obj)?.getFeature(FeatureClass) ?? null;
 }
@@ -64,8 +64,8 @@ export function getFeature<
  * @param {(feature: Object3DFeature) => boolean} predicate - A predicate function that receives a feature instance as an argument and returns a boolean indicating whether the feature matches.
  * @returns {Object3DFeature | null}
  */
-export function getFeatureBy<TObj extends THREE.Object3D, TFeature extends Object3DFeature>(
-	obj: TObj,
+export function getFeatureBy<TFeature extends Object3DFeature<any>>(
+	obj: THREE.Object3D,
 	predicate: (feature: TFeature) => boolean
 ): TFeature | null {
 	return Object3DFeaturability.extract(obj)?.getFeatureBy<TFeature>(predicate) ?? null;
@@ -84,7 +84,7 @@ export function getFeatures<TObj extends THREE.Object3D>(
 }
 
 /**
- * Destroys and detaches all features from the given object, freeing associated resources. 
+ * Destroys and detaches all features from the given object, freeing associated resources.
  * If `recursively` is set to `true`, this method will apply cleanup recursively to the entire object hierarchy.
  * @param {THREE.Object3D} obj - The target Three.js `Object3D` instance.
  * @param {boolean} recursively  - (Optional) Default is `false`. A boolean flag indicating whether to apply this method recursively to the object's hierarchy.

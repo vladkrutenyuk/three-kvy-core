@@ -1,13 +1,18 @@
 import * as THREE from "three";
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 import { RotateOF } from "./RotateOF.js";
 import { ExampleO3F } from "./ExampleO3F.js";
-import { RapierPhysics } from "./rapier-physics/RapierPhysics.js";
-import { OrbitControlsOF } from "./OrbitControlsOF.js";
-import { RigidbodyDynamic } from "./rapier-physics/RigidbodyDynamic.js";
-import { Collider } from "./rapier-physics/Collider.js";
 import { InputKeyModule } from "./InputKeyModule.js";
 import { SimpleMovement } from "./SimpleMovement.js";
+import {
+	RapierPhysics,
+	Collider,
+	RigidbodyDynamic,
+	RigidbodyKinematic,
+	SyncMode,
+	KeysInput
+} from "../addons/index.js";
+import { OrbitControlsOF } from "./OrbitControlsOF.js";
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
 // KVY.Object3DFeaturability.log = (x, ...args) =>
@@ -15,11 +20,15 @@ KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
 /** @type {typeof import("@dimforge/rapier3d-compat")} */
 var RAPIER = window.RAPIER;
 const rapier = new RapierPhysics(RAPIER);
-const input = new InputKeyModule();
-const ctx = KVY.CoreContext.create(THREE, { rapier, input }, { renderer: { antialias: true } });
+rapier.debugEnabled = true;
+const keys = new KeysInput();
+const ctx = KVY.CoreContext.create(THREE, { rapier, keys }, { renderer: { antialias: true } });
 const container = document.querySelector("#canvasContainer");
 ctx.three.mount(container);
 ctx.run();
+
+ctx.three.on("renderbefore", () => console.log("renderbefore"))
+rapier.on("step", () => console.log("stp"))
 
 class CustomTickModule extends KVY.CoreContextModule {
 	useCtx() {
@@ -186,7 +195,7 @@ const delay = (s = 0.05) => new Promise((res) => setTimeout(res, s * 1000));
 	await delay(1);
 
 	//TODO why eveyrthing from rapier is not destroyed
-	const ctx2 = KVY.CoreContext.create(THREE, { input }, { renderer: { antialias: true } });
+	const ctx2 = KVY.CoreContext.create(THREE, { keys }, { renderer: { antialias: true } });
 	ctx2.three.mount(container);
 	ctx2.run();
 	ctx2.root.add(cube);

@@ -1,4 +1,4 @@
-import KVY from "./lib.js";
+import KVY from "./KVY.js";
 
 export class RotateOF extends KVY.Object3DFeature {
     speed = 5;

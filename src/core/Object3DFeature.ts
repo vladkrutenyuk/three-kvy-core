@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { Evnt } from "./Events";
-import { CoreContext, ModulesRecord } from "./CoreContext";
+import { CoreContext, ModulesRecord, ModulesRecordDefault } from "./CoreContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
 import { assertDefined } from "../utils/assert-defined";
@@ -15,14 +15,14 @@ import { assertDefined } from "../utils/assert-defined";
  * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/Object3DFeature.ts | Source}
  */
 export abstract class Object3DFeature<
-	TModules extends ModulesRecord = {},
+	TModules extends ModulesRecord = ModulesRecordDefault,
 	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol
 > extends EventEmitter<TEventTypes> {
 	/** (readonly) Flag to mark that it is an instance of `isObject3DFeature`. */
-	public readonly isObject3DFeature: true;
+	public readonly isObject3DFeature!: true;
 
 	/** (readonly) Unique increment number for this feature instance. */
-	public readonly id: number;
+	public readonly id!: number;
 
 	/** UUID of feature instance. This gets automatically assigned, so this shouldn't be edited. 
 	 * Its generation way can be changed via overriding `Object3DFeature.generateUUID` static method.
@@ -30,7 +30,7 @@ export abstract class Object3DFeature<
 	public uuid: string;
 
 	/** (readonly) An instance of Three.js Object3D which this feature was added to. */
-	public readonly object: IFeaturable<TModules>;
+	public readonly object!: IFeaturable<TModules>;
 
 	/**
 	 * (readonly) Getter for the current attached `CoreContext`.
@@ -267,6 +267,7 @@ export abstract class Object3DFeature<
 
 		const subscribe = (ctx: CoreContext) => {
 			listener = function () {
+				//@ts-expect-error idi nah
 				this[handlerMethodName](ctx);
 			};
 			target.on(type, listener, this);

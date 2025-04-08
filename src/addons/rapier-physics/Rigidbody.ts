@@ -1,21 +1,35 @@
+import type * as RAPIER from "@dimforge/rapier3d-compat";
+import { IFeaturable, Object3DFeature, utils } from "@vladkrutenyuk/three-kvy-core";
 import * as THREE from "three";
-import KVY from "../lib.js";
-const { defineProps, readOnly } = KVY.utils.props;
+import { ModulesWithRapierPhysics } from "./RapierPhysics";
 
-export class Rigidbody extends KVY.Object3DFeature {
-	/** @type {true} */
-	isRigidbody;
+/**
+ * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/addons/Rigidbody.ts | Source}
+ */
+export class Rigidbody extends Object3DFeature<ModulesWithRapierPhysics> {
+	readonly isRigidbody = true;
 
-	/** @type {import("@dimforge/rapier3d-compat").RigidBody} */
-	rb;
+	get rb() {
+		return utils.assertDefined(this._rb, "rb");
+	}
+	protected _rb?: RAPIER.RigidBody;
 
-	constructor(object) {
+	constructor(object: IFeaturable) {
 		super(object);
-		defineProps(this, { isRigidbody: readOnly(true) });
+		utils.props.defineProps(this, { isRigidbody: utils.props.readOnly(true) });
+	}
+
+	getObjWorldPos() {
+		this.object.getWorldPosition(_v);
+		return _v;
+	}
+	getObjWorldQuat() {
+		this.object.getWorldQuaternion(_qt1);
+		return _qt1;
 	}
 
 	syncObjectToBody() {
-		const rb = this.rb;
+		const rb = this._rb;
 		if (!rb || rb.isSleeping()) return;
 
 		const obj = this.object;
@@ -40,7 +54,7 @@ export class Rigidbody extends KVY.Object3DFeature {
 	}
 
 	syncBodyToObjectKinematically() {
-		const rb = this.rb;
+		const rb = this._rb;
 		if (!rb) return;
 		const obj = this.object;
 		obj.getWorldPosition(_v);
@@ -50,18 +64,16 @@ export class Rigidbody extends KVY.Object3DFeature {
 	}
 
 	setBodyToObject() {
-		const rb = this.rb;
+		const rb = this._rb;
 		if (!rb) return;
 		const obj = this.object;
 		const pos = new THREE.Vector3();
 		const quat = new THREE.Quaternion();
 		obj.getWorldPosition(pos);
 		obj.getWorldQuaternion(quat);
-		rb.setTranslation(pos.x, pos.y, pos.z);
-		rb.setRotation(quat);
+		rb.setTranslation(pos, true);
+		rb.setRotation(quat, true);
 	}
-
-	_qt1 = new THREE.Quaternion();
 }
 
 const _v = new THREE.Vector3();

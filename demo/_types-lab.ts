@@ -1,5 +1,5 @@
 import RAPIER from "@dimforge/rapier3d-compat";
-import { addFeature } from "../src";
+import { addFeature } from "../src/kvy";
 import { ModulesRecord, CoreContext } from "../src/core/CoreContext";
 import { CoreContextModule, ReturnOfUseCtx } from "../src/core/CoreContextModule";
 import { IFeaturable, Object3DFeaturability } from "../src/core/Object3DFeaturablity";

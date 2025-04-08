@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "ES6",
     "module": "ESNext",
-    "outDir": "./dist",
+    
     "lib": [
-      "ES6",
+      "ES2017",
       "DOM"
     ],
     "moduleResolution": "node",
@@ -16,6 +16,6 @@
     "resolveJsonModule": true,
   },
   "include": [
-    "src/**/*"
+    "src/addons/**/*"
   ],
 }

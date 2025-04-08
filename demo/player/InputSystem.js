@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import KVY from "../lib.js";
+import KVY from "../KVY.js";
 
 export class InputSystem extends KVY.CoreContextModule {
 

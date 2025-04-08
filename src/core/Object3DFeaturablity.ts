@@ -299,7 +299,7 @@ export class Object3DFeaturability<
 		this._log("detached ctx");
 	}
 
-	private propagateAttachCtxDown(ctx: CoreContext<TModules>) {
+	private propagateAttachCtxDown(ctx: CoreContext) {
 		this._log("attaching ctx recursively...");
 		this.object.traverse((child) => {
 			Object3DFeaturability.extract(child)?.attachCtx(ctx);

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "lib": [
+      "ES2017",
+      "DOM"
+    ],
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@vladkrutenyuk/three-kvy-core": ["./src/kvy.ts"]
+    },
+  },
+  "include": [
+    "src/core/**/*",
+    "src/utils/**/*",
+    "src/kvy.ts",
+  ],
+}
