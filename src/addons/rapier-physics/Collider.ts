@@ -16,7 +16,7 @@ type ColliderParams<T extends ColliderType = ColliderType> =
 	T extends ColliderType ? [T, ...Parameters<(typeof RAPIER.ColliderDesc)[T]>] : never;
 
 export class Collider extends Object3DFeature<ModulesWithRapierPhysics> {
-	public get col() {
+	public get col(): RAPIER.Collider {
 		return assertDefined(this._col, "col");
 	}
 	private _col?: RAPIER.Collider;
@@ -63,6 +63,7 @@ export class Collider extends Object3DFeature<ModulesWithRapierPhysics> {
 		}
 
 		const collider = world.createCollider(desc, rb);
+		
 		if (this._setter){
 			this._setter(collider);
 		}

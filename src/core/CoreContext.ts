@@ -188,6 +188,14 @@ export class CoreContext<
 			console.warn(`Key [${key.toString()}] is already assinged in modules.`);
 			return this;
 		}
+		const sameClassModuleKey = this.findModuleKey(
+			(m) => m.constructor === module.constructor
+		);
+		if (sameClassModuleKey) {
+			console.warn(
+				`A module with the same class as the one under key '${key.toString()}' is already assigned to key '${sameClassModuleKey}'.`
+			);
+		}
 		this.modules[key] = module;
 		const m = module as unknown as ICoreContextModuleProtected;
 		m._ctx = this;

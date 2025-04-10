@@ -2,6 +2,7 @@ import type * as RAPIER from "@dimforge/rapier3d-compat";
 import { IFeaturable, Object3DFeature, utils } from "@vladkrutenyuk/three-kvy-core";
 import * as THREE from "three";
 import { ModulesWithRapierPhysics } from "./RapierPhysics";
+const { defineProps, readOnly } = utils.props;
 
 /**
  * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/addons/Rigidbody.ts | Source}
@@ -9,14 +10,14 @@ import { ModulesWithRapierPhysics } from "./RapierPhysics";
 export class Rigidbody extends Object3DFeature<ModulesWithRapierPhysics> {
 	readonly isRigidbody = true;
 
-	get rb() {
+	get rb(): RAPIER.RigidBody {
 		return utils.assertDefined(this._rb, "rb");
 	}
 	protected _rb?: RAPIER.RigidBody;
 
 	constructor(object: IFeaturable) {
 		super(object);
-		utils.props.defineProps(this, { isRigidbody: utils.props.readOnly(true) });
+		defineProps(this, { isRigidbody: readOnly(true) });
 	}
 
 	getObjWorldPos() {

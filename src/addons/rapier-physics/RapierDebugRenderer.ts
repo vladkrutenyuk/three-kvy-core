@@ -1,45 +1,61 @@
 import * as THREE from "three";
-import type * as RAPIER from "@dimforge/rapier3d-compat";
+import {
+	CoreContextModule,
+	CoreContext,
+	ModulesRecordDefault,
+	ReturnOfUseCtx,
+} from "@vladkrutenyuk/three-kvy-core";
+import { RapierPhysics } from "./RapierPhysics";
 
 /**
  * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/addons/RapierDebugRenderer.ts | Source}
  */
-export class RapierDebugRenderer {
-	private _lines: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
-	private _world: RAPIER.World;
+export class RapierDebugRenderer extends CoreContextModule {
+	private _lines?: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
 
-    get enabled() {
-        return this._lines.visible
-    }
-    set enabled(value: boolean) {
-        this._lines.visible = value;
-    }
+	get enabled() {
+		return this._enabled;
+	}
+	set enabled(value: boolean) {
+		const lines = this._lines;
+		if (lines) lines.visible = value;
+		this._enabled = value;
+	}
 
-	constructor(parent: THREE.Object3D, world: RAPIER.World) {
-		this._world = world;
-		this._lines = new THREE.LineSegments(
+	private _enabled = true;
+
+	protected useCtx(ctx: CoreContext<ModulesRecordDefault>): ReturnOfUseCtx {
+		const rapier = RapierPhysics.findInCtx(ctx);
+		if (!rapier) return;
+
+		const lines = new THREE.LineSegments(
 			new THREE.BufferGeometry(),
 			new THREE.LineBasicMaterial({ color: 0xffffff, vertexColors: true })
 		);
-		this._lines.frustumCulled = false;
-		parent.add(this._lines);
+		lines.frustumCulled = false;
+		lines.visible = this._enabled;
+		ctx.three.scene.add(lines);
+
+		const draw = () => {
+			const { vertices, colors } = rapier.world.debugRender();
+			lines.geometry.setAttribute(
+				"position",
+				new THREE.BufferAttribute(vertices, 3)
+			);
+			lines.geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4));
+			lines.visible = true;
+		};
+
+		rapier.on("stepafter", draw);
+		// ctx.three.on("renderbefore", draw);
+		
+		return () => {
+			this._lines = undefined;
+			lines.removeFromParent();
+			lines.geometry.dispose();
+			lines.material.dispose();
+			// ctx.three.off("renderbefore", draw);
+			rapier.off("stepafter", draw);
+		};
 	}
-
-	draw() {
-		const lines = this._lines;
-        if (!lines.visible) return;
-
-		const world = this._world;
-		const { vertices, colors } = world.debugRender();
-		lines.geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-		lines.geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4));
-		lines.visible = true;
-	}
-
-	destroy() {
-        const lines = this._lines;
-        lines.removeFromParent();
-        lines.geometry.dispose();
-        lines.material.dispose();
-    }
 }

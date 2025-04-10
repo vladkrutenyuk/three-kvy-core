@@ -6,6 +6,7 @@ import { InputKeyModule } from "./InputKeyModule.js";
 import { SimpleMovement } from "./SimpleMovement.js";
 import {
 	RapierPhysics,
+	RapierDebugRenderer,
 	Collider,
 	RigidbodyDynamic,
 	RigidbodyKinematic,
@@ -23,6 +24,7 @@ const rapier = new RapierPhysics(RAPIER);
 rapier.debugEnabled = true;
 const keys = new KeysInput();
 const ctx = KVY.CoreContext.create(THREE, { rapier, keys }, { renderer: { antialias: true } });
+ctx.assignModule("debug", new RapierDebugRenderer());
 const container = document.querySelector("#canvasContainer");
 ctx.three.mount(container);
 ctx.run();

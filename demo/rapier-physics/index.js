@@ -5,6 +5,7 @@ import { SimplexNoise } from "three/addons/math/SimplexNoise.js";
 import {
 	Collider,
 	KeysInput,
+	RapierDebugRenderer,
 	RapierPhysics,
 	RigidbodyDynamic,
 	RigidbodyKinematic,
@@ -25,9 +26,12 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 async function main() {
 	await RAPIER.init();
 
-	const rapier = new RapierPhysics(RAPIER);
-	rapier.debugEnabled = true;
-	ctx.assignModules({ keys: new KeysInput(), tween: new TweenModule(TWEEN), rapier });
+	ctx.assignModules({
+		keys: new KeysInput(),
+		tween: new TweenModule(TWEEN),
+		rapier: new RapierPhysics(RAPIER, { timeStep: "vary" }),
+	});
+	ctx.assignModule("debug", new RapierDebugRenderer());
 
 	const terrain = createTerrain();
 	ctx.root.add(terrain);
@@ -137,7 +141,6 @@ function createTerrain() {
 	]);
 	return terrain;
 }
-
 
 /**
  * @param {KVY.CoreContext} ctx

@@ -28,7 +28,7 @@ export class KinematicController extends KVY.Object3DFeature {
 		super(object);
 		this.halfHeight = props?.halfHeight || 0.85;
 		this.radius = props?.radius || 0.5;
-		this.offset = props?.offset || 0.01;
+		this.offset = props?.offset || 0.05;
 	}
 
 	/** @param {KVY.CoreContext} ctx */
@@ -71,29 +71,44 @@ export class KinematicController extends KVY.Object3DFeature {
 
 		const kcc = world.createCharacterController(this.offset);
 		// Don’t allow climbing slopes larger than 45 degrees.
-		kcc.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
+		// kcc.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
 		// Automatically slide down on slopes smaller than 30 degrees.
-		kcc.setMinSlopeSlideAngle((30 * Math.PI) / 180);
+		// kcc.setMinSlopeSlideAngle((30 * Math.PI) / 180);
 
-		kcc.enableSnapToGround(0.4);
+		// kcc.enableSnapToGround(0.4);
 		kcc.setApplyImpulsesToDynamicBodies(true);
-
+		
 		// Autostep if the step height is smaller than 0.5, its width is larger than 0.2,
 		// and allow stepping on dynamic bodies.
-		kcc.enableAutostep(0.3, 0.2, false);
+		// kcc.enableAutostep(0.3, 0.2, false);
 
 		this.kcc = kcc;
 
+		rapier.on("stepbefore", this.onStep);
+
 		return () => {
+			rapier.off("stepbefore", this.onStep);
 			world.removeCharacterController(kcc);
 			this._rapier = undefined;
 		};
 	}
 
+	onStep = () => {
+		this.update();
+	}
+
 	_velY = 0;
-	/** @param {KVY.CoreContext<{keys: KeyModule, rapier: RapierPhysics}>} ctx */
+	/** @param {KVY.CoreContext<{keys: KeysInput, rapier: RapierPhysics}>} ctx */
 	onBeforeRender(ctx) {
-		const dt = ctx.deltaTime;
+		// this.update();
+	}
+
+	update = () => {
+		/** @type {KVY.CoreContext<{keys: KeysInput, rapier: RapierPhysics}>} ctx */
+		const ctx = this.ctx;
+		const timeStep = this._rapier.timeStep
+		const dt = timeStep === "vary" ? ctx.deltaTime : timeStep;
+
 		const kcc = this.kcc;
 		const rb = this.rb;
 		const rapier = this._rapier;
@@ -102,6 +117,7 @@ export class KinematicController extends KVY.Object3DFeature {
 		const dir = _vt.setScalar(0);
 
 		const key = ctx.modules.keys.has;
+
 		if (key("KeyW")) dir.z -= 1;
 		if (key("KeyS")) dir.z += 1;
 		if (key("KeyD")) dir.x += 1;
@@ -131,7 +147,7 @@ export class KinematicController extends KVY.Object3DFeature {
 		movement.y += this._velY * dt;
 
 		// учитываем возможную платформу
-		this.takeIntoAccountPlatform(ctx);
+		this.takeIntoAccountPlatform();
 		const platform = this._platform;
 		if (platform?.rb) {
 			// console.log("on platform!");
@@ -153,7 +169,7 @@ export class KinematicController extends KVY.Object3DFeature {
 
 		// 6️⃣ Проверяем, стоит ли персонаж на земле
 		this._isGrounded = kcc.computedGrounded();
-		this.hitGround(ctx);
+		this.hitGround();
 
 		// sync object3d with rigidbody collider
 		_vt.copy(this.collider.translation());
@@ -168,8 +184,10 @@ export class KinematicController extends KVY.Object3DFeature {
 	}
 
 	_hitGround;
-	/** @param {KVY.CoreContext<{input: InputKeyModule, rapier: RapierPhysics}>} ctx */
-	hitGround(ctx) {
+	
+	hitGround() {
+		/** @type {KVY.CoreContext<{keys: KeysInput, rapier: RapierPhysics}>} ctx */
+		const ctx = this.ctx;
 		const rapier = this._rapier;
 
 		const rayOrigin = this.collider.translation();
@@ -183,8 +201,9 @@ export class KinematicController extends KVY.Object3DFeature {
 
 	_platform = { rb: null, lastPos: null, dx: 0, dy: 0, dz: 0 };
 
-	/** @param {KVY.CoreContext<{input: InputKeyModule, rapier: RapierPhysics}>} ctx */
-	takeIntoAccountPlatform(ctx) {
+	takeIntoAccountPlatform() {
+		/** @type {KVY.CoreContext<{keys: KeysInput, rapier: RapierPhysics}>} ctx */
+		const ctx = this.ctx;
 		const rb = this.rb;
 		const rapierModule = this._rapier;
 		const platform = this._platform;
