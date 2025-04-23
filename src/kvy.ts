@@ -13,7 +13,7 @@ export * from "./core/CoreContextModule.js";
 export * from "./core/Object3DFeaturablity.js";
 export * from "./core/factory.js";
 
-export const REVISION = "2.1.0-alpha.3";
+export const REVISION = "2.1.0-alpha.4";
 
 declare global {
 	interface Window {

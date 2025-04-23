@@ -145,10 +145,7 @@ export class Object3DFeaturability<
 		props?: TProps,
 		beforeAttach?: (feature: TFeature) => void
 	): TFeature {
-		const instance = new Feature(
-			this.object as IFeaturable<any, any>,
-			props ?? ({} as any)
-		);
+		const instance = new Feature(this.object as IFeaturable<any, any>, props);
 		beforeAttach?.(instance);
 
 		this._features.push(instance);

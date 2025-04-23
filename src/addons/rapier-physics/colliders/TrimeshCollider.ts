@@ -25,7 +25,7 @@ function isMesh(obj: unknown): obj is THREE.Mesh {
 	return (obj as THREE.Mesh).isMesh;
 }
 
-function createTrimeshColliderArgsFromMesh(mesh: THREE.Mesh) {
+export function createTrimeshColliderArgsFromMesh(mesh: THREE.Mesh) {
 	const geometry = mesh.geometry.clone();
 
 	// Применим мировую трансформацию
