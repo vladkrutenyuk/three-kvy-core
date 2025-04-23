@@ -14,3 +14,4 @@ export { BallCollider } from "./colliders/BallCollider";
 export { ConeCollider } from "./colliders/ConeCollider";
 export { CylinderCollider } from "./colliders/CylinderCollider";
 export { TrimeshCollider } from "./colliders/TrimeshCollider";
+export { ConvexMeshCollider } from "./colliders/ConvexMeshCollider";
