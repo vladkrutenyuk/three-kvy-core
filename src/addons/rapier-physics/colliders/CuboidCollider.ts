@@ -19,8 +19,8 @@ export class CuboidCollider extends Collider {
 		const [hx, hy, hz] = props ?? defaultValues;
 		super(object, [colType, hx, hy, hz]);
 		this.hx = hx;
-		this.hy = hx;
-		this.hz = hx;
+		this.hy = hy;
+		this.hz = hz;
 	}
 
 	protected useCtx(ctx: typeof this.ctx): () => void {
