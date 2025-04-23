@@ -24,7 +24,7 @@ export class CuboidCollider extends Collider {
 	}
 
 	protected useCtx(ctx: typeof this.ctx): () => void {
-		this._params = [colType, this.hx, this.hx, this.hz];
+		this._params = [colType, this.hx, this.hy, this.hz];
 		return super.useCtx(ctx);
 	}
 }
