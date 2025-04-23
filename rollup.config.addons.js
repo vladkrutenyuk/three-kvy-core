@@ -8,7 +8,7 @@ import dts from "rollup-plugin-dts";
 import alias from "@rollup/plugin-alias";
 
 export default {
-	input: "src/addons/index.ts",
+	input: ["src/addons/index.ts", "src/addons/rapier-physics/index.ts"],
 	output: [
 		{
 			dir: "addons",

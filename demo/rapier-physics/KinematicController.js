@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import KVY from "../KVY.js";
-import { Collider, RigidbodyKinematic, RapierPhysics, KeysInput } from "../../addons/index.js";
+import { KeysInput } from "../../addons/input/KeysInput.js";
+import { RigidbodyKinematic, RapierPhysics, CapsuleCollider, Collider } from "../../addons/rapier-physics/index.js";
 
 export class KinematicController extends KVY.Object3DFeature {
 	/** @type {import("@dimforge/rapier3d-compat").KinematicCharacterController} */
@@ -54,10 +55,11 @@ export class KinematicController extends KVY.Object3DFeature {
 		// const collider = rb.collider(0);
 		// if (!collider) throw new Error("Collider is null or undefined");
 
-		const colliderProps = ["capsule", this.halfHeight, this.radius];
+		const colliderProps = [this.halfHeight, this.radius];
 
 		const rbF = KVY.addFeature(obj, RigidbodyKinematic);
-		const colliderF = KVY.addFeature(obj, Collider, colliderProps);
+		// const colliderF = KVY.addFeature(obj, Collider, ["capsule",...colliderProps]);
+		const colliderF = KVY.addFeature(obj, CapsuleCollider, colliderProps);
 		this.rb = rbF.rb;
 		this.collider = colliderF.col;
 
@@ -71,16 +73,16 @@ export class KinematicController extends KVY.Object3DFeature {
 
 		const kcc = world.createCharacterController(this.offset);
 		// Don’t allow climbing slopes larger than 45 degrees.
-		// kcc.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
+		kcc.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
 		// Automatically slide down on slopes smaller than 30 degrees.
-		// kcc.setMinSlopeSlideAngle((30 * Math.PI) / 180);
+		kcc.setMinSlopeSlideAngle((30 * Math.PI) / 180);
 
-		// kcc.enableSnapToGround(0.4);
+		kcc.enableSnapToGround(0.4);
 		kcc.setApplyImpulsesToDynamicBodies(true);
 		
 		// Autostep if the step height is smaller than 0.5, its width is larger than 0.2,
 		// and allow stepping on dynamic bodies.
-		// kcc.enableAutostep(0.3, 0.2, false);
+		kcc.enableAutostep(0.3, 0.2, false); 
 
 		this.kcc = kcc;
 

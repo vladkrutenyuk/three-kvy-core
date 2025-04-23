@@ -1,7 +1,7 @@
 {
   "name": "@vladkrutenyuk/three-kvy-core",
-  "version": "2.1.0-alpha.2",
-  "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://linkedin.com/in/vladkrutenyuk)",
+  "version": "2.1.0-alpha.3",
+  "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://x.com/vladkrutenyuk)",
   "license": "MIT",
   "description": "Everything you need to create any-complexity 3D apps with Three.js. Empower Three.js with a modular, lifecycle-managed context that seamlessly propagates through objects via reusable features providing structured logic.",
   "homepage": "https://three-kvy-core.vladkrutenyuk.ru",
@@ -24,7 +24,8 @@
       "import": "./build/kvy.js",
       "types": "./build/kvy.d.ts"
     },
-    "./addons": "./addons/index.js"
+    "./addons": "./addons/index.js",
+    "./addons/*": "./addons/*"
   },
   "files": [
     "build",
