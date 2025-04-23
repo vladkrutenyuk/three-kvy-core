@@ -24,7 +24,7 @@ export class Collider extends Object3DFeature<ModulesWithRapierPhysics> {
 
 	constructor(object: IFeaturable, props: ColliderParams) {
 		super(object);
-		this._params = props;
+		this._params = props ?? defaultProps;
 	}
 
 	private _setter?: (collider: RAPIER.Collider) => void;
@@ -108,3 +108,5 @@ const _qt = new THREE.Quaternion();
 const _qt2 = new THREE.Quaternion();
 
 const _rbPredic = (x: Rigidbody) => x instanceof Rigidbody;
+
+const defaultProps = ["cuboid", 0.5, 0.5, 0.5];
