@@ -29,6 +29,8 @@ export class CoreContext<
 	destroy: [];
 	looprun: [];
 	loopstop: [];
+	userawake: [],
+	userstart: [],
 }> {
 	/**
 	 * Initialization shortcut. Creates and returns a new {@link CoreContext} instance.

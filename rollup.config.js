@@ -7,10 +7,9 @@ import terser from "@rollup/plugin-terser";
 import dts from "rollup-plugin-dts";
 import alias from "@rollup/plugin-alias";
 
-const _namespace = "KVY"; // Название неймспейса, используемого в UMD и d.ts
 const _tsInput = "src/kvy.ts"; // Входной файл для сборки
 const _fileName = "kvy"; // Базовое имя для всех файлов сборки
-const _npmModule = "@vladkrutenyuk/game-world"; // Базовое имя для всех файлов сборки
+
 const _outputDir = "build"; // Директория для всех файлов сборки
 const _externalDeps = ["three", "eventemitter3"]; // Внешние зависимости
 const _globalVariableMappings = {
@@ -42,7 +41,8 @@ const baseConfig = (format, min) => ({
 	external: _externalDeps,
 });
 
-
+const _namespace = "KVY"; // Название неймспейса, используемого в UMD и d.ts
+const _npmModule = "@vladkrutenyuk/three-kvy-core"; 
 export default [
 	// ESM Configuration (non-minified)
 	// baseConfig("esm"),

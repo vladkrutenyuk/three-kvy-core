@@ -24,7 +24,7 @@ export abstract class Object3DFeature<
 	/** (readonly) Unique increment number for this feature instance. */
 	public readonly id!: number;
 
-	/** UUID of feature instance. This gets automatically assigned, so this shouldn't be edited. 
+	/** UUID of feature instance. This gets automatically assigned, so this shouldn't be edited.
 	 * Its generation way can be changed via overriding `Object3DFeature.generateUUID` static method.
 	 */
 	public uuid: string;
@@ -42,7 +42,7 @@ export abstract class Object3DFeature<
 
 	/** (readonly) Flag to check if this feature has attached `CoreContext`. */
 	public get hasCtx(): boolean {
-		return !!this._ctx
+		return !!this._ctx;
 	}
 
 	private _ftblty: Object3DFeaturability<TModules>;
@@ -137,31 +137,31 @@ export abstract class Object3DFeature<
 	};
 
 	/**
-	 * Overridable Lifecycle Method. Called when some `CoreContext` is attached to this feature. 
+	 * Overridable Lifecycle Method. Called when some `CoreContext` is attached to this feature.
 	 * The defined returned cleanup function (optional) is called when the context is detached from the feature.
 	 * It is prohibitted to be called manually.
 	 *
 	 * @param {CoreContext<TModules>} ctx - An instance of `CoreContext` which is attached to this feature.
 	 * @returns {undefined | (() => void) | void} A cleanup function, or `undefined` if no cleanup is needed.
 	 * @override
-	 * 
+	 *
 	 * @example
 	 * ```
 	 * useCtx(ctx) {
 	 * 	const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
 	 * 	this.object.add(mesh);
-	 * 
+	 *
 	 * 	const listener = () => {
 	 * 		// ...
 	 * 	}
 	 * 	const customTicker = ctx.modules.customTicker;
 	 * 	customTicker.on("tick", listener);
-	 * 
+	 *
 	 * 	return () => {
 	 * 		this.object.remove(mesh);
 	 * 		mesh.geometry.dispose();
 	 * 		mesh.material.dispose();
-	 * 
+	 *
 	 * 		customTicker.off("tick", listener);
 	 * 	}
 	 * }
@@ -226,6 +226,20 @@ export abstract class Object3DFeature<
 	 */
 	onLoopStop(ctx: CoreContext<TModules>) {}
 
+	/**
+	 * When `ctx.emit("userstart")` is called by user manually.
+	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * @override
+	 */
+	onUserAwake(ctx: CoreContext<TModules>) {}
+
+	/**
+	 * When `ctx.emit("userstart")` is called by user manually.
+	 * @param {CoreContext<TModules>} ctx - The game context.
+	 * @override
+	 */
+	onUserStart(ctx: CoreContext<TModules>) {}
+
 	// Debug Logs
 
 	private _log(msg: string) {
@@ -247,11 +261,31 @@ export abstract class Object3DFeature<
 		if (this.onResize !== p.onResize) {
 			this.iehm(ctx.three, "unmount", "onUnmount");
 		}
+		//TODO refactor like this
+		// const array = [
+		// 	["looprun", "onLoopRun"],
+		// 	["loopstop", "onLoopStop"],
+		// 	["userawake", "onUserAwake"],
+		// 	["userstart", "onUserStart"],
+		// ] as const;
+		// for (const arrayItem of array) {
+		// 	const [eventName, methodName] = arrayItem;
+
+		// 	if (this[methodName] !== p[methodName]) {
+		// 		this.iehm(ctx, eventName, methodName);
+		// 	}
+		// }
 		if (this.onLoopRun !== p.onLoopRun) {
 			this.iehm(ctx, "looprun", "onLoopRun");
 		}
 		if (this.onLoopStop !== p.onLoopStop) {
 			this.iehm(ctx, "loopstop", "onLoopStop");
+		}
+		if (this.onUserAwake !== p.onUserAwake) {
+			this.iehm(ctx, "userawake", "onUserAwake");
+		}
+		if (this.onUserStart !== p.onUserStart) {
+			this.iehm(ctx, "userstart", "onUserStart");
 		}
 	}
 
@@ -286,7 +320,7 @@ export abstract class Object3DFeature<
 
 	/**
 	 * @returns Generates a unique identifier for [`Object3DFeature`](/docs/) instances.\
-	 * By default, it uses [`crypto.randomUUID()`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID), but in case of fall back, it returns `${Math.random()}-${Date.now()}`. 
+	 * By default, it uses [`crypto.randomUUID()`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID), but in case of fall back, it returns `${Math.random()}-${Date.now()}`.
 	 * You can freely override this static method to any of your own generation, e.g:
 	 * ```js
 	 * CoreContext.generateUUID = () => nanoid(10)
