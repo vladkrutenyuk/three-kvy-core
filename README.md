@@ -38,10 +38,16 @@ Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)
 ## What does it look like?
 
 ```js
-import * as THREE from "three";
+import * as THREE from "three/webgpu";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } });
+const three = new KVY.ThreeContext(
+        new THREE.WebGPURenderer({ antialias: true }), 
+        new THREE.PerspectiveCamera(), 
+        new THREE.Scene(),
+		new THREE.Clock()
+) 
+const ctx = new KVY.CoreContext(three);
 
 ctx.three.mount(document.querySelector("#canvas-container"));
 ctx.run();
