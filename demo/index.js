@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Object3D, WebGPURenderer} from "three/webgpu";
 import KVY from "./KVY.js";
 import { RotateOF } from "./RotateOF.js";
 import { ExampleO3F } from "./ExampleO3F.js";
@@ -14,6 +15,7 @@ import {
 	KeysInput
 } from "../addons/index.js";
 import { OrbitControlsOF } from "./OrbitControlsOF.js";
+
 
 KVY.Object3DFeature.log = (x, ...args) => console.log(`F-${x.id}`, ...args);
 // KVY.Object3DFeaturability.log = (x, ...args) =>

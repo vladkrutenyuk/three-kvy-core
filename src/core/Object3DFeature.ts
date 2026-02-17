@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { Evnt } from "./Events";
-import { CoreContext, ModulesRecord, ModulesRecordDefault } from "./CoreContext";
+import { CoreContext, ModulesRecord } from "./CoreContext";
 import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
 import { defineProps, readOnly } from "../utils/define-props";
 import { assertDefined } from "../utils/assert-defined";
@@ -15,7 +15,7 @@ import { assertDefined } from "../utils/assert-defined";
  * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/Object3DFeature.ts | Source}
  */
 export abstract class Object3DFeature<
-	TModules extends ModulesRecord = ModulesRecordDefault,
+	TModules extends ModulesRecord = ModulesRecord,
 	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol
 > extends EventEmitter<TEventTypes> {
 	/** (readonly) Flag to mark that it is an instance of `isObject3DFeature`. */
@@ -167,7 +167,7 @@ export abstract class Object3DFeature<
 	 * }
 	 * ```
 	 */
-	protected useCtx(ctx: CoreContext<TModules>): undefined | (() => void) | void {
+	protected useCtx(ctx: CoreContext<TModules>): undefined | (() => void) {
 		return;
 	}
 

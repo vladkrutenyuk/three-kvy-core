@@ -13,7 +13,7 @@ export class OrbitControlsOF extends KVY.Object3DFeature {
             maxPolarAngle: Math.PI / 2,
             minDistance: 1,
             maxDistance: 100,
-            ...props.options
+            // ...props.options
         };
 	}
 

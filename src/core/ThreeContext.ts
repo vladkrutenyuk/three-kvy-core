@@ -1,8 +1,7 @@
 import { EventEmitter } from "eventemitter3";
-import type * as THREE from "three";
+import type * as THREE from "three/webgpu";
 import { defineProps, readOnly } from "../utils/define-props";
 
-export type ThreeContextParams = { renderer?: THREE.WebGLRendererParameters };
 /**
  * A utility for initializing core [Three.js](https://threejs.org) entities, managing their setup, and handling rendering.
  * @see {@link https://three-kvy-core.vladkrutenyuk.ru/docs/api/three-context | Official Documentation}
@@ -10,47 +9,16 @@ export type ThreeContextParams = { renderer?: THREE.WebGLRendererParameters };
  */
 export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContext> {
 	/**
-	 * Shortcut to create an instance of ThreeContext.
-	 * @param {typeof import("three")} Three - Three.js `THREE` imported module, object containing class constructors `WebGLRenderer`, `PerspectiveCamera`, `Scene`, `Clock`, `Raycaster`.
-	 * @param {{renderer: THREE.WebGLRendererParameters}} params - (optional) Object parameters
-	 * @returns {ThreeContext} An instance of ThreeContext
-	 * @example
-	 * ```js
-		import * as THREE from "three";
-		import * as KVY from "@vladkrutenyuk/three-kvy-core";
-
-		const three = new KVY.ThreeContext.create(THREE, { renderer: { antialias: true } });
-		```
-	 */
-	static create(
-		Three: {
-			WebGLRenderer: typeof THREE.WebGLRenderer;
-			PerspectiveCamera: typeof THREE.PerspectiveCamera;
-			Scene: typeof THREE.Scene;
-			Clock: typeof THREE.Clock;
-			Raycaster: typeof THREE.Raycaster;
-		},
-		params?: ThreeContextParams
-	) {
-		return new ThreeContext(
-			new Three.WebGLRenderer(params?.renderer),
-			new Three.PerspectiveCamera(),
-			new Three.Scene(),
-			new Three.Clock(),
-			new Three.Raycaster(),
-		);
-	}
-
-	/**
 	 * (readonly) flag to mark that it is an instance of ThreeContext.
 	 * @type {true}
 	 */
 	public readonly isThreeContext!: true;
 	/**
-	 * (readonly) instance of Three.js `WebGLRenderer` used for rendering your awesome scene.
-	 * @type {THREE.WebGLRenderer}
+	 * (readonly) instance of Three.js `Renderer` used for rendering your awesome scene.
+	 * 
+	 * @type {THREE.Renderer}
 	 */
-	public readonly renderer: THREE.WebGLRenderer;
+	public readonly renderer: THREE.Renderer;
 
 	/**
 	 * An instance of Three.js `PerspectiveCamera` camera which is used in rendering. Fires event `camerachanged` on set.
@@ -69,9 +37,6 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 	/** (readonly) instance of Three.js `Clock` */
 	public readonly clock: THREE.Clock;
-
-	/** (readonly) instance of Three.js `Raycaster`. */
-	public readonly raycaster: THREE.Raycaster;
 
 	/** (readonly) HTML element where the renderer canvas is appended on mount. */
 	public get container(): HTMLDivElement | null {
@@ -104,18 +69,16 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 	/**
 	 * This creates a new {@link ThreeContext} instance.
-	 * @param {THREE.WebGLRenderer} renderer - An instance of Three.js `WebGLRenderer`
+	 * @param {THREE.Renderer} renderer - An instance of Three.js `Renderer`
 	 * @param {THREE.PerspectiveCamera} camera - An instance of Three.js `PerspectiveCamera`
 	 * @param {THREE.Scene} scene - An instance of Three.js `Scene`
 	 * @param {THREE.Clock} clock - An instance of Three.js `Clock`
-	 * @param {THREE.Raycaster} raycaster - An instance of Three.js `Raycaster`
 	 */
 	constructor(
-		renderer: THREE.WebGLRenderer,
+		renderer: THREE.Renderer,
 		camera: THREE.PerspectiveCamera,
 		scene: THREE.Scene,
-		clock: THREE.Clock,
-		raycaster: THREE.Raycaster
+		clock: THREE.Clock
 	) {
 		super();
 		defineProps(this, { isThreeContext: readOnly(true) });
@@ -123,7 +86,6 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.scene = scene;
 		this._camera = camera;
 		this.clock = clock;
-		this.raycaster = raycaster;
 		this._renderFn = this._srcRenderFn;
 	}
 
@@ -270,6 +232,6 @@ export type ThreeContextEventMap = {
 	[ev.Resize]: [width: number, height: number];
 	[ev.CameraChanged]: [
 		newCamera: THREE.PerspectiveCamera,
-		prevCamera: THREE.PerspectiveCamera
+		prevCamera: THREE.PerspectiveCamera,
 	];
 };

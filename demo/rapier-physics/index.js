@@ -1,5 +1,6 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
-import * as THREE from "three";
+// import * as THREE from "three";
+import * as THREE from "three/webgpu";
 import * as TWEEN from "three/addons/libs/tween.module.js";
 import { SimplexNoise } from "three/addons/math/SimplexNoise.js";
 import {
@@ -15,13 +16,19 @@ import { CameraFollow } from "../CameraFollow.js";
 import KVY from "../KVY.js";
 import { TweenModule } from "../TweenModule.js";
 import { KinematicController } from "./KinematicController.js";
+import { positionLocal, positionViewDirection, vec3 } from "three/tsl";
+
+// new THREE.WebGPURenderer().init()
 
 const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } });
-ctx.three.mount(document.querySelector("#canvas-container"));
-ctx.run();
 const renderer = ctx.three.renderer;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.init().then((x) => {
+	console.log("inited!");
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	ctx.three.mount(document.querySelector("#canvas-container"));
+	ctx.run();
+});
 
 async function main() {
 	await RAPIER.init();
@@ -126,9 +133,17 @@ function createTerrain() {
 	const scale = new RAPIER.Vector3(size, 1, size);
 
 	const terrain = new THREE.Group();
-	const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial()).rotateX(
-		-Math.PI / 2
-	);
+
+	const nodeMaterial = new THREE.MeshStandardNodeMaterial();
+	nodeMaterial.roughness = 0;
+	const pos = positionLocal;
+	
+	const pattern = pos.xz.fract().step(0.5); // vec2 шахматка по xz
+
+	// Собираем цвет: pattern.x в красный, pattern.y в зелёный
+	// nodeMaterial.colorNode = positionViewDirection;
+
+	const mesh = new THREE.Mesh(geometry, nodeMaterial).rotateX(-Math.PI / 2);
 	mesh.receiveShadow = true;
 	terrain.add(mesh);
 

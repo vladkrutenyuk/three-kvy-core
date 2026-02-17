@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { assertDefined } from "../utils/assert-defined";
-import { CoreContext, ModulesRecord, ModulesRecordDefault } from "./CoreContext";
+import { CoreContext, ModulesRecord } from "./CoreContext";
 import { defineProps, readOnly } from "../utils/define-props";
 
 /**
@@ -13,7 +13,7 @@ import { defineProps, readOnly } from "../utils/define-props";
  */
 export abstract class CoreContextModule<
 	TEventTypes extends EventEmitter.ValidEventTypes = string | symbol,
-	TModules extends ModulesRecord = ModulesRecordDefault
+	TModules extends ModulesRecord = ModulesRecord
 > extends EventEmitter<TEventTypes> {
 	/** Read-only flag to mark that it is an instance of {@link CoreContextModule}.*/
 	readonly isCoreContextModule!: true
@@ -55,6 +55,6 @@ export abstract class CoreContextModule<
 export type ReturnOfUseCtx = undefined | (() => void) | void;
 
 export interface ICoreContextModuleProtected {
-	_ctx?: CoreContext<ModulesRecordDefault>
+	_ctx?: CoreContext<ModulesRecord>
 	useCtx<TModules extends ModulesRecord>(ctx: CoreContext<TModules>): ReturnOfUseCtx;
 }

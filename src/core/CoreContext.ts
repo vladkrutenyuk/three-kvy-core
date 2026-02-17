@@ -1,20 +1,16 @@
 import { EventEmitter } from "eventemitter3";
-import type * as THREE from "three";
+import type * as THREE from "three/webgpu";
 import { defineProps, readOnly } from "../utils/define-props";
 import { removeArrayItem } from "../utils/remove-array-item";
 import {
 	CoreContextModule,
-	ICoreContextModuleProtected,
+	type ICoreContextModuleProtected,
 	ReturnOfUseCtx,
 } from "./CoreContextModule";
-import { IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
-import { ThreeContext, ThreeContextParams } from "./ThreeContext";
+import { type IFeaturable, Object3DFeaturability } from "./Object3DFeaturablity";
+import { ThreeContext } from "./ThreeContext";
 
 export type ModulesRecord = Record<string, CoreContextModule>;
-export type ModulesRecordDefault = Record<
-	string,
-	CoreContextModule & Record<string, any>
->;
 
 /**
  * The primary central entity, acting as a main hub, that orchestrates the Three.js environment, animation loop, and module system.\
@@ -24,7 +20,7 @@ export type ModulesRecordDefault = Record<
  * @see {@link https://github.com/vladkrutenyuk/three-kvy-core/blob/main/src/core/CoreContext.ts | Source}
  */
 export class CoreContext<
-	TModules extends ModulesRecord = ModulesRecordDefault
+	TModules extends ModulesRecord = ModulesRecord
 > extends EventEmitter<{
 	destroy: [];
 	looprun: [];
@@ -32,38 +28,6 @@ export class CoreContext<
 	userawake: [],
 	userstart: [],
 }> {
-	/**
-	 * Initialization shortcut. Creates and returns a new {@link CoreContext} instance.
-	 * @param {typeof import("three")} Three - Object containing Three.js class constructors `WebGLRenderer`, `Scene`, `PerspectiveCamera`, `Clock`, `Raycaster`. In short, just use imported [`THREE`](https://threejs.org/docs/manual/en/introduction/Installation.html) Three.js module.
-	 * @param {TModules} modules - (optional) Custom dictionary of any your modules {@link CoreContextModules}.
-	 * @param {ThreeContextParams} params - (optional) Object paramateres
-	 * @example
-	 * ```js
-	 *	import * as THREE from "three";
-	 *	import * as KVY from "@vladkrutenyuk/three-kvy-core";
-	 *
-	 *	const modules = {
-	 *		moduleA: new MyModuleA(),
-	 *		moduleB: new MyModuleB(),
-	 *	};
-	 *	const ctx = KVY.CoreContext.create(THREE, modules, { renderer: { antialias: true } });
-	 *	```
-	 * @returns {CoreContext}
-	 */
-	static create<TModules extends ModulesRecord = ModulesRecordDefault>(
-		Three: {
-			Scene: typeof THREE.Scene;
-			WebGLRenderer: typeof THREE.WebGLRenderer;
-			PerspectiveCamera: typeof THREE.PerspectiveCamera;
-			Raycaster: typeof THREE.Raycaster;
-			Clock: typeof THREE.Clock;
-		},
-		modules?: Partial<TModules>,
-		params?: ThreeContextParams
-	) {
-		const three = ThreeContext.create(Three, params);
-		return new CoreContext(three, three.scene, modules);
-	}
 	/** (readonly) Flag to mark that it is an instance of {@link CoreContext}. */
 	public readonly isCoreContext!: true;
 

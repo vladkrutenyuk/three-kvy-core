@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import type * as THREE from "three";
+import type * as THREE from "three/webgpu";
 import { defineProps, notEnumer } from "../utils/define-props";
 import { removeArrayItem } from "../utils/remove-array-item";
 import { traverseUp } from "../utils/traverse-up";
@@ -173,7 +173,7 @@ export class Object3DFeaturability<
 	 * @returns The feature instance, or `null` if not found.
 	 */
 	getFeatureBy<TFeature extends Object3DFeature = Object3DFeature>(
-		predicate: (feature: TFeature) => boolean
+		predicate: (feature: TFeature, index: number) => boolean
 	): TFeature | null {
 		return (this._features as TFeature[]).find(predicate) ?? null;
 	}
@@ -316,15 +316,6 @@ export class Object3DFeaturability<
 		this.object.traverse((child) => {
 			Object3DFeaturability.extract(child)?.detachCtx();
 		});
-		//? shall I use stack instead of recursive traverse?
-		// const stack: THREE.Object3D[] = [this.object];
-		// while (stack.length > 0) {
-		// 	const current = stack.pop();
-		// 	if (current) {
-		// 		Object3DFeaturability.extract(current)?.detachCtx();
-		// 		stack.push(...current.children);
-		// 	}
-		// }
 	}
 
 	private _log(msg: string) {
