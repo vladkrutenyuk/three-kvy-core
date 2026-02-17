@@ -18,8 +18,6 @@ import { TweenModule } from "../TweenModule.js";
 import { KinematicController } from "./KinematicController.js";
 import { positionLocal, positionViewDirection, vec3 } from "three/tsl";
 
-// new THREE.WebGPURenderer().init()
-
 const ctx = KVY.CoreContext.create(THREE, {}, { renderer: { antialias: true } });
 const renderer = ctx.three.renderer;
 renderer.init().then((x) => {

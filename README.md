@@ -42,10 +42,10 @@ import * as THREE from "three/webgpu";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
 const three = new KVY.ThreeContext(
-        new THREE.WebGPURenderer({ antialias: true }), 
-        new THREE.PerspectiveCamera(), 
-        new THREE.Scene(),
-		new THREE.Clock()
+    new THREE.WebGPURenderer({ antialias: true }), 
+    new THREE.PerspectiveCamera(), 
+    new THREE.Scene(),
+    new THREE.Clock()
 ) 
 const ctx = new KVY.CoreContext(three);
 
