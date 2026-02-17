@@ -1,6 +1,6 @@
 {
   "name": "@vladkrutenyuk/three-kvy-core",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": "Vlad Krutenyuk <vladislove2402@gmail.com> (https://x.com/vladkrutenyuk)",
   "license": "MIT",
   "description": "Everything you need to create any-complexity 3D apps with Three.js. Empower Three.js with a modular, lifecycle-managed context that seamlessly propagates through objects via reusable features providing structured logic.",
