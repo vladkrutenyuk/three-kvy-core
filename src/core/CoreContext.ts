@@ -28,6 +28,12 @@ export class CoreContext<
 	userawake: [],
 	userstart: [],
 }> {
+	static create<TModules extends ModulesRecord = ModulesRecord>(params: { renderer: THREE.Renderer, camera: THREE.PerspectiveCamera, scene: THREE.Scene, clock: THREE.Clock, modules?: Partial<TModules> | undefined }) {
+		const { renderer, camera, scene, clock, modules } = params;
+		const three = new ThreeContext(renderer, camera, scene, clock);
+		return new CoreContext<TModules>(three, scene, modules)
+	}
+
 	/** (readonly) Flag to mark that it is an instance of {@link CoreContext}. */
 	public readonly isCoreContext!: true;
 
