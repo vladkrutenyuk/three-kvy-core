@@ -41,16 +41,19 @@ Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)
 import * as THREE from "three/webgpu";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 
-const three = new KVY.ThreeContext(
-    new THREE.WebGPURenderer({ antialias: true }), 
-    new THREE.PerspectiveCamera(), 
-    new THREE.Scene(),
-    new THREE.Clock()
-) 
-const ctx = new KVY.CoreContext(three);
+const renderer = new THREE.WebGPURenderer({ antialias: true });
 
-ctx.three.mount(document.querySelector("#canvas-container"));
-ctx.run();
+const ctx = new KVY.CoreContext({
+    renderer,
+    camera: new THREE.PerspectiveCamera(),
+    scene: new THREE.Scene(),
+    clock: new THREE.Clock(),
+});
+
+renderer.init().then(() => {
+    ctx.three.mount(document.querySelector("#canvas-container"));
+    ctx.run();
+})
 
 class CustomTickModule extends KVY.CoreContextModule {
     useCtx(ctx) {
