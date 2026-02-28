@@ -167,7 +167,7 @@ export abstract class Object3DFeature<
 	 * }
 	 * ```
 	 */
-	protected useCtx(ctx: CoreContext<TModules>): undefined | (() => void) {
+	protected useCtx(ctx: CoreContext<TModules>): UseCtxReturn {
 		return;
 	}
 
@@ -350,3 +350,5 @@ interface IPrivateEvent
 		[Evnt.DetCtx]: [ctx: CoreContext];
 		[Evnt.Dstr]: [];
 	}> {}
+
+type UseCtxReturn = undefined | (() => void) | void;

@@ -98,6 +98,12 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		this.emit(ev.RenderAfter);
 	}
 
+	private _requestAnimationFrame: number | null = null;
+	requestRender = () => {
+		if (this._requestAnimationFrame !== null) return;
+		this._requestAnimationFrame = requestAnimationFrame(this.render);
+	};
+
 	/**
 	 * Overrides the render function with a custom implementation.
 	 * @param {Function} fn
@@ -196,7 +202,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		this.renderer.setSize(width, height);
 		this.emit(ev.Resize, width, height);
-		this.render();
+		this.requestRender();
 	};
 
 	private cameraChanged(
@@ -210,6 +216,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 		}
 		camera.updateProjectionMatrix();
 		this.emit(ev.CameraChanged, newCamera, prevCamera);
+		this.requestRender();
 	}
 }
 
