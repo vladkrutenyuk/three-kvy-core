@@ -202,7 +202,7 @@ export class ThreeContext extends EventEmitter<ThreeContextEventMap, ThreeContex
 
 		this.renderer.setSize(width, height);
 		this.emit(ev.Resize, width, height);
-		this.requestRender();
+		this.render();
 	};
 
 	private cameraChanged(
