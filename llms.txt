@@ -1,0 +1,440 @@
+# three-kvy-core
+
+> A lightweight, component-oriented Three.js extension library (3.5kb minzipped) for building scalable 3D applications.
+> Package: `@vladkrutenyuk/three-kvy-core` v2.3.4
+> Docs: https://three-kvy-core.vladkrutenyuk.ru
+> GitHub: https://github.com/vladkrutenyuk/three-kvy-core
+
+## Installation
+
+```sh
+npm i three eventemitter3 @vladkrutenyuk/three-kvy-core
+```
+
+## Core Mental Model
+
+The library is built on three concepts:
+
+1. **CoreContext** — the central hub. Owns the Three.js setup (renderer, camera, scene, clock), runs the animation loop, and holds a dictionary of modules. Context propagates automatically through the scene hierarchy via `Object3DFeaturability`.
+2. **Object3DFeature** — a reusable behavior component attached to a `THREE.Object3D`. Features receive the context when their object enters the `ctx.root` hierarchy and lose it when removed. Multiple features can be attached to one object.
+3. **CoreContextModule** — a pluggable service registered on `CoreContext` by name. Modules provide shared state or logic (physics engine, input, fixed tick, etc.) that features access via `ctx.modules`.
+
+Context propagates **automatically**: when you add an object to `ctx.root` (the scene by default), all features on it and its descendants receive the context. When removed, they lose it. No manual wiring needed.
+
+## Setup
+
+```js
+import * as THREE from "three";
+import * as KVY from "@vladkrutenyuk/three-kvy-core";
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+const ctx = KVY.CoreContext.create({
+    renderer,
+    camera: new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000),
+    scene: new THREE.Scene(),
+    clock: new THREE.Clock(),
+    modules: {
+        // optional: pass module instances here
+    }
+});
+
+// Mount renderer canvas to a DOM element
+ctx.three.mount(document.getElementById("app"));
+
+// Start animation loop
+ctx.run();
+```
+
+`CoreContext.create()` is the recommended factory. You can also use `new CoreContext(threeCtx, root?, modules?)` for custom root objects.
+
+## CoreContext API
+
+```ts
+ctx.three          // ThreeContext — renderer, camera, scene, clock
+ctx.modules        // { [key]: CoreContextModule } — typed module dictionary
+ctx.root           // THREE.Object3D — entry point for context propagation (= scene by default)
+ctx.deltaTime      // number — seconds since last frame
+ctx.time           // number — seconds since ctx.run()
+ctx.isRunning      // boolean
+ctx.isDestroyed    // boolean
+
+ctx.run()          // start animation loop
+ctx.stop()         // pause animation loop (resumable)
+ctx.destroy()      // permanently destroy everything
+
+ctx.assignModules({ key: moduleInstance })  // add modules after creation
+ctx.assignModule("key", moduleInstance)     // add a single module
+ctx.removeModule("key")                     // remove module by key
+ctx.findModule(predicate)                   // find module by predicate
+ctx.findModuleKey(predicate)                // find module key by predicate
+
+// Events (extends EventEmitter)
+ctx.on("looprun", handler)
+ctx.on("loopstop", handler)
+ctx.on("destroy", handler)
+ctx.emit("userawake")   // user-defined signal, triggers onUserAwake on all features
+ctx.emit("userstart")   // user-defined signal, triggers onUserStart on all features
+```
+
+## ThreeContext API (`ctx.three`)
+
+```ts
+ctx.three.renderer   // THREE.Renderer
+ctx.three.camera     // THREE.PerspectiveCamera (settable, fires "camerachanged")
+ctx.three.scene      // THREE.Scene
+ctx.three.clock      // THREE.Clock
+ctx.three.container  // HTMLDivElement | null
+ctx.three.isMounted  // boolean
+
+ctx.three.mount(element)   // append canvas, start ResizeObserver
+ctx.three.unmount()        // remove canvas
+ctx.three.render()         // manual render (fires renderbefore/renderafter events)
+ctx.three.requestRender()  // schedule one-shot render via requestAnimationFrame
+ctx.three.destroy()        // called automatically by ctx.destroy()
+
+ctx.three.overrideRender(fn)  // replace render function
+ctx.three.resetRender()       // restore default render function
+
+// Events (extends EventEmitter)
+ctx.three.on("renderbefore", handler)
+ctx.three.on("renderafter", handler)
+ctx.three.on("mount", (container) => {})
+ctx.three.on("unmount", handler)
+ctx.three.on("resize", (width, height) => {})
+ctx.three.on("camerachanged", (newCam, prevCam) => {})
+```
+
+## Object3DFeature — Writing Features
+
+Extend `Object3DFeature` to create reusable behaviors. **Never instantiate directly** — always use `addFeature()`.
+
+```ts
+import * as KVY from "@vladkrutenyuk/three-kvy-core";
+
+class Rotate extends KVY.Object3DFeature {
+    speed = 1;
+
+    onBeforeRender(ctx) {
+        this.object.rotateY(ctx.deltaTime * this.speed);
+    }
+}
+
+// Attach to any Object3D
+const mesh = new THREE.Mesh(geometry, material);
+ctx.root.add(mesh);
+KVY.addFeature(mesh, Rotate);
+```
+
+### Constructor Props
+
+Pass initial props through a second constructor argument:
+
+```ts
+class Rotate extends KVY.Object3DFeature {
+    speed: number;
+
+    constructor(object, props) {
+        super(object);
+        this.speed = props?.speed ?? 1;
+    }
+
+    onBeforeRender(ctx) {
+        this.object.rotateY(ctx.deltaTime * this.speed);
+    }
+}
+
+KVY.addFeature(mesh, Rotate, { speed: 2 });
+```
+
+### Lifecycle Methods (all optional overrides)
+
+```ts
+class MyFeature extends KVY.Object3DFeature {
+    // Called when CoreContext is attached to this feature.
+    // Return a cleanup function (or nothing) — cleanup runs on ctx detach.
+    useCtx(ctx) {
+        const handler = () => { /* ... */ };
+        ctx.modules.someModule.on("event", handler);
+
+        const child = new THREE.Mesh(...);
+        this.object.add(child);
+
+        return () => {
+            ctx.modules.someModule.off("event", handler);
+            this.object.remove(child);
+            child.geometry.dispose();
+            child.material.dispose();
+        };
+    }
+
+    onBeforeRender(ctx) {}   // every frame, before render
+    onAfterRender(ctx) {}    // every frame, after render
+    onResize(ctx) {}         // when container resizes
+    onMount(ctx) {}          // when ctx.three.mount() is called
+    onUnmount(ctx) {}        // when ctx.three.unmount() is called
+    onLoopRun(ctx) {}        // when ctx.run() is called
+    onLoopStop(ctx) {}       // when ctx.stop() is called
+    onUserAwake(ctx) {}      // when ctx.emit("userawake") is called
+    onUserStart(ctx) {}      // when ctx.emit("userstart") is called
+    onDestroy() {}           // when feature.destroy() is called (no ctx arg)
+}
+```
+
+### Feature Properties
+
+```ts
+feature.object    // THREE.Object3D — the object this feature is attached to
+feature.ctx       // CoreContext — throws if accessed before context is attached
+feature.hasCtx    // boolean — safe check before accessing ctx
+feature.id        // number — unique incremental id
+feature.uuid      // string — unique uuid
+feature.isObject3DFeature  // true
+```
+
+Features extend `EventEmitter` — you can emit and listen to custom events:
+
+```ts
+class Health extends KVY.Object3DFeature {
+    emit("died") { this.emit("died"); }
+}
+const h = KVY.addFeature(mesh, Health);
+h.on("died", () => { /* ... */ });
+```
+
+## Object3DFeature Factory Functions
+
+```ts
+// Add a feature to an object. Returns the feature instance.
+KVY.addFeature(object, FeatureClass)
+KVY.addFeature(object, FeatureClass, props)
+KVY.addFeature(object, FeatureClass, props, (feature) => { /* beforeAttach */ })
+
+// Retrieve a feature by class. Returns instance or null.
+KVY.getFeature(object, FeatureClass)
+
+// Find a feature by predicate. Returns instance or null.
+KVY.getFeatureBy(object, (feature) => boolean)
+
+// Get all features. Returns Object3DFeature[] or null.
+KVY.getFeatures(object)
+
+// Destroy all features on an object (and optionally its entire subtree).
+KVY.clear(object)
+KVY.clear(object, true)  // recursive
+```
+
+## CoreContextModule — Writing Modules
+
+Extend `CoreContextModule` to create shared services. Modules extend `EventEmitter` so features can subscribe to their events.
+
+```ts
+import * as KVY from "@vladkrutenyuk/three-kvy-core";
+
+class FixedTick extends KVY.CoreContextModule {
+    step = 1 / 60;
+    private _acc = 0;
+
+    protected useCtx(ctx) {
+        const handler = () => {
+            this._acc += ctx.deltaTime;
+            while (this._acc >= this.step) {
+                this._acc -= this.step;
+                this.emit("tick", this.step);
+            }
+        };
+        ctx.three.on("renderbefore", handler);
+        return () => ctx.three.off("renderbefore", handler);
+    }
+}
+
+// Register on context
+ctx.assignModules({
+    fixedTick: new FixedTick(),
+});
+
+// Access from features
+class MyFeature extends KVY.Object3DFeature {
+    useCtx(ctx) {
+        const handler = (dt) => { /* physics step */ };
+        ctx.modules.fixedTick.on("tick", handler);
+        return () => ctx.modules.fixedTick.off("tick", handler);
+    }
+}
+```
+
+### TypeScript: Typed Modules
+
+Define a modules interface and pass it as a generic to get full type safety:
+
+```ts
+interface MyModules extends KVY.ModulesRecord {
+    fixedTick: FixedTick;
+    input: KeysInput;
+}
+
+const ctx = KVY.CoreContext.create<MyModules>({ renderer, camera, scene, clock });
+
+// Features with typed modules:
+class MyFeature extends KVY.Object3DFeature<MyModules> {
+    useCtx(ctx) {
+        ctx.modules.fixedTick  // typed as FixedTick
+        ctx.modules.input      // typed as KeysInput
+    }
+}
+```
+
+### Module Properties
+
+```ts
+module.ctx       // CoreContext — throws if not yet assigned
+module.hasCtx    // boolean
+module.isCoreContextModule  // true
+```
+
+## Built-in Addons
+
+Addons are imported from a separate entry point:
+
+```ts
+import { KeysInput } from "@vladkrutenyuk/three-kvy-core/addons/input";
+import { RapierPhysics, Rigidbody, RigidbodyDynamic, RigidbodyFixed, RigidbodyKinematic, Collider } from "@vladkrutenyuk/three-kvy-core/addons/rapier-physics";
+```
+
+### KeysInput (module)
+
+```ts
+const input = new KeysInput();
+ctx.assignModules({ input });
+
+// In a feature:
+useCtx(ctx) {
+    // no setup needed, KeysInput handles its own listeners
+}
+onBeforeRender(ctx) {
+    if (ctx.modules.input.has("KeyW")) { /* move forward */ }
+    if (ctx.modules.input.shift) { /* shift held */ }
+}
+```
+
+`input.has(code)` — checks if a key is currently pressed, using [`KeyboardEvent.code`](https://developer.mozilla.org/docs/Web/API/KeyboardEvent/code) format (`"KeyW"`, `"Space"`, `"Digit1"`, etc.).
+
+### RapierPhysics (module) + Rigidbody/Collider (features)
+
+Requires `@dimforge/rapier3d-compat`:
+
+```ts
+import RAPIER from "@dimforge/rapier3d-compat";
+import { RapierPhysics, RigidbodyDynamic, RigidbodyFixed, Collider } from "@vladkrutenyuk/three-kvy-core/addons/rapier-physics";
+
+await RAPIER.init();
+ctx.assignModules({ physics: new RapierPhysics(RAPIER) });
+
+// Add to objects:
+KVY.addFeature(ground, RigidbodyFixed);
+KVY.addFeature(ground, Collider, { type: "cuboid", hx: 5, hy: 0.1, hz: 5 });
+
+KVY.addFeature(box, RigidbodyDynamic);
+KVY.addFeature(box, Collider, { type: "cuboid", hx: 0.5, hy: 0.5, hz: 0.5 });
+```
+
+## Common Patterns
+
+### Cross-feature communication
+
+```ts
+class Coin extends KVY.Object3DFeature {
+    useCtx(ctx) {
+        // Find another feature anywhere in the scene
+        let player = null;
+        ctx.root.traverse((child) => {
+            player = player ?? KVY.getFeature(child, PlayerMovement);
+        });
+
+        const checkPickup = () => {
+            if (!player) return;
+            if (this.object.position.distanceTo(player.object.position) < 1) {
+                player.addScore();
+                KVY.clear(this.object);
+                this.object.removeFromParent();
+            }
+        };
+
+        ctx.modules.fixedTick.on("tick", checkPickup);
+        return () => ctx.modules.fixedTick.off("tick", checkPickup);
+    }
+}
+```
+
+### Cleanup is mandatory in useCtx
+
+Always return a cleanup from `useCtx` when you add event listeners, create child objects, or allocate resources. The cleanup runs when the object leaves the context hierarchy or the context is destroyed.
+
+```ts
+useCtx(ctx) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+    this.object.add(mesh);
+    return () => {
+        this.object.remove(mesh);
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+    };
+}
+```
+
+### beforeAttach callback in addFeature
+
+Use `beforeAttach` to configure a feature before it attaches to the context (before `useCtx` fires):
+
+```ts
+KVY.addFeature(mesh, MyFeature, undefined, (feature) => {
+    feature.speed = 10;
+    feature.color = 0xff0000;
+});
+```
+
+### WebGPU renderer
+
+The library works identically with `THREE.WebGPURenderer`. Call `renderer.init()` before mounting:
+
+```ts
+import * as THREE from "three/webgpu";
+
+const renderer = new THREE.WebGPURenderer({ antialias: true });
+const ctx = KVY.CoreContext.create({ renderer, camera, scene, clock });
+
+await renderer.init();
+ctx.three.mount(container);
+ctx.run();
+```
+
+### Removing vs destroying featurable objects
+
+When an object with features is removed from the hierarchy (`removeFromParent()`), the context detaches automatically — the cleanup returned from `useCtx` runs. If the object is later added back to a hierarchy that has a context, `useCtx` fires again. **No manual cleanup call needed for temporary removal.**
+
+```ts
+// Temporarily remove — ctx detaches, useCtx cleanup runs automatically
+obj.removeFromParent();
+
+// Add back — ctx re-attaches, useCtx fires again
+ctx.root.add(obj);
+```
+
+`KVY.clear(obj)` permanently destroys all features and removes featurability from the object entirely. Use it when the object is no longer needed.
+
+```ts
+// Permanently destroy all features (and featurability) on an object
+KVY.clear(obj);
+obj.removeFromParent();
+
+// Same, but recursively for the whole subtree
+KVY.clear(obj, true);
+obj.removeFromParent();
+```
+
+To destroy a single specific feature, call `feature.destroy()` directly.
+
+## What the library does NOT do
+
+- Does not import or bundle `three` — it is a peer dependency. The library manipulates Three.js types but does not reference the three package internally.
+- Does not impose a specific folder structure or module loader.
+- Does not replace the Three.js API — you use standard Three.js objects and the library adds lifecycle and component management on top.

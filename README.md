@@ -46,11 +46,12 @@ import * as KVY from "@vladkrutenyuk/three-kvy-core";
 // --- Setup ---
 
 const renderer = new THREE.WebGPURenderer({ antialias: true });
-const ctx = new KVY.CoreContext({
+const ctx = KVY.CoreContext.create({
     renderer,
     camera: new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100),
     scene: new THREE.Scene(),
     clock: new THREE.Clock(),
+    modules: {}
 });
 
 renderer.init().then(() => {
