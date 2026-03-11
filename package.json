@@ -32,7 +32,8 @@
     "addons",
     "package.json",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "llms.txt"
   ],
   "devDependencies": {
     "@dimforge/rapier3d-compat": "^0.14.0",

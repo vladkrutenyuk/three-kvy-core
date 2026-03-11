@@ -35,11 +35,13 @@ npm i three eventemitter3 @vladkrutenyuk/three-kvy-core
 
 Visit [three-kvy-core.vladkrutenyuk.ru](https://three-kvy-core.vladkrutenyuk.ru)
 
+> An `llms.txt` file is included in the package — a comprehensive guide for LLMs and AI coding agents covering all APIs, lifecycle, patterns, and addons.
+
 ## What does it look like?
 ### Quick Example: Coin Collector Mini-Game
 
 WASD movement, spinning coins, pickup detection, and a simple score system — showcasing custom modules, multiple features per object, cross-feature communication, and fixed-tick logic.
-```js
+```javascript
 import * as THREE from "three/webgpu";
 import * as KVY from "@vladkrutenyuk/three-kvy-core";
 

@@ -1,7 +1,7 @@
 # three-kvy-core
 
 > A lightweight, component-oriented Three.js extension library (3.5kb minzipped) for building scalable 3D applications.
-> Package: `@vladkrutenyuk/three-kvy-core` v2.3.4
+> Package: `@vladkrutenyuk/three-kvy-core`
 > Docs: https://three-kvy-core.vladkrutenyuk.ru
 > GitHub: https://github.com/vladkrutenyuk/three-kvy-core
 
@@ -39,7 +39,7 @@ const ctx = KVY.CoreContext.create({
 });
 
 // Mount renderer canvas to a DOM element
-ctx.three.mount(document.getElementById("app"));
+ctx.three.mount(document.getElementById("root"));
 
 // Start animation loop
 ctx.run();
