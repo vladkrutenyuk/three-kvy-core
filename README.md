@@ -86,12 +86,16 @@ class FixedTickModule extends KVY.CoreContextModule {
     step = 1 / 60;
     _accumulator = 0;
 
-    onBeforeRender(ctx) {
-        this._accumulator += ctx.deltaTime;
-        while (this._accumulator >= this.step) {
-            this._accumulator -= this.step;
-            this.emit("fixedtick", this.step);
-        }
+    useCtx(ctx) {
+        const onBeforeRender = () => {
+            this._accumulator += ctx.deltaTime;
+            while (this._accumulator >= this.step) {
+                this._accumulator -= this.step;
+                this.emit("fixedtick", this.step);
+            }
+        };
+        ctx.three.on("renderbefore", onBeforeRender);
+        return () => ctx.three.off("renderbefore", onBeforeRender);
     }
 }
 
